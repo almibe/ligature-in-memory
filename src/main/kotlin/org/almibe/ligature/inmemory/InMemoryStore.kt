@@ -6,56 +6,45 @@ package org.almibe.ligature.inmemory
 
 import org.almibe.ligature.Dataset
 import org.almibe.ligature.Store
-import java.util.concurrent.locks.ReentrantLock
 import java.util.stream.Stream
-import kotlin.concurrent.withLock
 
 class InMemoryStore: Store {
     private var open = true
     private var datasets = mutableMapOf<String, InMemoryDataset>()
-    private var lock = ReentrantLock()
 
-    override fun close() {
-        lock.withLock {
-            open = false
-            datasets.clear()
+    @Synchronized override fun close() {
+        open = false
+        datasets.clear()
+    }
+
+    @Synchronized override fun deleteDataset(name: String) {
+        if (open) {
+            datasets.remove(name)
+        } else {
+            throw IllegalStateException("Store is closed.")
         }
     }
 
-    override fun deleteDataset(name: String) {
-        lock.withLock {
-            if (open) {
-                datasets.remove(name)
+    @Synchronized override fun getDataset(name: String): Dataset {
+        if (open) {
+            val dataset = datasets.get(name)
+            return if (dataset != null) {
+                dataset
             } else {
-                throw IllegalStateException("Store is closed.")
+                val newDataset = InMemoryDataset(name)
+                datasets.put(name, newDataset)
+                newDataset
             }
+        } else {
+            throw IllegalStateException("Store is closed.")
         }
     }
 
-    override fun getDataset(name: String): Dataset {
-        return lock.withLock {
-            if (open) {
-                val dataset = datasets.get(name)
-                return if (dataset != null) {
-                    dataset
-                } else {
-                    val newDataset = InMemoryDataset(name)
-                    datasets.put(name, newDataset)
-                    newDataset
-                }
-            } else {
-                throw IllegalStateException("Store is closed.")
-            }
-        }
-    }
-
-    override fun getDatasetNames(): Stream<String> {
-        lock.withLock {
-            if (open) {
-                return datasets.keys.stream()
-            } else {
-                throw IllegalStateException("Store is closed.")
-            }
+    @Synchronized override fun getDatasetNames(): Stream<String> {
+        if (open) {
+            return datasets.keys.stream()
+        } else {
+            throw IllegalStateException("Store is closed.")
         }
     }
 }
