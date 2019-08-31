@@ -5,11 +5,9 @@
 package org.almibe.ligature.inmemory
 
 import org.almibe.ligature.*
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Stream
 
 class InMemoryDataset(private val name: String): Dataset {
-    data class ContextualValue(val value: Value, val context: String)
     private val id = Int.MIN_VALUE
 
     @Synchronized override fun getDatasetName(): String {
