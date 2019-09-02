@@ -5,10 +5,28 @@
 package org.almibe.ligature.inmemory
 
 import org.almibe.ligature.*
+import java.util.*
 import java.util.stream.Stream
 
 class InMemoryDataset(private val name: String): Dataset {
-    private val id = Int.MIN_VALUE
+    private data class Quad(val first: Int, val second: Int, val third: Int, val fourth: Int): Comparable<Quad> {
+        override fun compareTo(other: Quad): Int {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    }
+
+    private val id = Int.MIN_VALUE                        // #cnt
+    private val nodeId = mutableMapOf<Node, Int>()        // #nid
+    private val idNode = mutableMapOf<Int, Node>()        // #idn
+    private val literalId = mutableMapOf<Literal, Int>()  // #lid
+    private val idLiteral = mutableMapOf<Int, Literal>()  // #idl
+    private val eavc = TreeSet<Quad>()                    // #eavc
+    private val evac = TreeSet<Quad>()                    // #evac
+    private val avec = TreeSet<Quad>()                    // #avec
+    private val aevc = TreeSet<Quad>()                    // #aevc
+    private val veac = TreeSet<Quad>()                    // #veac
+    private val vaec = TreeSet<Quad>()                    // #vaec
+    private val ceav = TreeSet<Quad>()                    // #ceav
 
     @Synchronized override fun getDatasetName(): String {
         return name
