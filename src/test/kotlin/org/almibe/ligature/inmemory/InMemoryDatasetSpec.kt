@@ -4,5 +4,5 @@
 
 package org.almibe.ligature.inmemory
 
-class LigatureInMemorySpec {
+class InMemoryDatasetSpec {
 }
