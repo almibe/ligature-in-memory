@@ -11,7 +11,16 @@ import java.util.stream.Stream
 class InMemoryDataset(private val name: String): Dataset {
     private data class Quad(val first: Int, val second: Int, val third: Int, val fourth: Int): Comparable<Quad> {
         override fun compareTo(other: Quad): Int {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            if (first.compareTo(other.first) != 0) {
+                return first.compareTo(other.first)
+            }
+            if (second.compareTo(other.second) != 0) {
+                return second.compareTo(other.second)
+            }
+            if (third.compareTo(other.third) != 0) {
+                return third.compareTo(other.third)
+            }
+            return fourth.compareTo(fourth)
         }
     }
 
