@@ -8,7 +8,7 @@ import org.almibe.ligature.*
 import java.util.*
 import java.util.stream.Stream
 
-class InMemoryDataset(private val name: String): Dataset {
+internal class InMemoryDataset(private val name: String): Dataset {
     private data class Quad(val first: Int, val second: Int, val third: Int, val fourth: Int): Comparable<Quad> {
         override fun compareTo(other: Quad): Int {
             if (first.compareTo(other.first) != 0) {
@@ -42,30 +42,62 @@ class InMemoryDataset(private val name: String): Dataset {
     }
 
     @Synchronized override fun addStatements(statements: Stream<Statement>) {
+        statements.forEach {
+            addStatement(it)
+        }
+    }
 
+    private fun addStatement(statement: Statement) {
+        TODO()
     }
 
     @Synchronized override fun allLiterals(): Stream<Literal> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return literalId.keys.stream()
     }
 
     @Synchronized override fun allNodes(): Stream<Node> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return nodeId.keys.stream()
     }
 
     @Synchronized override fun allStatements(): Stream<Statement> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return eavc.map {
+            TODO()
+        }.stream()
     }
 
     @Synchronized override fun deleteNode(node: Node) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    @Synchronized override fun matchAll(entity: Node?, attribute: Node?, value: Value?, context: Node?): Stream<Statement> {
+    @Synchronized override fun addNodeTypes(node: Node, types: Collection<String>) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    @Synchronized override fun newNode(): Node {
+    @Synchronized override fun allAttributes(): Stream<Attribute> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Synchronized override fun allNodes(types: Collection<String>): Stream<Node> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Synchronized override fun allTypes(): Stream<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Synchronized override fun matchAll(entity: Node?, attribute: Attribute?, value: Value?, context: Node?): Stream<Statement> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Synchronized override fun newNode(types: Collection<String>): Node {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Synchronized override fun nodeTypes(node: Node): Collection<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    @Synchronized override fun removeNodeTypes(node: Node, types: Collection<String>) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
