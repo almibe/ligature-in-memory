@@ -41,6 +41,10 @@ internal class InMemoryDataset(private val name: String): Dataset {
         return name
     }
 
+    override fun newNode(): Node {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     @Synchronized override fun addStatements(statements: Stream<Statement>) {
         statements.forEach {
             addStatement(it)
@@ -59,25 +63,7 @@ internal class InMemoryDataset(private val name: String): Dataset {
         return nodeId.keys.stream()
     }
 
-    @Synchronized override fun allStatements(): Stream<Statement> {
-        return eavc.map {
-            TODO()
-        }.stream()
-    }
-
-    @Synchronized override fun deleteNode(node: Node) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Synchronized override fun addNodeTypes(node: Node, types: Collection<String>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     @Synchronized override fun allAttributes(): Stream<Attribute> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Synchronized override fun allNodes(types: Collection<String>): Stream<Node> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -86,22 +72,6 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     @Synchronized override fun matchAll(entity: Node?, attribute: Attribute?, value: Value?, context: Node?): Stream<Statement> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Synchronized override fun newNode(types: Collection<String>): Node {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Synchronized override fun nodeTypes(node: Node): Collection<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Synchronized override fun removeNodeTypes(node: Node, types: Collection<String>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Synchronized override fun relabelNode(node: Node, label: String?) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

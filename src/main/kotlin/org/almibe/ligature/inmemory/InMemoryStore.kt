@@ -32,7 +32,7 @@ class InMemoryStore: Store {
                 dataset
             } else {
                 val newDataset = InMemoryDataset(name)
-                datasets.put(name, newDataset)
+                datasets[name] = newDataset
                 newDataset
             }
         } else {
