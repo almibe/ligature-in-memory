@@ -25,8 +25,8 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private val id = Int.MIN_VALUE                        // #cnt
-    private val nodeId = mutableMapOf<Node, Int>()        // #nid
-    private val idNode = mutableMapOf<Int, Node>()        // #idn
+    private val attributeId = mutableMapOf<Node, Int>()   // #nid
+    private val idAttribute = mutableMapOf<Int, Node>()   // #idn
     private val literalId = mutableMapOf<Literal, Int>()  // #lid
     private val idLiteral = mutableMapOf<Int, Literal>()  // #idl
     private val eavc = TreeSet<Quad>()                    // #eavc
@@ -41,7 +41,7 @@ internal class InMemoryDataset(private val name: String): Dataset {
         return name
     }
 
-    override fun newNode(): Node {
+    @Synchronized override fun newNode(): Node {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -53,22 +53,6 @@ internal class InMemoryDataset(private val name: String): Dataset {
 
     private fun addStatement(statement: Statement) {
         TODO()
-    }
-
-    @Synchronized override fun allLiterals(): Stream<Literal> {
-        return literalId.keys.stream()
-    }
-
-    @Synchronized override fun allNodes(): Stream<Node> {
-        return nodeId.keys.stream()
-    }
-
-    @Synchronized override fun allAttributes(): Stream<Attribute> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Synchronized override fun allTypes(): Stream<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     @Synchronized override fun matchAll(entity: Node?, attribute: Attribute?, value: Value?, context: Node?): Stream<Statement> {
