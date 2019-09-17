@@ -9,7 +9,7 @@ import java.util.*
 import java.util.stream.Stream
 
 internal class InMemoryDataset(private val name: String): Dataset {
-    private data class Quad(val first: Int, val second: Int, val third: Int, val fourth: Int): Comparable<Quad> {
+    private data class Quad(val first: Int, val second: Int, val third: Int, val fourth: Int?): Comparable<Quad> {
         override fun compareTo(other: Quad): Int {
             if (first.compareTo(other.first) != 0) {
                 return first.compareTo(other.first)
@@ -20,29 +20,37 @@ internal class InMemoryDataset(private val name: String): Dataset {
             if (third.compareTo(other.third) != 0) {
                 return third.compareTo(other.third)
             }
-            return fourth.compareTo(fourth)
+            return if (fourth == null && other.fourth == null) {
+                0
+            } else if (fourth == null) {
+                -1
+            } else if (other.fourth == null) {
+                1
+            } else {
+                fourth.compareTo(other.fourth)
+            }
         }
     }
 
-    private val id = Int.MIN_VALUE                        // #cnt
-    private val attributeId = mutableMapOf<Node, Int>()   // #nid
-    private val idAttribute = mutableMapOf<Int, Node>()   // #idn
+    private var id = Int.MIN_VALUE                        // #cnt
+    private val attributeId = mutableMapOf<Node, Int>()   // #aid
+    private val idAttribute = mutableMapOf<Int, Node>()   // #ida
     private val literalId = mutableMapOf<Literal, Int>()  // #lid
     private val idLiteral = mutableMapOf<Int, Literal>()  // #idl
     private val eavc = TreeSet<Quad>()                    // #eavc
-    private val evac = TreeSet<Quad>()                    // #evac
-    private val avec = TreeSet<Quad>()                    // #avec
-    private val aevc = TreeSet<Quad>()                    // #aevc
-    private val veac = TreeSet<Quad>()                    // #veac
-    private val vaec = TreeSet<Quad>()                    // #vaec
-    private val ceav = TreeSet<Quad>()                    // #ceav
+//    private val evac = TreeSet<Quad>()                    // #evac
+//    private val avec = TreeSet<Quad>()                    // #avec
+//    private val aevc = TreeSet<Quad>()                    // #aevc
+//    private val veac = TreeSet<Quad>()                    // #veac
+//    private val vaec = TreeSet<Quad>()                    // #vaec
+//    private val ceav = TreeSet<Quad>()                    // #ceav
 
     @Synchronized override fun getDatasetName(): String {
         return name
     }
 
     @Synchronized override fun newNode(): Node {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Node((id++).toString())
     }
 
     @Synchronized override fun addStatements(statements: Stream<Statement>) {
@@ -52,6 +60,19 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private fun addStatement(statement: Statement) {
+        val entityId = statement.entity.id.toInt()
+        val attributeId = getAttributeId(statement.attribute)
+        val valueId = getValueId(statement.value)
+        val contextId = statement.context?.id?.toInt()
+
+        eavc.add(Quad(entityId, attributeId, valueId, contextId))
+    }
+
+    private fun getAttributeId(attribute: Attribute): Int {
+        TODO()
+    }
+
+    private fun getValueId(value: Value): Int {
         TODO()
     }
 
