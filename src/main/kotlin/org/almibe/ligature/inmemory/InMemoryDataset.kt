@@ -84,7 +84,21 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private fun getOrCreateValueId(value: Value): Int {
-        TODO()
+        return when (value) {
+            is Node -> value.id.toInt() //TODO check if valid node id
+            is Literal -> getOrCreateLiteralId(value)
+        }
+    }
+
+    private fun getOrCreateLiteralId(literal: Literal): Int {
+        return if (literalId.containsKey(literal)) {
+            literalId[literal]!!
+        } else {
+            id++
+            literalId[literal] = id
+            idLiteral[id] = literal
+            id
+        }
     }
 
     @Synchronized override fun matchAll(entity: Node?, attribute: Attribute?, value: Value?, context: Node?): Stream<Statement> {
