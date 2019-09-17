@@ -113,7 +113,7 @@ internal class InMemoryDataset(private val name: String): Dataset {
 
     private fun removeStatement(statement: Statement) {
         val entityId = statement.entity.id.toInt() //TODO check valid node id
-        val attributeId = getAttributeIdOrNull(statement.attribute)
+        val attributeId = attributeId[statement.attribute]
         val valueId = getValueIdOrNull(statement.value)
         val contextId = statement.context?.id?.toInt() //TODO check valid node id
 
@@ -123,11 +123,10 @@ internal class InMemoryDataset(private val name: String): Dataset {
         }
     }
 
-    private fun getAttributeIdOrNull(attribute: Attribute): Int? {
-        TODO()
-    }
-
     private fun getValueIdOrNull(value: Value): Int? {
-        TODO()
+        return when (value) {
+            is Node -> value.id.toInt() //TODO check valid node id
+            is Literal -> literalId[value]
+        }
     }
 }
