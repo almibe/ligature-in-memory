@@ -154,16 +154,24 @@ internal class InMemoryDataset(private val name: String): Dataset {
     private fun getValueIdOrNull(value: Value?): Int? {
         return when (value) {
             null -> null
-            is Node -> value.id.toInt() //TODO check valid node id
+            is Node -> getAndCheckNodeId(value)
             is Literal -> literalId[value]
         }
     }
 
     private fun checkAndCleanUpAttribute(attributeId: Int) {
-        TODO("clean up attributeId, idAttribute")
+        val result = eavc.firstOrNull { it.second == attributeId }
+        if (result == null) {
+            val attribute = idAttribute.remove(attributeId)
+            this.attributeId.remove(attribute)
+        }
     }
 
     private fun checkAndCleanUpLiteral(literalId: Int) {
-        TODO("clean up literalId, idLiteral")
+        val result = eavc.firstOrNull { it.third == literalId }
+        if (result == null) {
+            val literal = idLiteral.remove(literalId)
+            this.literalId.remove(literal)
+        }
     }
 }
