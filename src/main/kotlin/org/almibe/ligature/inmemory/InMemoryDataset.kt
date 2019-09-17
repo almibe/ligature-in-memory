@@ -101,8 +101,20 @@ internal class InMemoryDataset(private val name: String): Dataset {
         }
     }
 
-    @Synchronized override fun matchAll(entity: Node?, attribute: Attribute?, value: Value?, context: Node?): Stream<Statement> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    @Synchronized override fun matchAll(entity: Node?,
+                                        attribute: Attribute?,
+                                        value: Value?,
+                                        context: Node?): Stream<Statement> {
+        val entityId = entity?.id?.toInt() //TODO check if valid node id
+        val attributeId = attributeId[attribute]
+        val valueId = getValueIdOrNull(value)
+        val contextId = context?.id?.toInt() //TODO check if valid node id
+
+        return eavc.stream().filter {
+            TODO()
+        }.map {
+            TODO()
+        }
     }
 
     @Synchronized override fun removeStatements(statements: Stream<Statement>) {
@@ -123,8 +135,9 @@ internal class InMemoryDataset(private val name: String): Dataset {
         }
     }
 
-    private fun getValueIdOrNull(value: Value): Int? {
+    private fun getValueIdOrNull(value: Value?): Int? {
         return when (value) {
+            null -> null
             is Node -> value.id.toInt() //TODO check valid node id
             is Literal -> literalId[value]
         }
