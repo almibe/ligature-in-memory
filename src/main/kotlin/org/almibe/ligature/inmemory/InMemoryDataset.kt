@@ -144,7 +144,10 @@ internal class InMemoryDataset(private val name: String): Dataset {
 
         if (entityId != null && attributeId != null && valueId != null) {
             eavc.remove(Quad(entityId, attributeId, valueId, contextId))
-            //TODO clean up attributeId, idAttribute, literalId, idLiteral
+            checkAndCleanUpAttribute(attributeId)
+            if (statement.value is Literal) {
+                checkAndCleanUpLiteral(valueId)
+            }
         }
     }
 
@@ -154,5 +157,13 @@ internal class InMemoryDataset(private val name: String): Dataset {
             is Node -> value.id.toInt() //TODO check valid node id
             is Literal -> literalId[value]
         }
+    }
+
+    private fun checkAndCleanUpAttribute(attributeId: Int) {
+        TODO("clean up attributeId, idAttribute")
+    }
+
+    private fun checkAndCleanUpLiteral(literalId: Int) {
+        TODO("clean up literalId, idLiteral")
     }
 }
