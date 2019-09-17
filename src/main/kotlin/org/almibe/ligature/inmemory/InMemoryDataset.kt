@@ -9,10 +9,10 @@ import java.util.*
 import java.util.stream.Stream
 
 internal class InMemoryDataset(private val name: String): Dataset {
-    private data class Quad(val first: Int, val second: Int, val third: Int, val fourth: Int?): Comparable<Quad> {
+    private data class Quad(val first: Int?, val second: Int, val third: Int, val fourth: Int?): Comparable<Quad> {
         override fun compareTo(other: Quad): Int {
-            if (first.compareTo(other.first) != 0) {
-                return first.compareTo(other.first)
+            if (nullableIntCompare(first, other.first) != 0) {
+                return nullableIntCompare(first, other.first)
             }
             if (second.compareTo(other.second) != 0) {
                 return second.compareTo(other.second)
@@ -20,14 +20,18 @@ internal class InMemoryDataset(private val name: String): Dataset {
             if (third.compareTo(other.third) != 0) {
                 return third.compareTo(other.third)
             }
-            return if (fourth == null && other.fourth == null) {
+            return nullableIntCompare(fourth, other.fourth)
+        }
+
+        private fun nullableIntCompare(first: Int?, second: Int?): Int {
+            return if (first == null && second == null) {
                 0
-            } else if (fourth == null) {
+            } else if (first == null) {
                 -1
-            } else if (other.fourth == null) {
+            } else if (second == null) {
                 1
             } else {
-                fourth.compareTo(other.fourth)
+                first.compareTo(second)
             }
         }
     }
