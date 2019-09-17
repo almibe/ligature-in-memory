@@ -5,6 +5,7 @@
 package org.almibe.ligature.inmemory
 
 import org.almibe.ligature.*
+import java.lang.RuntimeException
 import java.util.*
 import java.util.stream.Stream
 
@@ -54,7 +55,8 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     @Synchronized override fun newNode(): Node {
-        return Node((id++).toString())
+        id++
+        return Node((id).toString())
     }
 
     @Synchronized override fun addStatements(statements: Stream<Statement>) {
@@ -64,12 +66,23 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private fun addStatement(statement: Statement) {
-        val entityId = statement.entity.id.toInt() //TODO check valid node id
+        val entityId = getAndCheckNodeId(statement.entity)
         val attributeId = getOrCreateAttributeId(statement.attribute)
         val valueId = getOrCreateValueId(statement.value)
-        val contextId = statement.context?.id?.toInt() //TODO check valid node id
+        val contextId = getAndCheckNodeId(statement.context)
 
         eavc.add(Quad(entityId, attributeId, valueId, contextId))
+    }
+
+    private fun getAndCheckNodeId(node: Node?): Int? {
+        if (node == null) {
+            return null
+        }
+        val id = node.id.toInt()
+        if (id > this.id) {
+            throw RuntimeException("Invalid node id $id.")
+        }
+        return id
     }
 
     private fun getOrCreateAttributeId(attribute: Attribute): Int {
@@ -85,7 +98,7 @@ internal class InMemoryDataset(private val name: String): Dataset {
 
     private fun getOrCreateValueId(value: Value): Int {
         return when (value) {
-            is Node -> value.id.toInt() //TODO check if valid node id
+            is Node -> getAndCheckNodeId(value)!!
             is Literal -> getOrCreateLiteralId(value)
         }
     }
@@ -105,10 +118,10 @@ internal class InMemoryDataset(private val name: String): Dataset {
                                         attribute: Attribute?,
                                         value: Value?,
                                         context: Node?): Stream<Statement> {
-        val entityId = entity?.id?.toInt() //TODO check if valid node id
+        val entityId = getAndCheckNodeId(entity)
         val attributeId = attributeId[attribute]
         val valueId = getValueIdOrNull(value)
-        val contextId = context?.id?.toInt() //TODO check if valid node id
+        val contextId = getAndCheckNodeId(context)
 
         return eavc.stream().filter {
             TODO()
@@ -124,12 +137,12 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private fun removeStatement(statement: Statement) {
-        val entityId = statement.entity.id.toInt() //TODO check valid node id
+        val entityId = getAndCheckNodeId(statement.entity)
         val attributeId = attributeId[statement.attribute]
         val valueId = getValueIdOrNull(statement.value)
-        val contextId = statement.context?.id?.toInt() //TODO check valid node id
+        val contextId = getAndCheckNodeId(statement.context)
 
-        if (attributeId != null && valueId != null) {
+        if (entityId != null && attributeId != null && valueId != null) {
             eavc.remove(Quad(entityId, attributeId, valueId, contextId))
             //TODO clean up attributeId, idAttribute, literalId, idLiteral
         }
