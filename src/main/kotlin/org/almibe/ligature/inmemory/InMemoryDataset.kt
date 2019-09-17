@@ -65,18 +65,18 @@ internal class InMemoryDataset(private val name: String): Dataset {
 
     private fun addStatement(statement: Statement) {
         val entityId = statement.entity.id.toInt()
-        val attributeId = getAttributeId(statement.attribute)
-        val valueId = getValueId(statement.value)
+        val attributeId = getOrCreateAttributeId(statement.attribute)
+        val valueId = getOrCreateValueId(statement.value)
         val contextId = statement.context?.id?.toInt()
 
         eavc.add(Quad(entityId, attributeId, valueId, contextId))
     }
 
-    private fun getAttributeId(attribute: Attribute): Int {
+    private fun getOrCreateAttributeId(attribute: Attribute): Int {
         TODO()
     }
 
-    private fun getValueId(value: Value): Int {
+    private fun getOrCreateValueId(value: Value): Int {
         TODO()
     }
 
@@ -85,6 +85,28 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     @Synchronized override fun removeStatements(statements: Stream<Statement>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        statements.forEach {
+            removeStatement(it)
+        }
+    }
+
+    private fun removeStatement(statement: Statement) {
+        val entityId = statement.entity.id.toInt()
+        val attributeId = getAttributeIdOrNull(statement.attribute)
+        val valueId = getValueIdOrNull(statement.value)
+        val contextId = statement.context?.id?.toInt()
+
+        if (attributeId != null && valueId != null) {
+            eavc.remove(Quad(entityId, attributeId, valueId, contextId))
+            //TODO clean up attributeId, idAttribute, literalId, idLiteral
+        }
+    }
+
+    private fun getAttributeIdOrNull(attribute: Attribute): Int? {
+        TODO()
+    }
+
+    private fun getValueIdOrNull(value: Value): Int? {
+        TODO()
     }
 }
