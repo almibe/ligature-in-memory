@@ -37,8 +37,8 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private var id = Int.MIN_VALUE                        // #cnt
-    private val attributeId = mutableMapOf<Node, Int>()   // #aid
-    private val idAttribute = mutableMapOf<Int, Node>()   // #ida
+    private val attributeId = mutableMapOf<Attribute, Int>()   // #aid
+    private val idAttribute = mutableMapOf<Int, Attribute>()   // #ida
     private val literalId = mutableMapOf<Literal, Int>()  // #lid
     private val idLiteral = mutableMapOf<Int, Literal>()  // #idl
     private val eavc = TreeSet<Quad>()                    // #eavc
@@ -64,16 +64,23 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private fun addStatement(statement: Statement) {
-        val entityId = statement.entity.id.toInt()
+        val entityId = statement.entity.id.toInt() //TODO check valid node id
         val attributeId = getOrCreateAttributeId(statement.attribute)
         val valueId = getOrCreateValueId(statement.value)
-        val contextId = statement.context?.id?.toInt()
+        val contextId = statement.context?.id?.toInt() //TODO check valid node id
 
         eavc.add(Quad(entityId, attributeId, valueId, contextId))
     }
 
     private fun getOrCreateAttributeId(attribute: Attribute): Int {
-        TODO()
+        return if (attributeId.containsKey(attribute)) {
+            attributeId[attribute]!!
+        } else {
+            id++
+            attributeId[attribute] = id
+            idAttribute[id] = attribute
+            id
+        }
     }
 
     private fun getOrCreateValueId(value: Value): Int {
@@ -91,10 +98,10 @@ internal class InMemoryDataset(private val name: String): Dataset {
     }
 
     private fun removeStatement(statement: Statement) {
-        val entityId = statement.entity.id.toInt()
+        val entityId = statement.entity.id.toInt() //TODO check valid node id
         val attributeId = getAttributeIdOrNull(statement.attribute)
         val valueId = getValueIdOrNull(statement.value)
-        val contextId = statement.context?.id?.toInt()
+        val contextId = statement.context?.id?.toInt() //TODO check valid node id
 
         if (attributeId != null && valueId != null) {
             eavc.remove(Quad(entityId, attributeId, valueId, contextId))
