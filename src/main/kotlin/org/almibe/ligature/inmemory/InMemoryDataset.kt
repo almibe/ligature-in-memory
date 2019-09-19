@@ -37,18 +37,18 @@ internal class InMemoryDataset(private val name: String): Dataset {
         }
     }
 
-    private var id = Int.MIN_VALUE                        // #cnt
+    private var id = Int.MIN_VALUE                             // #cnt
     private val attributeId = mutableMapOf<Attribute, Int>()   // #aid
     private val idAttribute = mutableMapOf<Int, Attribute>()   // #ida
-    private val literalId = mutableMapOf<Literal, Int>()  // #lid
-    private val idLiteral = mutableMapOf<Int, Literal>()  // #idl
-    private val eavc = TreeSet<Quad>()                    // #eavc
-//    private val evac = TreeSet<Quad>()                    // #evac
-//    private val avec = TreeSet<Quad>()                    // #avec
-//    private val aevc = TreeSet<Quad>()                    // #aevc
-//    private val veac = TreeSet<Quad>()                    // #veac
-//    private val vaec = TreeSet<Quad>()                    // #vaec
-//    private val ceav = TreeSet<Quad>()                    // #ceav
+    private val literalId = mutableMapOf<Literal, Int>()       // #lid
+    private val idLiteral = mutableMapOf<Int, Literal>()       // #idl
+    private val eavc = TreeSet<Quad>()                         // #eavc
+//    private val evac = TreeSet<Quad>()                         // #evac
+//    private val avec = TreeSet<Quad>()                         // #avec
+//    private val aevc = TreeSet<Quad>()                         // #aevc
+//    private val veac = TreeSet<Quad>()                         // #veac
+//    private val vaec = TreeSet<Quad>()                         // #vaec
+//    private val ceav = TreeSet<Quad>()                         // #ceav
 
     @Synchronized override fun getDatasetName(): String {
         return name
@@ -123,10 +123,30 @@ internal class InMemoryDataset(private val name: String): Dataset {
         val valueId = getValueIdOrNull(value)
         val contextId = getAndCheckNodeId(context)
 
-        return eavc.stream().filter {
-            TODO()
+        return eavc.stream().filter { quad ->
+            if (entityId != null && quad.first != entityId) {
+                return@filter false
+            }
+            if (attributeId != null && quad.second != attributeId) {
+                return@filter false
+            }
+            if (valueId != null && quad.third != valueId) {
+                return@filter false
+            }
+            if (contextId != null && quad.fourth != contextId) {
+                return@filter false
+            }
+            return@filter true
         }.map {
-            TODO()
+            val newEntity = Node(it.first.toString())
+            val newAttribute = idAttribute[it.second]!!
+            val newValue = idLiteral[it.third] ?: Node(it.third.toString())
+            val newContext = if (it.fourth != null) {
+                Node(it.fourth.toString())
+            } else {
+                null
+            }
+            Statement(newEntity, newAttribute, newValue, newContext)
         }
     }
 
