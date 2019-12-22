@@ -6,7 +6,7 @@
 ;
 ; SPDX-License-Identifier: EPL-2.0
 
-(ns org.libraryweasel.ligature.memory.core-test
+(ns org.libraryweasel.ligature.memory.store-test
   (:require [clojure.test :refer :all]
             [ligature-in-memory.core :refer :all]))
 
