@@ -8,7 +8,7 @@
 
 (ns org.libraryweasel.ligature.memory.core)
 
-(defn create-ligature-memory
+(defn create-ligature-in-memory
   ""
   []
   nil)
