@@ -6,7 +6,8 @@
 ;
 ; SPDX-License-Identifier: EPL-2.0
 
-(ns org.libraryweasel.ligature.memory.store)
+(ns org.libraryweasel.ligature.memory.store
+  (:require [org.libraryweasel.ligature.core :refer :all]))
 
 (defn ligature-memory-store
   "Creates an in-memory implementation of the LigatureStore protocol."
@@ -31,7 +32,7 @@
         [this]
         "memory"))))
 
-(defn ligature-memory-dataset
+(defn- ligature-memory-dataset
   "Creates an in-memory implementation of the LigatureDataset protocol."
   [name]
   (let
