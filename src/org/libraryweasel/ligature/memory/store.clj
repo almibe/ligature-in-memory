@@ -16,9 +16,9 @@
     (reify LigatureStore
       (get-dataset
         [this dateset-name]
-        (if (contains? @datasets dataset-name) ;; TODO this should be in a transaction
-          (dataset-name @datasets)
-          (comment create a new dataset and add to the datasets map)))
+        ((swap! datasets
+          #(when (not (contains? % dateset-name))
+            (conj % [dateset-name {}]))) dateset-name))
       (delete-dataset
         [this dateset-name]
         (comment remove dataset-name))
@@ -34,43 +34,41 @@
 
 (defn- ligature-memory-dataset
   "Creates an in-memory implementation of the LigatureDataset protocol."
-  [name]
-  (let
-    [dataset (atom {})]
-    (reify LigatureDataset
-      (add-statements
-        [this statements]
-        )
-      (remove-statements
-        [this statements]
-        )
-      (all-statements
-        [this]
-        )
-      (new-identifier
-        [this]
-        )
-      (match-statements
-        [this pattern]
-        )
-      (dataset-name
-        [this]
-        )
-      (add-rules
-        [this rules]
-        )
-      (remove-rules
-        [this rules]
-        )
-      (all-rules
-        [this]
-        )
-      (match-rules
-        [this pattern]
-        )
-      (sparql-query
-        [this query]
-        )
-      (wander-query
-        [this query]
-        ))))
+  [store name]
+  (reify LigatureDataset
+    (add-statements
+      [this statements]
+      )
+    (remove-statements
+      [this statements]
+      )
+    (all-statements
+      [this]
+      )
+    (new-identifier
+      [this]
+      )
+    (match-statements
+      [this pattern]
+      )
+    (dataset-name
+      [this]
+      )
+    (add-rules
+      [this rules]
+      )
+    (remove-rules
+      [this rules]
+      )
+    (all-rules
+      [this]
+      )
+    (match-rules
+      [this pattern]
+      )
+    (sparql-query
+      [this query]
+      )
+    (wander-query
+      [this query]
+      )))

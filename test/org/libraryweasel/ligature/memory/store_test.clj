@@ -8,8 +8,12 @@
 
 (ns org.libraryweasel.ligature.memory.store-test
   (:require [clojure.test :refer :all]
-            [org.libraryweasel.ligature.memory.store :refer :all]))
+            [org.libraryweasel.ligature.memory.store :refer :all]
+            [org.libraryweasel.ligature.core :refer :all]))
 
 (deftest store-test
   (testing "Create new store."
-    (is (not (= (ligature-memory-store) nil)))))
+    (is (not (= (ligature-memory-store) nil))))
+  (testing "Test empty store.")
+    (let [store (ligature-memory-store)]
+      (is (not (= (get-dataset store "test") nil)))))
