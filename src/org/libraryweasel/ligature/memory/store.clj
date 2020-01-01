@@ -12,7 +12,7 @@
 (defn ligature-memory-store
   "Creates an in-memory implementation of the LigatureStore protocol."
   []
-  (let [datasets (ref {})]
+  (let [datasets (atom {})]
     (reify LigatureStore
       (get-dataset
         [this dateset-name]
@@ -36,7 +36,7 @@
   "Creates an in-memory implementation of the LigatureDataset protocol."
   [name]
   (let
-    [spog (ref {})]
+    [dataset (atom {})]
     (reify LigatureDataset
       (add-statements
         [this statements]
@@ -50,17 +50,23 @@
       (new-identifier
         [this]
         )
-      (match
+      (match-statements
         [this pattern]
         )
       (dataset-name
         [this]
         )
-      (set-ontology
-        [this ontology]
+      (add-rules
+        [this rules]
         )
-      (get-ontology
+      (remove-rules
+        [this rules]
+        )
+      (all-rules
         [this]
+        )
+      (match-rules
+        [this pattern]
         )
       (sparql-query
         [this query]
