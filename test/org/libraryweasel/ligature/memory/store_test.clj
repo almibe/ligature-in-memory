@@ -14,6 +14,11 @@
 (deftest store-test
   (testing "Create new store."
     (is (not (= (ligature-memory-store) nil))))
-  (testing "Test empty store.")
+  (testing "Basic store functionality."
     (let [store (ligature-memory-store)]
-      (is (not (= (get-dataset store "test") nil)))))
+      (is (not (= (get-dataset store "test") nil)))
+      (is (= (all-datasets store) #{"test"}))
+      (is (not (= (get-dataset store "test2") nil)))
+      (is (= (all-datasets store) #{"test" "test2"}))
+      (delete-dataset store "test")
+      (is (= (all-datasets store) #{"test"})))))
