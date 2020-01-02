@@ -20,11 +20,11 @@
           #(when (not (contains? % dateset-name))
             (conj % [dateset-name {}]))) dateset-name))
       (delete-dataset
-        [this dateset-name]
-        (comment remove dataset-name))
+        [this dataset-name]
+        (swap! datasets #(dissoc % dataset-name)))
       (all-datasets
         [this]
-        (keys datasets))
+        (set (keys @datasets)))
       (close
         [this]
         (comment "do nothing"))

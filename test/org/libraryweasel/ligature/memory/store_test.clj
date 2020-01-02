@@ -21,4 +21,4 @@
       (is (not (= (get-dataset store "test2") nil)))
       (is (= (all-datasets store) #{"test" "test2"}))
       (delete-dataset store "test")
-      (is (= (all-datasets store) #{"test"})))))
+      (is (= (all-datasets store) #{"test2"})))))
