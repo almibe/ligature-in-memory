@@ -37,38 +37,38 @@
   [store name]
   (reify LigatureDataset
     (add-statements
-      [this statements]
-      )
+      [this & statements]
+      (comment TODO))
     (remove-statements
-      [this statements]
-      )
+      [this & statements]
+      (comment TODO))
     (all-statements
       [this]
-      )
+      (comment TODO))
     (new-identifier
       [this]
-      )
+      (comment TODO))
     (match-statements
       [this pattern]
-      )
+      (comment TODO))
     (dataset-name
       [this]
-      )
+      (comment TODO))
     (add-rules
-      [this rules]
-      )
+      [this & rules]
+      (comment TODO))
     (remove-rules
-      [this rules]
-      )
+      [this & rules]
+      (comment TODO))
     (all-rules
       [this]
-      )
+      (comment TODO))
     (match-rules
       [this pattern]
-      )
+      (comment TODO))
     (sparql-query
       [this query]
-      )
+      (comment TODO))
     (wander-query
       [this query]
-      )))
+      (comment TODO))))
