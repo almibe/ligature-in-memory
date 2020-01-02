@@ -37,10 +37,10 @@
   [store name]
   (reify LigatureDataset
     (add-statements
-      [this & statements]
+      [this statements]
       (comment TODO))
     (remove-statements
-      [this & statements]
+      [this statements]
       (comment TODO))
     (all-statements
       [this]
@@ -55,10 +55,10 @@
       [this]
       (comment TODO))
     (add-rules
-      [this & rules]
+      [this rules]
       (comment TODO))
     (remove-rules
-      [this & rules]
+      [this rules]
       (comment TODO))
     (all-rules
       [this]

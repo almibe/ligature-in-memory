@@ -25,9 +25,9 @@
       (testing "Basic dataset functionality."
         (let [dataset (get-dataset store "test")]
           (is (= (set (all-statements dataset)) #{}))
-          (add-statements dataset (statement "This" :a "test"))
+          (add-statements dataset [(statement "This" :a "test")])
           (is (= (set (all-statements dataset)) #{(statement "This" :a "test")}))
-          (add-statements dataset (statement "a" :a "a") (statement "b" :a "b"))
+          (add-statements dataset [(statement "a" :a "a") (statement "b" :a "b")])
           (add-statements dataset [(statement "c" :a "c" "c")])
           (is (= (set (all-statements dataset)) #{(statement "This" :a "test")
                                                   (statement "a" :a "a")
