@@ -21,4 +21,15 @@
       (is (not (= (get-dataset store "test2") nil)))
       (is (= (all-datasets store) #{"test" "test2"}))
       (delete-dataset store "test")
-      (is (= (all-datasets store) #{"test2"})))))
+      (is (= (all-datasets store) #{"test2"}))
+      (testing "Basic dataset functionality."
+        (let [dataset (get-dataset store "test")]
+          (is (= (set (all-statements dataset)) #{}))
+          (add-statements dataset (statement "This" :a "test"))
+          (is (= (set (all-statements dataset)) #{(statement "This" :a "test")}))
+          (add-statements dataset (statement "a" :a "a") (statement "b" :a "b"))
+          (add-statements dataset [(statement "c" :a "c" "c")])
+          (is (= (set (all-statements dataset)) #{(statement "This" :a "test")
+                                                  (statement "a" :a "a")
+                                                  (statement "b" :a "b")
+                                                  (statement "c" :a "c" "c")})))))))
