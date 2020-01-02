@@ -9,29 +9,6 @@
 (ns org.libraryweasel.ligature.memory.store
   (:require [org.libraryweasel.ligature.core :refer :all]))
 
-(defn ligature-memory-store
-  "Creates an in-memory implementation of the LigatureStore protocol."
-  []
-  (let [datasets (atom {})]
-    (reify LigatureStore
-      (get-dataset
-        [this dateset-name]
-        ((swap! datasets
-          #(when (not (contains? % dateset-name))
-            (conj % [dateset-name {}]))) dateset-name))
-      (delete-dataset
-        [this dataset-name]
-        (swap! datasets #(dissoc % dataset-name)))
-      (all-datasets
-        [this]
-        (set (keys @datasets)))
-      (close
-        [this]
-        (comment "do nothing"))
-      (location
-        [this]
-        "memory"))))
-
 (defn- ligature-memory-dataset
   "Creates an in-memory implementation of the LigatureDataset protocol."
   [store name]
@@ -44,7 +21,7 @@
       (comment TODO))
     (all-statements
       [this]
-      (comment TODO))
+      (get-dataset store name))
     (new-identifier
       [this]
       (comment TODO))
@@ -72,3 +49,26 @@
     (wander-query
       [this query]
       (comment TODO))))
+
+(defn ligature-memory-store
+  "Creates an in-memory implementation of the LigatureStore protocol."
+  []
+  (let [datasets (atom {})]
+    (reify LigatureStore
+      (get-dataset
+        [this dateset-name]
+        ((swap! datasets
+          #(when (not (contains? % dateset-name))
+            (conj % [dateset-name (ligature-memory-dataset this dateset-name)]))) dateset-name))
+      (delete-dataset
+        [this dataset-name]
+        (swap! datasets #(dissoc % dataset-name)))
+      (all-datasets
+        [this]
+        (set (keys @datasets)))
+      (close
+        [this]
+        (comment "do nothing"))
+      (location
+        [this]
+        "memory"))))
