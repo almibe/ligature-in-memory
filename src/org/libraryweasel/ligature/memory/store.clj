@@ -65,12 +65,12 @@
     (reify LigatureStore
       (collection
         [this collection-name]
-        ((swap! store
-          #(when (not (contains? % collection-name))
-            (conj % [collection-name (ligature-memory-collection this collection-name)]))) collection-name))
+        (ligature-memory-collection store collection-name))
       (delete-collection
         [this collection-name]
-        (swap! store #(dissoc % collection-name)))
+        (swap! store (do
+                       #(dissoc (:rules %) collection-name)
+                       #(dissoc (:data %) collection-name))))
       (all-collections
         [this]
         (set (keys (:data @store))))
