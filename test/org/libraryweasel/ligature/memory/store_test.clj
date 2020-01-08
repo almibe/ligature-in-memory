@@ -39,4 +39,18 @@
                                                      [ "c" :a "c" "c"]}))
           (remove-statements collection [["a" :a "a"] ["b" :a "b"] ["d" :a "d"]])
           (is (= (set (all-statements collection)) #{[ "This" :a "test"]
-                                                     [ "c" :a "c" "c"]})))))))
+                                                     [ "c" :a "c" "c"]}))
+          (add-statements collection [[(new-identifier collection)
+                                       "knows"
+                                       (new-identifier collection)
+                                       (new-identifier collection)]])
+          (is (= (set (all-statements collection)) #{[ "This" :a "test"]
+                                                     ["_:1" "knows" "_:2" "_:3"]
+                                                     [ "c" :a "c" "c"]}))
+          (is (= (set (match-statements collection [:? :? :? :?])) #{[ "This" :a "test"]
+                                                                     ["_:1" "knows" "_:2" "_:3"]
+                                                                     [ "c" :a "c" "c"]}))
+          (is (= (set (match-statements collection [:? :? :?])) #{[ "This" :a "test"]}))
+          (is (= (set (match-statements collection [:? :a :? :?])) #{[ "This" :a "test"]
+                                                                     [ "c" :a "c" "c"]}))
+          (is (= (set (match-statements collection ["c" :? "c" :?])) #{[ "c" :a "c" "c"]})))))))
