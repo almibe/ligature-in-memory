@@ -29,6 +29,30 @@
   [store name pattern]
   (comment TODO))
 
+(defn- add-rules-impl
+  [store name rules]
+  (comment TODO))
+
+(defn- remove-rules-impl
+  [store name rules]
+  (comment TODO))
+
+(defn- all-rules-impl
+  [store name]
+  (comment TODO))
+
+(defn- match-rules-impl
+  [store name pattern]
+  (comment TODO))
+
+(defn- sparql-query-impl
+  [store name query]
+  (comment TODO))
+
+(defn- wander-query-impl
+  [store name query]
+  (comment TODO))
+
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
   [store name]
@@ -53,22 +77,22 @@
       name)
     (add-rules
       [this rules]
-      (comment TODO))
+      (swap! store #(add-rules-impl % name rules)))
     (remove-rules
       [this rules]
-      (comment TODO))
+      (swap! store #(remove-rules-impl % name rules)))
     (all-rules
       [this]
-      (comment TODO))
+      (swap! store #(all-rules-impl % name)))
     (match-rules
       [this pattern]
-      (comment TODO))
+      (swap! store #(match-rules-impl % name pattern)))
     (sparql-query
       [this query]
-      (comment TODO))
+      (swap! store #(sparql-query-impl % name query)))
     (wander-query
       [this query]
-      (comment TODO))))
+      (swap! store #(wander-query-impl % name query)))))
 
 (defn ligature-memory-store
   "Creates an in-memory implementation of the LigatureStore protocol."
