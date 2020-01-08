@@ -12,25 +12,23 @@
             [org.libraryweasel.ligature.core :refer :all]))
 
 (deftest store-test
-  (testing "Create new store."
-    (is (not (= (ligature-memory-store) nil))))
-  (testing "Basic store functionality."
+  (testing "Basic empty store functionality."
     (let [store (ligature-memory-store)]
       (is (not (= (collection store "test") nil)))
-      (is (= (all-collections store) #{"test"}))
+      (is (= (all-collections store) #{}))
       (is (not (= (collection store "test2") nil)))
-      (is (= (all-collections store) #{"test" "test2"}))
+      (is (= (all-collections store) #{}))
       (delete-collection store "test")
-      (is (= (all-collections store) #{"test2"}))
+      (is (= (all-collections store) #{}))
       (testing "Basic collection functionality."
         (let [collection (collection store "test")]
           (is (= (collection-name collection) "test"))
           (is (= (set (all-statements collection)) #{}))
-          (add-statements collection [(statement "This" :a "test")])
-          (is (= (set (all-statements collection)) #{(statement "This" :a "test")}))
-          (add-statements collection [(statement "a" :a "a") (statement "b" :a "b")])
-          (add-statements collection [(statement "c" :a "c" "c")])
-          (is (= (set (all-statements collection)) #{(statement "This" :a "test")
-                                                  (statement "a" :a "a")
-                                                  (statement "b" :a "b")
-                                                  (statement "c" :a "c" "c")})))))))
+          (add-statements collection [[ "This" :a "test"]])
+          (is (= (set (all-statements collection)) #{[ "This" :a "test"]}))
+          (add-statements collection [[ "a" :a "a"] [ "b" :a "b"]])
+          (add-statements collection [[ "c" :a "c" "c"]])
+          (is (= (set (all-statements collection)) #{[ "This" :a "test"]
+                                                  [ "a" :a "a"]
+                                                  [ "b" :a "b"]
+                                                  [ "c" :a "c" "c"]})))))))

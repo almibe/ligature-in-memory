@@ -23,13 +23,13 @@
   (reify LigatureCollection
     (add-statements
       [this statements]
-      (swap! store #(add-statements-impl store name statements)))
+      (swap! store #(add-statements-impl % name statements)))
     (remove-statements
       [this statements]
       (comment TODO))
     (all-statements
       [this]
-      (collection store name))
+      (keys (:data @store)))
     (new-identifier
       [this]
       (comment TODO))
