@@ -31,4 +31,12 @@
           (is (= (set (all-statements collection)) #{[ "This" :a "test"]
                                                   [ "a" :a "a"]
                                                   [ "b" :a "b"]
-                                                  [ "c" :a "c" "c"]})))))))
+                                                  [ "c" :a "c" "c"]}))
+          (remove-statements collection [])
+          (is (= (set (all-statements collection)) #{[ "This" :a "test"]
+                                                     [ "a" :a "a"]
+                                                     [ "b" :a "b"]
+                                                     [ "c" :a "c" "c"]}))
+          (remove-statements collection [["a" :a "a"] ["b" :a "b"] ["d" :a "d"]])
+          (is (= (set (all-statements collection)) #{[ "This" :a "test"]
+                                                     [ "c" :a "c" "c"]})))))))
