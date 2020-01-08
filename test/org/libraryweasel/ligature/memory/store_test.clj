@@ -24,6 +24,7 @@
       (is (= (all-datasets store) #{"test2"}))
       (testing "Basic dataset functionality."
         (let [dataset (get-dataset store "test")]
+          (is (= (dataset-name dataset) "test"))
           (is (= (set (all-statements dataset)) #{}))
           (add-statements dataset [(statement "This" :a "test")])
           (is (= (set (all-statements dataset)) #{(statement "This" :a "test")}))

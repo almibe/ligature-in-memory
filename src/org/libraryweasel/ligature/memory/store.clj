@@ -9,28 +9,36 @@
 (ns org.libraryweasel.ligature.memory.store
   (:require [org.libraryweasel.ligature.core :refer :all]))
 
-(defn- ligature-memory-dataset
-  "Creates an in-memory implementation of the LigatureDataset protocol."
+; TODO possibly rewrite strategy
+;; have a single swap in the first line of the protocol impl function where it is needed
+;; and then perform all functionality in private functions that don't directly call swap ever
+
+(defn- add-statements-impl
+  [store name statements]
+  )
+
+(defn- ligature-memory-collection
+  "Creates an in-memory implementation of the LigatureCollection protocol."
   [store name]
-  (reify LigatureDataset
+  (reify LigatureCollection
     (add-statements
       [this statements]
-      (comment TODO))
+      (swap! store #(add-statements-impl store name statements)))
     (remove-statements
       [this statements]
       (comment TODO))
     (all-statements
       [this]
-      (get-dataset store name))
+      (collection store name))
     (new-identifier
       [this]
       (comment TODO))
     (match-statements
       [this pattern]
       (comment TODO))
-    (dataset-name
+    (collection-name
       [this]
-      (comment TODO))
+      name)
     (add-rules
       [this rules]
       (comment TODO))
@@ -53,22 +61,22 @@
 (defn ligature-memory-store
   "Creates an in-memory implementation of the LigatureStore protocol."
   []
-  (let [datasets (atom {})]
+  (let [store (atom {:data {} :rules {}})]
     (reify LigatureStore
-      (get-dataset
-        [this dateset-name]
-        ((swap! datasets
-          #(when (not (contains? % dateset-name))
-            (conj % [dateset-name (ligature-memory-dataset this dateset-name)]))) dateset-name))
-      (delete-dataset
-        [this dataset-name]
-        (swap! datasets #(dissoc % dataset-name)))
-      (all-datasets
+      (collection
+        [this collection-name]
+        ((swap! store
+          #(when (not (contains? % collection-name))
+            (conj % [collection-name (ligature-memory-collection this collection-name)]))) collection-name))
+      (delete-collection
+        [this collection-name]
+        (swap! store #(dissoc % collection-name)))
+      (all-collections
         [this]
-        (set (keys @datasets)))
+        (set (keys (:data @store))))
       (close
         [this]
-        (comment "do nothing"))
-      (location
+        (swap! store {:data {} :rules {}}))
+      (details
         [this]
-        "memory"))))
+        {:location "memory"}))))
