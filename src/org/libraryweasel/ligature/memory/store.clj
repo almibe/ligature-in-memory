@@ -15,7 +15,19 @@
 
 (defn- add-statements-impl
   [store name statements]
-  )
+  (comment TODO))
+
+(defn- remove-statements-impl
+  [store name statements]
+  (comment TODO))
+
+(defn- new-identifier-impl
+  [store name]
+  (comment TODO))
+
+(defn- match-statements-impl
+  [store name pattern]
+  (comment TODO))
 
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
@@ -26,16 +38,16 @@
       (swap! store #(add-statements-impl % name statements)))
     (remove-statements
       [this statements]
-      (comment TODO))
+      (swap! store #(remove-statements-impl % name statements)))
     (all-statements
       [this]
       (keys (:data @store)))
     (new-identifier
       [this]
-      (comment TODO))
+      (swap! store #(new-identifier-impl % name)))
     (match-statements
       [this pattern]
-      (comment TODO))
+      (swap! store #(match-statements-impl % name pattern)))
     (collection-name
       [this]
       name)
