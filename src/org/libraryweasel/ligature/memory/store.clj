@@ -7,7 +7,8 @@
 ; SPDX-License-Identifier: EPL-2.0
 
 (ns org.libraryweasel.ligature.memory.store
-  (:require [org.libraryweasel.ligature.core :refer :all]))
+  (:require [org.libraryweasel.ligature.core :refer :all])
+  (:require [clojure.spec.alpha :as s]))
 
 ; TODO possibly rewrite strategy
 ;; have a single swap in the first line of the protocol impl function where it is needed
@@ -15,43 +16,43 @@
 
 (defn- add-statements-impl
   [store name statements]
-  (comment TODO))
+  (comment TODO 1))
 
 (defn- remove-statements-impl
   [store name statements]
-  (comment TODO))
+  (comment TODO 1))
 
 (defn- new-identifier-impl
   [store name]
-  (comment TODO))
+  (comment TODO 1))
 
 (defn- match-statements-impl
   [store name pattern]
-  (comment TODO))
+  (comment TODO 1))
 
 (defn- add-rules-impl
   [store name rules]
-  (comment TODO))
+  (comment TODO 2))
 
 (defn- remove-rules-impl
   [store name rules]
-  (comment TODO))
+  (comment TODO 2))
 
 (defn- all-rules-impl
   [store name]
-  (comment TODO))
+  (comment TODO 2))
 
 (defn- match-rules-impl
   [store name pattern]
-  (comment TODO))
+  (comment TODO 2))
 
 (defn- sparql-query-impl
   [store name query]
-  (comment TODO))
+  (comment TODO 3))
 
 (defn- wander-query-impl
   [store name query]
-  (comment TODO))
+  (comment TODO 3))
 
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
@@ -97,7 +98,7 @@
 (defn ligature-memory-store
   "Creates an in-memory implementation of the LigatureStore protocol."
   []
-  (let [store (atom {:data {} :rules {}})]
+  (let [store (atom {})]
     (reify LigatureStore
       (collection
         [this collection-name]
@@ -112,7 +113,7 @@
         (set (keys (:data @store))))
       (close
         [this]
-        (swap! store {:data {} :rules {}}))
+        (swap! store {}))
       (details
         [this]
         {:location "memory"}))))
