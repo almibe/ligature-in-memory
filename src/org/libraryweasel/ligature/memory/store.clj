@@ -7,8 +7,9 @@
 ; SPDX-License-Identifier: EPL-2.0
 
 (ns org.libraryweasel.ligature.memory.store
-  (:require [org.libraryweasel.ligature.core :refer :all])
-  (:require [clojure.spec.alpha :as s]))
+  (:require [org.libraryweasel.ligature.core :as l])
+  (:require [clojure.spec.alpha :as s])
+  (:require [clojure.set :as set]))
 
 ; TODO possibly rewrite strategy
 ;; have a single swap in the first line of the protocol impl function where it is needed
@@ -16,11 +17,19 @@
 
 (defn- add-statements-impl
   [store name statements]
-  (comment TODO 1))
+  (if (s/valid? :l/statements statements)
+    (conj (if (contains? store name)
+      (store name)
+      (assoc store name (sorted-set))) statements)
+    (throw ex-info "Invalid statement.")))
 
 (defn- remove-statements-impl
   [store name statements]
-  (comment TODO 1))
+  (if (s/valid? :l/statements statements)
+    (set/difference (if (contains? store name)
+      (store name)
+      (assoc store name (sorted-set))) statements)
+    (throw ex-info "Invalid statement.")))
 
 (defn- new-identifier-impl
   [store name]
@@ -57,7 +66,7 @@
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
   [store name]
-  (reify LigatureCollection
+  (reify l/LigatureCollection
     (add-statements
       [this statements]
       (swap! store #(add-statements-impl % name statements)))
@@ -70,7 +79,7 @@
     (new-identifier
       [this]
       (swap! store #(new-identifier-impl % name)))
-    (match-statements
+    (l/match-statements
       [this pattern]
       (swap! store #(match-statements-impl % name pattern)))
     (collection-name
@@ -99,7 +108,7 @@
   "Creates an in-memory implementation of the LigatureStore protocol."
   []
   (let [store (atom {})]
-    (reify LigatureStore
+    (reify l/LigatureStore
       (collection
         [this collection-name]
         (ligature-memory-collection store collection-name))
