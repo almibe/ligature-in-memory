@@ -17,19 +17,19 @@
 
 (defn- add-statements-impl
   [store name statements]
-  (if (s/valid? :l/statements statements)
+  (if (s/valid? ::l/statements statements)
     (conj (if (contains? store name)
       (store name)
       (assoc store name (sorted-set))) statements)
-    (throw ex-info "Invalid statement.")))
+    (throw (ex-info "Invalid statement." {}))))
 
 (defn- remove-statements-impl
   [store name statements]
-  (if (s/valid? :l/statements statements)
+  (if (s/valid? ::l/statements statements)
     (set/difference (if (contains? store name)
       (store name)
       (assoc store name (sorted-set))) statements)
-    (throw ex-info "Invalid statement.")))
+    (throw (ex-info "Invalid statement." {}))))
 
 (defn- new-identifier-impl
   [store name]
