@@ -18,9 +18,9 @@
 (defn- add-statements-impl
   [store name statements]
   (if (s/valid? ::l/statements statements)
-    (conj (if (contains? store name)
+    (assoc-in store [name :data] (conj (if (contains? store name)
       (store name)
-      ((assoc store name (sorted-set)) name)) statements)
+      (sorted-set)) statements))
     (throw (ex-info "Invalid statement." {}))))
 
 (defn- remove-statements-impl
@@ -33,7 +33,9 @@
 
 (defn- all-statements-impl
   [store name]
-  (if (contains? store name) (:data (store name)) (sorted-set)))
+  (if (contains? store name)
+    (:data (store name))
+    (sorted-set)))
 
 (defn- new-identifier-impl
   [store name]
@@ -118,9 +120,7 @@
         (ligature-memory-collection store collection-name))
       (delete-collection
         [this collection-name]
-        (swap! store (do
-                       #(dissoc (:rules %) collection-name)
-                       #(dissoc (:data %) collection-name))))
+        (swap! store #(dissoc % collection-name)))
       (all-collections
         [this]
         (set (keys @store)))
