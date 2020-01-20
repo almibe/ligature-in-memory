@@ -18,7 +18,7 @@
 (defn- add-statements-impl
   [store name statements]
   (if (s/valid? ::l/statements statements)
-    (assoc-in store [name :data] (conj (if (contains? store name)
+    (assoc-in store [name :data] (into (if (contains? store name)
       (:data (store name))
       (sorted-set)) statements))
     (throw (ex-info "Invalid statement." {}))))
