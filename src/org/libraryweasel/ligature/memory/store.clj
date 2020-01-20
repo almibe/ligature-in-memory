@@ -20,16 +20,20 @@
   (if (s/valid? ::l/statements statements)
     (conj (if (contains? store name)
       (store name)
-      (assoc store name (sorted-set))) statements)
+      ((assoc store name (sorted-set)) name)) statements)
     (throw (ex-info "Invalid statement." {}))))
 
 (defn- remove-statements-impl
   [store name statements]
   (if (s/valid? ::l/statements statements)
     (set/difference (if (contains? store name)
-      (store name)
+      ((:data store name))
       (assoc store name (sorted-set))) statements)
     (throw (ex-info "Invalid statement." {}))))
+
+(defn- all-statements-impl
+  [store name]
+  (if (contains? store name) (:data (store name)) (sorted-set)))
 
 (defn- new-identifier-impl
   [store name]
@@ -75,7 +79,7 @@
       (swap! store #(remove-statements-impl % name statements)))
     (all-statements
       [this]
-      (keys (:data @store)))
+      (all-statements-impl @store name))
     (new-identifier
       [this]
       (swap! store #(new-identifier-impl % name)))
@@ -119,7 +123,7 @@
                        #(dissoc (:data %) collection-name))))
       (all-collections
         [this]
-        (set (keys (:data @store))))
+        (set (keys @store)))
       (close
         [this]
         (swap! store {}))
