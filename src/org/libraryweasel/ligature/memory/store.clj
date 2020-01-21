@@ -21,15 +21,15 @@
     (assoc-in store [name :data] (into (if (contains? store name)
       (:data (store name))
       (sorted-set)) statements))
-    (throw (ex-info "Invalid statement." {}))))
+    (throw (ex-info "Invalid statement." (s/explain ::l/statements statements)))))
 
 (defn- remove-statements-impl
   [store name statements]
   (if (s/valid? ::l/statements statements)
-    (set/difference (if (contains? store name)
-      ((:data store name))
-      (assoc store name (sorted-set))) statements)
-    (throw (ex-info "Invalid statement." {}))))
+    (assoc-in store [name :data] (set/difference (if (contains? store name)
+      (:data (store name))
+      (sorted-set)) statements))
+    (throw (ex-info "Invalid statement." (s/explain ::l/statements statements)))))
 
 (defn- all-statements-impl
   [store name]
