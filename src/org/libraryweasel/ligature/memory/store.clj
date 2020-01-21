@@ -37,9 +37,18 @@
     (:data (store name))
     (sorted-set)))
 
+(defn- first-new-identifier
+  [store name]
+  )
+
 (defn- new-identifier-impl
   [store name]
-  (comment TODO 1))
+  ; TODO see if store -> name -> :id-counter exists
+  ; TODO if so increment and (str "_:" new-id)
+  ; TODO if not assoc store -> name -> :id-counter 1 and return "_:1"
+  (if (get-in store [name :id-counter])
+    ()
+    (first-new-identifier store name)))
 
 (defn- match-statements-impl
   [store name pattern]
