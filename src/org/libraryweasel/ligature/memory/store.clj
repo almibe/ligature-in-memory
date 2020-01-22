@@ -39,15 +39,12 @@
 
 (defn- first-new-identifier
   [store name]
-  )
+  (throw (ex-info "Not impl'd" {})))
 
 (defn- new-identifier-impl
   [store name]
-  ; TODO see if store -> name -> :id-counter exists
-  ; TODO if so increment and (str "_:" new-id)
-  ; TODO if not assoc store -> name -> :id-counter 1 and return "_:1"
-  (if (get-in store [name :id-counter])
-    ()
+  (if-let [id-counter (get-in store [name :id-counter])]
+    (assoc-in store [name :id-counter] (inc id-counter))
     (first-new-identifier store name)))
 
 (defn- match-statements-impl
@@ -93,7 +90,7 @@
       (all-statements-impl @store name))
     (new-identifier
       [this]
-      (swap! store #(new-identifier-impl % name)))
+      (str "_:" (get-in [name :id-counter] (swap! store #(new-identifier-impl % name)))))
     (l/match-statements
       [this pattern]
       (swap! store #(match-statements-impl % name pattern)))
