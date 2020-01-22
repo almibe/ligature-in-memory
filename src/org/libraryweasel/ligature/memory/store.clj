@@ -39,7 +39,7 @@
 
 (defn- first-new-identifier
   [store name]
-  (throw (ex-info "Not impl'd" {})))
+  (assoc-in store [name :id-counter] 1))
 
 (defn- new-identifier-impl
   [store name]
@@ -90,7 +90,7 @@
       (all-statements-impl @store name))
     (new-identifier
       [this]
-      (str "_:" (get-in [name :id-counter] (swap! store #(new-identifier-impl % name)))))
+      (str "_:" (get-in (swap! store #(new-identifier-impl % name)) [name :id-counter])))
     (l/match-statements
       [this pattern]
       (swap! store #(match-statements-impl % name pattern)))
