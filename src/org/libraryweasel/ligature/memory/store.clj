@@ -49,7 +49,9 @@
 
 (defn- match-statements-impl
   [store name pattern]
-  (comment TODO 1))
+  (if-let [collection (get-in store [name :data])]
+    (filter (comment TODO) collection)
+    #{}))
 
 (defn- add-rules-impl
   [store name rules]
