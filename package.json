@@ -1,0 +1,25 @@
+{
+  "name": "@almibe/ligature-in-memory",
+  "version": "0.1.0-SNAPSHOT",
+  "description": "An in-memory implementation of Ligature.",
+  "main": "index.ts",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/almibe/ligature-in-memory.git"
+  },
+  "author": "Alex Michael Berry",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/almibe/ligature-in-memory/issues"
+  },
+  "homepage": "https://github.com/almibe/ligature-in-memory#readme",
+  "devDependencies": {
+    "jest": "^25.1.0"
+  }
+}
