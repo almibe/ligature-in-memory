@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/almibe/ligature-in-memory#readme",
   "devDependencies": {
+    "@almibe/ligature": "file:../ligature",
     "jest": "^25.1.0"
   }
 }
