@@ -1,7 +1,7 @@
 # ligature-in-memory
-An in-memory implementation of Ligature.
+An in-memory implementation of the [Ligature](https://github.com/almibe/ligature) api.
 
 ## Building
-This project requires Leiningen to be installed.
-See https://leiningen.org for installation instructions.
-Once that is set up use `lein test` to run tests `lein install` to install the artifact locally.
+This project requires npm to be installed.
+See https://npmjs.org for installation instructions.
+Once that is set up use `npm test` to run tests `npm run build` to build the artifact locally.
