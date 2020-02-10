@@ -4,6 +4,8 @@
 
 import * as lig from "@almibe/ligature"
 
+export const createInMemoryStore = () => new InMemoryStore();
+
 class InMemoryStore implements lig.LigatureStore {
   collection(collectionName: string): Promise<lig.LigatureCollection> {
     throw new Error("Method not implemented.");

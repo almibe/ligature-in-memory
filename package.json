@@ -2,11 +2,19 @@
   "name": "@almibe/ligature-in-memory",
   "version": "0.1.0-SNAPSHOT",
   "description": "An in-memory implementation of Ligature.",
-  "main": "index.ts",
+  "main": "dist/index.ts",
+  "types": "dist/index.d.ts",
   "directories": {
     "test": "test"
   },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/"
+  ],
   "scripts": {
+    "prepublish": "npm test",
+    "build": "tsc",
     "test": "jest"
   },
   "repository": {
@@ -21,6 +29,12 @@
   "homepage": "https://github.com/almibe/ligature-in-memory#readme",
   "devDependencies": {
     "@almibe/ligature": "file:../ligature",
-    "jest": "^25.1.0"
+    "@types/jest": "^25.1.2",
+    "jest": "^25.1.0",
+    "ts-jest": "^25.2.0",
+    "typescript": "^3.7.5"
+  },
+  "dependencies": {
+    "level-mem": "^5.0.1"
   }
 }
