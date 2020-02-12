@@ -3,12 +3,18 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import * as lig from "@almibe/ligature"
+import * as level from "level-mem"
+import * as sub from "subleveldown"
 
 export const createInMemoryStore = () => new InMemoryStore();
 
 class InMemoryStore implements lig.LigatureStore {
-  collection(collectionName: string): Promise<lig.LigatureCollection> {
-    throw new Error("Method not implemented.");
+  private store = level()
+
+  async collection(collectionName: string): Promise<lig.LigatureCollection> {
+    const collectionDB = sub(this.store, "collections")
+    
+    return Promise.resolve(new InMemoryCollection(collectionName, this.store))
   }
   deleteCollection(collectionName: string): Promise<null> {
     throw new Error("Method not implemented.");
@@ -25,6 +31,14 @@ class InMemoryStore implements lig.LigatureStore {
 }
 
 class InMemoryCollection implements lig.LigatureCollection {
+  private name: string
+  private store: any
+
+  constructor(name: string, store: any) {
+    this.name = name
+    this.store = store
+  }
+
   addStatements(statements: lig.Statements): Promise<null> {
     throw new Error("Method not implemented.");
   }
