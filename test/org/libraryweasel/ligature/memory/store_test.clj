@@ -1,13 +1,12 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+; Copyright (c) 2019-2020 Alex Michael Berry
+;
+; This program and the accompanying materials are made
+; available under the terms of the Eclipse Public License 2.0
+; which is available at https://www.eclipse.org/legal/epl-2.0/
+;
+; SPDX-License-Identifier: EPL-2.0
 
-
-
-
-
- /*
- (ns org.libraryweasel.ligature.memory.store-test
+(ns org.libraryweasel.ligature.memory.store-test
   (:require [clojure.test :refer :all]
             [org.libraryweasel.ligature.memory.store :refer :all]
             [org.libraryweasel.ligature.core :refer :all]))
@@ -55,5 +54,3 @@
           (is (= (set (match-statements collection [:? :a :? :?])) #{["This" :a "test"]
                                                                      ["c" :a "c" "c"]}))
           (is (= (set (match-statements collection ["c" :? "c" :?])) #{["c" :a "c" "c"]})))))))
-
- */
