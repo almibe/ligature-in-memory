@@ -79,11 +79,13 @@
 
 (defn- ligature-read-tx
   "Create a read-only transaction for Ligature."
-  [])
+  [store]
+  (reify l/ReadTx))
 
 (defn- ligature-write-tx
   "Create a read/write transaction for Ligature."
-  [])
+  [store]
+  (reify l/WriteTx))
 
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
@@ -121,16 +123,16 @@
 ;      (swap! store #(match-rules-impl % name pattern)))
     (compute
       [this f]
-      )
+      (f (ligature-read-tx store)))
     (write
       [this f]
-      )
-    (sparql-query
-      [this query]
-      (swap! store #(sparql-query-impl % name query)))
-    (wander-query
-      [this query]
-      (swap! store #(wander-query-impl % name query)))))
+      (f (ligature-write-tx store)))))
+;    (sparql-query
+;      [this query]
+;      (swap! store #(sparql-query-impl % name query)))
+;    (wander-query
+;      [this query]
+;      (swap! store #(wander-query-impl % name query)))))
 
 (defn ligature-memory-store
   "Creates an in-memory implementation of the LigatureStore protocol."
