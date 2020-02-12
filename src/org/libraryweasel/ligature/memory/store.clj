@@ -77,40 +77,54 @@
   [store name query]
   (comment TODO 3))
 
+(defn- ligature-read-tx
+  "Create a read-only transaction for Ligature."
+  [])
+
+(defn- ligature-write-tx
+  "Create a read/write transaction for Ligature."
+  [])
+
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
   [store name]
   (reify l/LigatureCollection
-    (add-statements
-      [this statements]
-      (swap! store #(add-statements-impl % name statements)))
-    (remove-statements
-      [this statements]
-      (swap! store #(remove-statements-impl % name statements)))
-    (all-statements
-      [this]
-      (all-statements-impl @store name))
-    (new-identifier
-      [this]
-      (str "_:" (get-in (swap! store #(new-identifier-impl % name)) [name :id-counter])))
-    (l/match-statements
-      [this pattern]
-      (swap! store #(match-statements-impl % name pattern)))
+;    (add-statements
+;      [this statements]
+;      (swap! store #(add-statements-impl % name statements)))
+;    (remove-statements
+;      [this statements]
+;      (swap! store #(remove-statements-impl % name statements)))
+;    (all-statements
+;      [this]
+;      (all-statements-impl @store name))
+;    (new-identifier
+;      [this]
+;      (str "_:" (get-in (swap! store #(new-identifier-impl % name)) [name :id-counter])))
+;    (l/match-statements
+;      [this pattern]
+;      (swap! store #(match-statements-impl % name pattern)))
     (collection-name
       [this]
       name)
-    (add-rules
-      [this rules]
-      (swap! store #(add-rules-impl % name rules)))
-    (remove-rules
-      [this rules]
-      (swap! store #(remove-rules-impl % name rules)))
-    (all-rules
-      [this]
-      (swap! store #(all-rules-impl % name)))
-    (match-rules
-      [this pattern]
-      (swap! store #(match-rules-impl % name pattern)))
+;    (add-rules
+;      [this rules]
+;      (swap! store #(add-rules-impl % name rules)))
+;    (remove-rules
+;      [this rules]
+;      (swap! store #(remove-rules-impl % name rules)))
+;    (all-rules
+;      [this]
+;      (swap! store #(all-rules-impl % name)))
+;    (match-rules
+;      [this pattern]
+;      (swap! store #(match-rules-impl % name pattern)))
+    (compute
+      [this f]
+      )
+    (write
+      [this f]
+      )
     (sparql-query
       [this query]
       (swap! store #(sparql-query-impl % name query)))
