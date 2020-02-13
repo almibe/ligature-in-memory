@@ -85,7 +85,7 @@
 (defn- ligature-write-tx
   "Create a read/write transaction for Ligature."
   [store]
-  (reify l/WriteTx))
+  (reify l/ReadTx l/WriteTx))
 
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
