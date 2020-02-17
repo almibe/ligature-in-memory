@@ -70,43 +70,42 @@
         (is (= (set (all-rules tx)) #{}))
         (cancel tx))))
 
-  (testing "matching statements in collections")
+  (testing "matching statements in collections"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (writeTx (collection store "test"))]
+        (add-statement tx ["This" :a "test"])
+        (add-statement tx [(new-identifier tx) :a "test"])
+        (add-statement tx ["a" "knows" "b"])
+        (add-statement tx ["b" "knows" "c"])
+        (add-statement tx ["c" "knows" "a"])
+        (add-statement tx ["c" "knows" "a"]) ; dupe
+        (add-statement tx [(new-identifier tx) (new-identifier tx) (new-identifier tx) (new-identifier tx)])
+        (commit tx))
+      (let [tx (readTx (collection store "test"))]
+        (is (= (count (match-statements tx [:? :? :?])) 6))
+        (is (= (set (match-statements tx) [:? :a :?]) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-statements tx) [:? :a "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-statements tx) [:? :? "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-statements tx) [:? :? :? ":_5"]) #{["_:2" "_:3" "_:4" "_:5"]}))
+        (cancel tx))))
 
-  (testing "matching rules in collections"))
-  
-  ; (testing "Basic empty store functionality."
-  ;   (let [store (ligature-memory-store)]
-  ;     (testing "Basic collection functionality."
-  ;       (let [collection (collection store "test")]
-  ;         (is (= (collection-name collection) "test"))
-  ;         (is (= (set (all-statements collection)) #{}))
-  ;         (add-statements collection [["This" :a "test"]])
-  ;         (is (= (all-statements collection) #{["This" :a "test"]}))
-  ;         (add-statements collection [["a" :a "a"] ["b" :a "b"]])
-  ;         (add-statements collection [["c" :a "c" "c"]])
-  ;         (is (= (set (all-statements collection)) #{["This" :a "test"]
-  ;                                                    ["a" :a "a"]
-  ;                                                    ["b" :a "b"]
-  ;                                                    ["c" :a "c" "c"]}))
-  ;         (remove-statements collection [])
-  ;         (is (= (set (all-statements collection)) #{["This" :a "test"]
-  ;                                                    ["a" :a "a"]
-  ;                                                    ["b" :a "b"]
-  ;                                                    ["c" :a "c" "c"]}))
-  ;         (remove-statements collection [["a" :a "a"] ["b" :a "b"] ["d" :a "d"]])
-  ;         (is (= (set (all-statements collection)) #{["This" :a "test"]
-  ;                                                    ["c" :a "c" "c"]}))
-  ;         (add-statements collection [[(new-identifier collection)
-  ;                                      "knows"
-  ;                                      (new-identifier collection)
-  ;                                      (new-identifier collection)]])
-  ;         (is (= (set (all-statements collection)) #{["This" :a "test"]
-  ;                                                    ["_:1" "knows" "_:2" "_:3"]
-  ;                                                    ["c" :a "c" "c"]}))
-  ;         (is (= (set (match-statements collection [:? :? :? :?])) #{["This" :a "test"]
-  ;                                                                    ["_:1" "knows" "_:2" "_:3"]
-  ;                                                                    ["c" :a "c" "c"]}))
-  ;         (is (= (set (match-statements collection [:? :? :?])) #{["This" :a "test"]}))
-  ;         (is (= (set (match-statements collection [:? :a :? :?])) #{["This" :a "test"]
-  ;                                                                    ["c" :a "c" "c"]}))
-  ;         (is (= (set (match-statements collection ["c" :? "c" :?])) #{["c" :a "c" "c"]})))))))
+  (testing "matching rules in collections"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (writeTx (collection store "test"))]
+        (add-rule tx ["This" :a "test"])
+        (add-rule tx [(new-identifier tx) :a "test"])
+        (add-rule tx ["a" "knows" "b"])
+        (add-rule tx ["b" "knows" "c"])
+        (add-rule tx ["c" "knows" "a"])
+        (add-rule tx ["c" "knows" "a"]) ; dupe
+        (add-rule tx [(new-identifier tx) (new-identifier tx) (new-identifier tx) (new-identifier tx)])
+        (commit tx))
+      (let [tx (readTx (collection store "test"))]
+        (is (= (count (match-rules tx [:? :? :?])) 6))
+        (is (= (set (match-rules tx) [:? :a :?]) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-rules tx) [:? :a "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-rules tx) [:? :? "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-rules tx) [:? :? :? ":_5"]) #{["_:2" "_:3" "_:4" "_:5"]}))
+        (cancel tx)))))
