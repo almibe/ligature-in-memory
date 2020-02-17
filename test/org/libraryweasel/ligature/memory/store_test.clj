@@ -21,27 +21,56 @@
   (testing "access new collection"
     (let [store (ligature-memory-store)]
       (is (not (= (collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
-      (is (= (all-collections store) #{"test"}))))
+      (is (= (all-collections store) #{}))))
 
+  (testing "creating a new collection"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (is (= (all-collections store) #{"test"}))))
+  
   (testing "access and delete new collection"
     (let [store (ligature-memory-store)]
-      (is (not (= (collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
       (is (= (all-collections store) #{"test"}))
       (delete-collection store "test")
       (delete-collection store "test2")
       (is (= (all-collections store) #{}))))
 
-  (testing "new collections should be empty")
+  (testing "new collections should be empty"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (readTx (collection store "test"))]
+        (is (= (set (all-statements tx)) #{}))
+        (is (= (set (all-rules tx)) #{}))
+        (cancel tx))))
 
-  (testing "adding statements to collections")
+  (testing "adding statements/rules to collections"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (writeTx (collection store "test"))]
+        (add-statement tx ["This" :a "test"])
+        (add-rule tx ["Also" :a "test"])
+        (commit tx))
+      (let [tx (readTx (collection store "test"))]
+        (is (= (set (all-statements tx)) #{["This" :a "test"]}))
+        (is (= (set (all-rules tx)) #{["Also" :a "test"]}))
+        (cancel tx))))
 
-  (testing "removing statements from collections")
+  (testing "removing statements/rules from collections"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (writeTx (collection store "test"))]
+        (add-statement tx ["This" :a "test"])
+        (add-rule tx ["Also" :a "test"])
+        (remove-statement tx ["This" :a "test"])
+        (remove-rule tx ["Also" :a "test"])
+        (commit tx))
+      (let [tx (readTx (collection store "test"))]
+        (is (= (set (all-statements tx)) #{}))
+        (is (= (set (all-rules tx)) #{}))
+        (cancel tx))))
 
   (testing "matching statements in collections")
-
-  (testing "adding rules to collections")
-
-  (testing "removing rules from collections")
 
   (testing "matching rules in collections"))
   
