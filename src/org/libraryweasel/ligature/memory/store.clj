@@ -18,7 +18,7 @@
 (defn- add-statement-impl
   [store name statement]
   (if (s/valid? ::l/statement statement)
-    (assoc-in store [name :data] (into (if (contains? store name)
+    (assoc-in store [name :data] (conj (if (contains? store name)
       (:data (store name))
       (sorted-set)) statement))
     (throw (ex-info "Invalid statement." (s/explain ::l/statements statement)))))
@@ -81,62 +81,71 @@
   "Create a read-only transaction for Ligature."
   [store]
   (reify l/ReadTx
-    (all-statements
+    (l/all-statements
       [this]
       (all-statements-impl @store name))
     (l/match-statements
       [this pattern]
       (swap! store #(match-statements-impl % name pattern)))
-    (all-rules
+    (l/all-rules
       [this]
       (swap! store #(all-rules-impl % name)))
-    (match-rules
+    (l/match-rules
       [this pattern]
       (swap! store #(match-rules-impl % name pattern)))
-    (sparql-query
+    (l/sparql-query
       [this query]
       (swap! store #(sparql-query-impl % name query)))
-    (wander-query
+    (l/wander-query
       [this query]
-      (swap! store #(wander-query-impl % name query)))))
+      (swap! store #(wander-query-impl % name query)))
+    (l/cancel
+      [this]
+      (comment do nothing))))
 
 (defn- ligature-write-tx
   "Create a read/write transaction for Ligature."
   [store]
   (reify l/ReadTx l/WriteTx
-    (all-statements
+    (l/all-statements
       [this]
       (all-statements-impl @store name))
     (l/match-statements
       [this pattern]
       (swap! store #(match-statements-impl % name pattern)))
-    (add-statement
+    (l/add-statement
       [this statement]
       (swap! store #(add-statement-impl % name statement)))
-    (remove-statement
+    (l/remove-statement
       [this statement]
       (swap! store #(remove-statement-impl % name statement)))
-    (new-identifier
+    (l/new-identifier
       [this]
       (str "_:" (get-in (swap! store #(new-identifier-impl % name)) [name :id-counter])))
-    (add-rule
+    (l/add-rule
       [this rule]
       (swap! store #(add-rule-impl % name rule)))
-    (remove-rule
+    (l/remove-rule
       [this rule]
       (swap! store #(remove-rule-impl % name rule)))
-    (all-rules
+    (l/all-rules
       [this]
       (swap! store #(all-rules-impl % name)))
-    (match-rules
+    (l/match-rules
       [this pattern]
       (swap! store #(match-rules-impl % name pattern)))
-    (sparql-query
+    (l/sparql-query
       [this query]
       (swap! store #(sparql-query-impl % name query)))
-    (wander-query
+    (l/wander-query
       [this query]
-      (swap! store #(wander-query-impl % name query)))))
+      (swap! store #(wander-query-impl % name query)))
+    (l/commit 
+      [this]
+      (comment TODO))
+    (l/cancel
+      [this]
+      (comment TODO))))
 
 (defn- ligature-memory-collection
   "Creates an in-memory implementation of the LigatureCollection protocol."
@@ -159,6 +168,10 @@
     (reify l/LigatureStore
       (collection
         [this collection-name]
+        (ligature-memory-collection store collection-name))
+      (create-collection
+        [this collection-name]
+        (swap! store #(assoc % collection-name {}))
         (ligature-memory-collection store collection-name))
       (delete-collection
         [this collection-name]

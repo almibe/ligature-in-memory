@@ -84,10 +84,10 @@
         (commit tx))
       (let [tx (readTx (collection store "test"))]
         (is (= (count (match-statements tx [:? :? :?])) 6))
-        (is (= (set (match-statements tx) [:? :a :?]) #{["This" :a "test"] ["Also" :a "test"]}))
-        (is (= (set (match-statements tx) [:? :a "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
-        (is (= (set (match-statements tx) [:? :? "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
-        (is (= (set (match-statements tx) [:? :? :? ":_5"]) #{["_:2" "_:3" "_:4" "_:5"]}))
+        (is (= (set (match-statements tx [:? :a :?])) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-statements tx [:? :a "test"])) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-statements tx [:? :? "test"])) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-statements tx [:? :? :? ":_5"])) #{["_:2" "_:3" "_:4" "_:5"]}))
         (cancel tx))))
 
   (testing "matching rules in collections"
@@ -104,8 +104,8 @@
         (commit tx))
       (let [tx (readTx (collection store "test"))]
         (is (= (count (match-rules tx [:? :? :?])) 6))
-        (is (= (set (match-rules tx) [:? :a :?]) #{["This" :a "test"] ["Also" :a "test"]}))
-        (is (= (set (match-rules tx) [:? :a "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
-        (is (= (set (match-rules tx) [:? :? "test"]) #{["This" :a "test"] ["Also" :a "test"]}))
-        (is (= (set (match-rules tx) [:? :? :? ":_5"]) #{["_:2" "_:3" "_:4" "_:5"]}))
+        (is (= (set (match-rules tx [:? :a :?])) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-rules tx [:? :a "test"])) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-rules tx [:? :? "test"])) #{["This" :a "test"] ["Also" :a "test"]}))
+        (is (= (set (match-rules tx [:? :? :? ":_5"])) #{["_:2" "_:3" "_:4" "_:5"]}))
         (cancel tx)))))
