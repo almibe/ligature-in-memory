@@ -44,15 +44,23 @@
         (is (= (set (all-rules tx)) #{}))
         (cancel tx))))
 
-  (testing "adding statements/rules to collections"
+  (testing "adding statements to collections"
     (let [store (ligature-memory-store)]
       (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
       (let [tx (writeTx (collection store "test"))]
         (add-statement tx ["This" :a "test"])
-        (add-rule tx ["Also" :a "test"])
         (commit tx))
       (let [tx (readTx (collection store "test"))]
         (is (= (set (all-statements tx)) #{["This" :a "test"]}))
+        (cancel tx))))
+
+  (testing "adding rules to collections"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (writeTx (collection store "test"))]
+        (add-rule tx ["Also" :a "test"])
+        (commit tx))
+      (let [tx (readTx (collection store "test"))]
         (is (= (set (all-rules tx)) #{["Also" :a "test"]}))
         (cancel tx)))))
 
