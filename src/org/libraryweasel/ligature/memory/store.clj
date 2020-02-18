@@ -21,7 +21,7 @@
     (assoc-in store [name :data] (conj (if (contains? store name)
       (:data (store name))
       (sorted-set)) statement))
-    (throw (ex-info "Invalid statement." (s/explain ::l/statements statement)))))
+    (throw (ex-info "Invalid statement." (s/explain ::l/statement statement)))))
 
 (defn- remove-statement-impl
   [store name statement]
@@ -29,7 +29,7 @@
     (assoc-in store [name :data] (set/difference (if (contains? store name)
       (:data (store name))
       (sorted-set)) statement))
-    (throw (ex-info "Invalid statement." (s/explain ::l/statements statement)))))
+    (throw (ex-info "Invalid statement." (s/explain ::l/statement statement)))))
 
 (defn- all-statements-impl
   [store name]
@@ -54,8 +54,12 @@
     #{}))
 
 (defn- add-rule-impl
-  [store name rule]
-  (comment TODO 2))
+  [store name rule])
+  ; (if (s/valid? ::l/rule rule)
+  ;   (assoc-in store [name :rules] (conj (if (contains? store name)
+  ;     (:rules (store name))
+  ;     (sorted-set)) rule))
+  ;   (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
 
 (defn- remove-rule-impl
   [store name rule]
@@ -79,7 +83,7 @@
 
 (defn- ligature-read-tx
   "Create a read-only transaction for Ligature."
-  [store]
+  [store name]
   (reify l/ReadTx
     (l/all-statements
       [this]
@@ -105,7 +109,7 @@
 
 (defn- ligature-write-tx
   "Create a read/write transaction for Ligature."
-  [store]
+  [store name]
   (reify l/ReadTx l/WriteTx
     (l/all-statements
       [this]
@@ -156,10 +160,10 @@
       name)
     (readTx
       [this]
-      (ligature-read-tx store))
+      (ligature-read-tx store name))
     (writeTx
       [this]
-      (ligature-write-tx store))))
+      (ligature-write-tx store name))))
 
 (defn ligature-memory-store
   "Creates an in-memory implementation of the LigatureStore protocol."
@@ -171,7 +175,9 @@
         (ligature-memory-collection store collection-name))
       (create-collection
         [this collection-name]
-        (swap! store #(assoc % collection-name {}))
+        (if (contains? @store name)
+          (comment do nothing)
+          (swap! store #(assoc % collection-name {})))
         (ligature-memory-collection store collection-name))
       (delete-collection
         [this collection-name]
