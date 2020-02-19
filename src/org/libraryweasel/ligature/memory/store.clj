@@ -18,7 +18,7 @@
 (defn- add-statement-impl
   [store name statement]
   (if (s/valid? ::l/statement statement)
-    (assoc-in store [name :data] (conj (if (contains? store name)
+    (assoc-in store [name :data] (conj (if (and (contains? store name) (contains? (store name) :data))
       (:data (store name))
       (sorted-set)) statement))
     (throw (ex-info "Invalid statement." (s/explain ::l/statement statement)))))
@@ -26,7 +26,7 @@
 (defn- remove-statement-impl
   [store name statement]
   (if (s/valid? ::l/statement statement)
-    (assoc-in store [name :data] (set/difference (if (contains? store name)
+    (assoc-in store [name :data] (disj (if (contains? store name)
       (:data (store name))
       (sorted-set)) statement))
     (throw (ex-info "Invalid statement." (s/explain ::l/statement statement)))))
@@ -56,14 +56,18 @@
 (defn- add-rule-impl
   [store name rule]
   (if (s/valid? ::l/rule rule)
-    (assoc-in store [name :rules] (conj (if (contains? store name)
+    (assoc-in store [name :rules] (conj (if (and (contains? store name) (contains? (store name) :rules))
       (:rules (store name))
       (sorted-set)) rule))
     (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
 
 (defn- remove-rule-impl
   [store name rule]
-  (comment TODO 2))
+  (if (s/valid? ::l/rule rule)
+    (assoc-in store [name :data] (disj (if (contains? store name)
+      (:rules (store name))
+      (sorted-set)) rule))
+    (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
 
 (defn- all-rules-impl
   [store name]
