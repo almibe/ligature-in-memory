@@ -54,12 +54,12 @@
     #{}))
 
 (defn- add-rule-impl
-  [store name rule])
-  ; (if (s/valid? ::l/rule rule)
-  ;   (assoc-in store [name :rules] (conj (if (contains? store name)
-  ;     (:rules (store name))
-  ;     (sorted-set)) rule))
-  ;   (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
+  [store name rule]
+  (if (s/valid? ::l/rule rule)
+    (assoc-in store [name :rules] (conj (if (contains? store name)
+      (:rules (store name))
+      (sorted-set)) rule))
+    (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
 
 (defn- remove-rule-impl
   [store name rule]
@@ -67,7 +67,9 @@
 
 (defn- all-rules-impl
   [store name]
-  (comment TODO 2))
+  (if (contains? store name)
+    (:rules (store name))
+    (sorted-set)))
 
 (defn- match-rules-impl
   [store name pattern]
