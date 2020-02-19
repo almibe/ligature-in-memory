@@ -64,7 +64,7 @@
 (defn- remove-rule-impl
   [store name rule]
   (if (s/valid? ::l/rule rule)
-    (assoc-in store [name :data] (disj (if (contains? store name)
+    (assoc-in store [name :rules] (disj (if (contains? store name)
       (:rules (store name))
       (sorted-set)) rule))
     (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
