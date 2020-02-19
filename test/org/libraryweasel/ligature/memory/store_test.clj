@@ -62,21 +62,31 @@
         (commit tx))
       (let [tx (readTx (collection store "test"))]
         (is (= (set (all-rules tx)) #{["Also" :a "test"]}))
-        (cancel tx)))))
+        (cancel tx))))
 
-  ; (testing "removing statements/rules from collections"
-  ;   (let [store (ligature-memory-store)]
-  ;     (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
-  ;     (let [tx (writeTx (collection store "test"))]
-  ;       (add-statement tx ["This" :a "test"])
-  ;       (add-rule tx ["Also" :a "test"])
-  ;       (remove-statement tx ["This" :a "test"])
-  ;       (remove-rule tx ["Also" :a "test"])
-  ;       (commit tx))
-  ;     (let [tx (readTx (collection store "test"))]
-  ;       (is (= (set (all-statements tx)) #{}))
-  ;       (is (= (set (all-rules tx)) #{}))
-  ;       (cancel tx))))
+  (testing "removing statements from collections"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (writeTx (collection store "test"))]
+        (add-statement tx ["This" :a "test"])
+        (add-statement tx ["Also" :a "test"])
+        (remove-statement tx ["This" :a "test"])
+        (commit tx))
+      (let [tx (readTx (collection store "test"))]
+        (is (= (set (all-statements tx)) #{["Also" :a "test"]}))
+        (cancel tx))))
+
+  (testing "removing rules from collections"
+    (let [store (ligature-memory-store)]
+      (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
+      (let [tx (writeTx (collection store "test"))]
+        (add-rule tx ["This" :a "test"])
+        (add-rule tx ["Also" :a "test"])
+        (remove-rule tx ["This" :a "test"])
+        (commit tx))
+      (let [tx (readTx (collection store "test"))]
+        (is (= (set (all-rules tx)) #{["Also" :a "test"]}))
+        (cancel tx)))))
 
   ; (testing "matching statements in collections"
   ;   (let [store (ligature-memory-store)]
