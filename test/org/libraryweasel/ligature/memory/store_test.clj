@@ -107,4 +107,4 @@
         (is (= (set (match-statements tx [:? a "test" :?])) #{["This" a "test" _] ["_:1" a "test" _]}))
         (is (= (set (match-statements tx [:? :? "test" :?])) #{["This" a "test" _] ["_:1" a "test" _]}))
         (is (= (set (match-statements tx [:? :? :? "_:5"])) #{["_:2" "_:3" "_:4" "_:5"]}))
-        (cancel tx)))) ; TODO add test running against a non-existant collection w/ match-statement calls
+        (cancel tx))))) ; TODO add test running against a non-existant collection w/ match-statement calls
