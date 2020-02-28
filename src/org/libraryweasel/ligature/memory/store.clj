@@ -21,7 +21,7 @@
     (assoc-in store [name :data] (conj (if (and (contains? store name) (contains? (store name) :data))
       (:data (store name))
       (sorted-set)) statement))
-    (throw (ex-info "Invalid statement." (s/explain ::l/statement statement)))))
+    (throw (ex-info "Invalid statement." (s/explain-data ::l/statement statement)))))
 
 (defn- remove-statement-impl
   [store name statement]
@@ -29,7 +29,7 @@
     (assoc-in store [name :data] (disj (if (contains? store name)
       (:data (store name))
       (sorted-set)) statement))
-    (throw (ex-info "Invalid statement." (s/explain ::l/statement statement)))))
+    (throw (ex-info "Invalid statement." (s/explain-data ::l/statement statement)))))
 
 (defn- all-statements-impl
   [store name]
@@ -47,10 +47,24 @@
     (assoc-in store [name :id-counter] (inc id-counter))
     (first-new-identifier store name)))
 
+(defn- match
+  [pattern-el data-el]
+  (if (= pattern-el :?)
+    true
+    (= pattern-el data-el)))
+
+(defn- match-filter
+  [pattern]
+  #(and (match (l/subject pattern) (l/subject %))
+        (match (l/predicate pattern) (l/predicate %))
+        (match (l/object pattern) (l/object %))
+        (match (l/graph pattern) (l/graph %))))
+
 (defn- match-statements-impl
   [store name pattern]
   (if-let [collection (get-in store [name :data])]
-    (filter (comment TODO) collection)
+    (filter (match-filter pattern) collection)
+    ;(println (str "match - " collection))
     #{}))
 
 (defn- add-rule-impl
@@ -59,7 +73,7 @@
     (assoc-in store [name :rules] (conj (if (and (contains? store name) (contains? (store name) :rules))
       (:rules (store name))
       (sorted-set)) rule))
-    (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
+    (throw (ex-info "Invalid rule." (s/explain-data ::l/rule rule)))))
 
 (defn- remove-rule-impl
   [store name rule]
@@ -67,7 +81,7 @@
     (assoc-in store [name :rules] (disj (if (contains? store name)
       (:rules (store name))
       (sorted-set)) rule))
-    (throw (ex-info "Invalid rule." (s/explain ::l/rule rule)))))
+    (throw (ex-info "Invalid rule." (s/explain-data ::l/rule rule)))))
 
 (defn- all-rules-impl
   [store name]
@@ -96,10 +110,10 @@
       (all-statements-impl @store name))
     (l/match-statements
       [this pattern]
-      (swap! store #(match-statements-impl % name pattern)))
+      (match-statements-impl @store name pattern))
     (l/all-rules
       [this]
-      (swap! store #(all-rules-impl % name)))
+      (all-rules-impl @store name))
     (l/match-rules
       [this pattern]
       (swap! store #(match-rules-impl % name pattern)))
