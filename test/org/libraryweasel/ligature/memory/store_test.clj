@@ -107,24 +107,4 @@
         (is (= (set (match-statements tx [:? a "test" :?])) #{["This" a "test" _] ["_:1" a "test" _]}))
         (is (= (set (match-statements tx [:? :? "test" :?])) #{["This" a "test" _] ["_:1" a "test" _]}))
         (is (= (set (match-statements tx [:? :? :? "_:5"])) #{["_:2" "_:3" "_:4" "_:5"]}))
-        (cancel tx))))) ; TODO add test running against a non-existant collection w/ match-statement calls
-
-  ;; (testing "matching rules in collections"
-  ;;   (let [store (ligature-memory-store)]
-  ;;     (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
-  ;;     (let [tx (writeTx (collection store "test"))]
-  ;;       (add-rule tx ["This" a "test"])
-  ;;       (add-rule tx [(new-identifier tx) a "test"])
-  ;;       (add-rule tx ["a" "knows" "b"])
-  ;;       (add-rule tx ["b" "knows" "c"])
-  ;;       (add-rule tx ["c" "knows" "a"])
-  ;;       (add-rule tx ["c" "knows" "a"]) ; dupe
-  ;;       (add-rule tx [(new-identifier tx) (new-identifier tx) (new-identifier tx)])
-  ;;       (commit tx))
-  ;;     (let [tx (readTx (collection store "test"))]
-  ;;       (is (= (count (match-rules tx [:? :? :?])) 6))
-  ;;       (is (= (set (match-rules tx [:? a :?])) #{["This" a "test"] ["Also" a "test"]}))
-  ;;       (is (= (set (match-rules tx [:? a "test"])) #{["This" a "test"] ["Also" a "test"]}))
-  ;;       (is (= (set (match-rules tx [:? :? "test"])) #{["This" a "test"] ["Also" a "test"]}))
-  ;;       (is (= (set (match-rules tx [:? :? :? ":_5"])) #{["_:2" "_:3" "_:4" "_:5"]}))
-  ;;       (cancel tx)))))
+        (cancel tx)))) ; TODO add test running against a non-existant collection w/ match-statement calls
