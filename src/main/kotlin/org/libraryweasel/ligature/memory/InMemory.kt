@@ -59,23 +59,15 @@ private class InMemoryReadTx: ReadTx {
         TODO("Not yet implemented")
     }
 
-    override fun matchRules(entity: Identifier?, attribute: Identifier?, value: Node?): Flow<Rule> {
+    override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
         TODO("Not yet implemented")
     }
 
-    override fun matchStatements(entity: Node?, attribute: Identifier?, value: Node?): Flow<Statement> {
+    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
 
-    override fun matchStatements(entity: Node?, attribute: Identifier?, range: Range): Flow<Statement> {
-        TODO("Not yet implemented")
-    }
-
-    override fun sparqlQuery(query: String): Any? {
-        TODO("Not yet implemented")
-    }
-
-    override fun wanderQuery(query: String): Any? {
+    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Range, graph: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
 }
@@ -105,19 +97,19 @@ private class InMemoryWriteTx: WriteTx {
         TODO("Not yet implemented")
     }
 
-    override fun matchRules(entity: Identifier?, attribute: Identifier?, value: Node?): Flow<Rule> {
+    override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
         TODO("Not yet implemented")
     }
 
-    override fun matchStatements(entity: Node?, attribute: Identifier?, value: Node?): Flow<Statement> {
+    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
 
-    override fun matchStatements(entity: Node?, attribute: Identifier?, range: Range): Flow<Statement> {
+    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Range, graph: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
 
-    override fun newIdentifier(): Identifier {
+    override fun newEntity(): Entity {
         TODO("Not yet implemented")
     }
 
@@ -126,14 +118,6 @@ private class InMemoryWriteTx: WriteTx {
     }
 
     override fun removeStatement(statement: Statement) {
-        TODO("Not yet implemented")
-    }
-
-    override fun sparqlQuery(query: String): Any? {
-        TODO("Not yet implemented")
-    }
-
-    override fun wanderQuery(query: String): Any? {
         TODO("Not yet implemented")
     }
 }
