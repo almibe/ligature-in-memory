@@ -4,114 +4,197 @@
 
 package org.libraryweasel.ligature.memory
 
+import io.vavr.collection.HashSet
+import io.vavr.collection.Set
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import org.libraryweasel.ligature.*
-import java.util.concurrent.atomic.AtomicReference
+import java.lang.RuntimeException
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
+
+private data class CollectionValue(val statements: Set<Statement>, val  rules: Set<Rule>)
 
 class InMemoryStore: LigatureStore {
-    private val collections: AtomicReference<io.vavr.collection.Map<Entity, InMemoryCollection>> = AtomicReference()
+    private val collections = ConcurrentHashMap<Entity, CollectionValue>()
 
-    override fun allCollections(): Flow<Entity> = collections.get().values().map { it.collectionName }.asFlow()
+    override fun allCollections(): Flow<Entity> = collections.keys.asFlow()
 
-    override fun close() = collections.set(io.vavr.collection.HashMap.empty())
+    override fun close() = collections.clear()
 
-    override fun collection(collectionName: Entity): LigatureCollection {
-        TODO("Not yet implemented")
+    override fun createCollection(collectionName: Entity): LigatureCollection {
+        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), HashSet.empty()))
+        return InMemoryCollection(collectionName, collections)
     }
 
+    override fun collection(collectionName: Entity): LigatureCollection =
+        InMemoryCollection(collectionName, collections)
+
     override fun deleteCollection(collectionName: Entity) {
-        TODO("Not yet implemented")
+        collections.remove(collectionName)
     }
 
     override fun details(): Map<String, String> = mapOf("location" to "memory")
 }
 
-private class InMemoryCollection(private val name: Entity): LigatureCollection {
+private class InMemoryCollection(private val name: Entity, private val collections: ConcurrentHashMap<Entity, CollectionValue>): LigatureCollection {
     override val collectionName: Entity
         get() = name
 
-    override fun readTx(): ReadTx {
-        TODO("Not yet implemented")
-    }
+    override fun readTx(): ReadTx = InMemoryReadTx(name, collections)
 
-    override fun writeTx(): WriteTx {
-        TODO("Not yet implemented")
-    }
+    override fun writeTx(): WriteTx = InMemoryWriteTx(name, collections)
 }
 
-private class InMemoryReadTx: ReadTx {
+private class InMemoryReadTx(name: Entity, collections: ConcurrentHashMap<Entity, CollectionValue>): ReadTx {
+    private val collection = collections[name]
+    private val active = AtomicBoolean(true)
+
     override fun allRules(): Flow<Rule> {
-        TODO("Not yet implemented")
+        return if (active.get()) {
+            collection?.rules?.asFlow() ?: listOf<Rule>().asFlow()
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun allStatements(): Flow<Statement> {
-        TODO("Not yet implemented")
+        return if (active.get()) {
+            collection?.statements?.asFlow() ?: listOf<Statement>().asFlow()
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun cancel() {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            active.set(false)
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 }
 
-private class InMemoryWriteTx: WriteTx {
+private class InMemoryWriteTx(private val name: Entity, private val collections: ConcurrentHashMap<Entity, CollectionValue>): WriteTx {
+    private val active = AtomicBoolean(true)
+
     override fun addRule(rule: Rule) {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun addStatement(statement: Statement) {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun allRules(): Flow<Rule> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun allStatements(): Flow<Statement> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun cancel() {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            active.set(false)
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun commit() {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun newEntity(): Entity {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun removeRule(rule: Rule) {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun removeStatement(statement: Statement) {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            TODO("Not yet implemented")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 }
