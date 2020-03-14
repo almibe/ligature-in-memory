@@ -5,36 +5,30 @@
 package org.libraryweasel.ligature.memory
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import org.libraryweasel.ligature.*
+import java.util.concurrent.atomic.AtomicReference
 
 class InMemoryStore: LigatureStore {
-    override fun allCollections(): Flow<LigatureCollection> {
+    private val collections: AtomicReference<io.vavr.collection.Map<Entity, InMemoryCollection>> = AtomicReference()
+
+    override fun allCollections(): Flow<Entity> = collections.get().values().map { it.collectionName }.asFlow()
+
+    override fun close() = collections.set(io.vavr.collection.HashMap.empty())
+
+    override fun collection(collectionName: Entity): LigatureCollection {
         TODO("Not yet implemented")
     }
 
-    override fun close() {
+    override fun deleteCollection(collectionName: Entity) {
         TODO("Not yet implemented")
     }
 
-    override fun collection(collectionName: String): LigatureCollection {
-        TODO("Not yet implemented")
-    }
-
-    override fun createCollection(collectionName: String): LigatureCollection {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteCollection(collectionName: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun details(): Map<String, String> {
-        TODO("Not yet implemented")
-    }
+    override fun details(): Map<String, String> = mapOf("location" to "memory")
 }
 
-private class InMemoryCollection(private val name: String): LigatureCollection {
-    override val collectionName: String
+private class InMemoryCollection(private val name: Entity): LigatureCollection {
+    override val collectionName: Entity
         get() = name
 
     override fun readTx(): ReadTx {
@@ -67,7 +61,7 @@ private class InMemoryReadTx: ReadTx {
         TODO("Not yet implemented")
     }
 
-    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Range, graph: Entity?): Flow<Statement> {
+    override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
 }
@@ -105,7 +99,7 @@ private class InMemoryWriteTx: WriteTx {
         TODO("Not yet implemented")
     }
 
-    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Range, graph: Entity?): Flow<Statement> {
+    override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
 
