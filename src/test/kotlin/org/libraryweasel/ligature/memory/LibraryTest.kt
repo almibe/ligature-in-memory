@@ -4,16 +4,19 @@
 
 package org.libraryweasel.ligature.memory
 
+import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.flow.toList
 import org.libraryweasel.ligature.Entity
+import org.libraryweasel.ligature.Statement
+import org.libraryweasel.ligature.default
 
 class InMemorySpec: StringSpec({
     "Create and close store" {
         val store = InMemoryStore()
         store.details() shouldBe mapOf("location" to "memory")
-        store.allCollections().toList() sholdBe listOf<Entity>()
+        store.allCollections().toList() shouldBe listOf<Entity>()
         store.close()
     }
 
@@ -30,32 +33,34 @@ class InMemorySpec: StringSpec({
     }
 
     "access and delete new collection" {
-//    (let [store (ligature-memory-store)]
-//    (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
-//    (is (= (all-collections store) #{"test"}))
-//    (delete-collection store "test")
-//    (delete-collection store "test2")
-//    (is (= (all-collections store) #{}))))
+        val store = InMemoryStore()
+        store.createCollection(Entity("test")) shouldNotBe  null
+        store.allCollections().toList() shouldBe listOf<Entity>(Entity("test"))
+        store.deleteCollection(Entity("test"))
+        store.deleteCollection(Entity("test2"))
+        store.allCollections().toList() shouldBe listOf<Entity>()
     }
 
     "new collections should be empty" {
-//    (let [store (ligature-memory-store)]
-//    (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
-//    (let [tx (readTx (collection store "test"))]
-//    (is (= (set (all-statements tx)) #{}))
-//    (is (= (set (all-rules tx)) #{}))
-//    (cancel tx))))
+        val store = InMemoryStore()
+        val collection = store.createCollection(Entity("test"))
+        collection shouldNotBe  null
+        val tx = collection.readTx()
+        tx.allStatements().toList() shouldBe listOf()
+        tx.allRules().toList() shouldBe listOf()
+        tx.cancel()
     }
 
     "adding statements to collections" {
-//    (let [store (ligature-memory-store)]
-//    (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
-//    (let [tx (writeTx (collection store "test"))]
-//    (add-statement tx ["This" a "test" _])
-//    (commit tx))
-//    (let [tx (readTx (collection store "test"))]
-//    (is (= (set (all-statements tx)) #{["This" a "test" _]}))
-//    (cancel tx))))
+        val store = InMemoryStore()
+        val collection = store.createCollection(Entity("test"))
+        collection shouldNotBe null
+        val tx = collection.writeTx()
+        tx.addStatement(Statement(Entity("This"), a, Entity("test"), default))
+        tx.commit()
+        val readTx = collection.readTx()
+        readTx.allStatements().toList() shouldBe listOf(Statement(Entity("This"), a, Entity("test"), default))
+        readTx.cancel()
     }
 
     "adding rules to collections" {
