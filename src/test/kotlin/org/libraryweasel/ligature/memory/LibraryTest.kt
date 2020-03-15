@@ -8,10 +8,7 @@ import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.flow.toList
-import org.libraryweasel.ligature.Entity
-import org.libraryweasel.ligature.Statement
-import org.libraryweasel.ligature.a
-import org.libraryweasel.ligature.default
+import org.libraryweasel.ligature.*
 
 class InMemorySpec: StringSpec({
     "Create and close store" {
@@ -104,7 +101,7 @@ class InMemorySpec: StringSpec({
         readTx.cancel()
    }
 
-    "matching statements in collections" {
+//    "matching statements in collections" {
 //    (let [store (ligature-memory-store)]
 //    (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
 //    (let [tx (writeTx (collection store "test"))]
@@ -124,5 +121,5 @@ class InMemorySpec: StringSpec({
 //    (is (= (set (match-statements tx [:? :? "test" :?])) #{["This" a "test" _] ["_:1" a "test" _]}))
 //    (is (= (set (match-statements tx [:? :? :? "_:5"])) #{["_:2" "_:3" "_:4" "_:5"]}))
 //    (cancel tx))))) ; TODO add test running against a non-existant collection w/ match-statement calls
-    }
+//    }
 })

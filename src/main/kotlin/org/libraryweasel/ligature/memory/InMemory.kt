@@ -12,11 +12,13 @@ import org.libraryweasel.ligature.*
 import java.lang.RuntimeException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 private data class CollectionValue(val statements: Set<Statement>, val  rules: Set<Rule>)
 
 class InMemoryStore: LigatureStore {
     private val collections = ConcurrentHashMap<Entity, CollectionValue>()
+    private val lock = ReentrantReadWriteLock()
 
     override fun allCollections(): Flow<Entity> = collections.keys.asFlow()
 
@@ -24,11 +26,11 @@ class InMemoryStore: LigatureStore {
 
     override fun createCollection(collectionName: Entity): LigatureCollection {
         collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), HashSet.empty()))
-        return InMemoryCollection(collectionName, collections)
+        return InMemoryCollection(collectionName, collections, lock)
     }
 
     override fun collection(collectionName: Entity): LigatureCollection =
-        InMemoryCollection(collectionName, collections)
+        InMemoryCollection(collectionName, collections, lock)
 
     override fun deleteCollection(collectionName: Entity) {
         collections.remove(collectionName)
@@ -37,18 +39,27 @@ class InMemoryStore: LigatureStore {
     override fun details(): Map<String, String> = mapOf("location" to "memory")
 }
 
-private class InMemoryCollection(private val name: Entity, private val collections: ConcurrentHashMap<Entity, CollectionValue>): LigatureCollection {
+private class InMemoryCollection(private val name: Entity,
+                                 private val collections: ConcurrentHashMap<Entity, CollectionValue>,
+                                 private val lock: ReentrantReadWriteLock): LigatureCollection {
     override val collectionName: Entity
         get() = name
 
-    override fun readTx(): ReadTx = InMemoryReadTx(name, collections)
+    override fun readTx(): ReadTx = InMemoryReadTx(name, collections, lock)
 
-    override fun writeTx(): WriteTx = InMemoryWriteTx(name, collections)
+    override fun writeTx(): WriteTx = InMemoryWriteTx(name, collections, lock)
 }
 
-private class InMemoryReadTx(name: Entity, collections: ConcurrentHashMap<Entity, CollectionValue>): ReadTx {
+private class InMemoryReadTx(name: Entity,
+                             collections: ConcurrentHashMap<Entity, CollectionValue>,
+                             lock: ReentrantReadWriteLock): ReadTx {
     private val collection = collections[name]
     private val active = AtomicBoolean(true)
+    private val readLock = lock.readLock()
+
+    init {
+        readLock.lock()
+    }
 
     override fun allRules(): Flow<Rule> {
         return if (active.get()) {
@@ -68,6 +79,7 @@ private class InMemoryReadTx(name: Entity, collections: ConcurrentHashMap<Entity
 
     override fun cancel() {
         if (active.get()) {
+            readLock.unlock()
             active.set(false)
         } else {
             throw RuntimeException("Transaction is closed.")
@@ -99,8 +111,15 @@ private class InMemoryReadTx(name: Entity, collections: ConcurrentHashMap<Entity
     }
 }
 
-private class InMemoryWriteTx(private val name: Entity, private val collections: ConcurrentHashMap<Entity, CollectionValue>): WriteTx {
+private class InMemoryWriteTx(name: Entity,
+                              collections: ConcurrentHashMap<Entity, CollectionValue>,
+                              lock: ReentrantReadWriteLock): WriteTx {
     private val active = AtomicBoolean(true)
+    private val writeLock = lock.writeLock()
+
+    init {
+        writeLock.lock()
+    }
 
     override fun addRule(rule: Rule) {
         if (active.get()) {
@@ -136,6 +155,7 @@ private class InMemoryWriteTx(private val name: Entity, private val collections:
 
     override fun cancel() {
         if (active.get()) {
+            writeLock.unlock()
             active.set(false)
         } else {
             throw RuntimeException("Transaction is closed.")
