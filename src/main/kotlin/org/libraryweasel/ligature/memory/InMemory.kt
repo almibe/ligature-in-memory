@@ -8,6 +8,7 @@ import io.vavr.collection.HashSet
 import io.vavr.collection.Set
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filter
 import org.libraryweasel.ligature.*
 import java.lang.RuntimeException
 import java.util.concurrent.ConcurrentHashMap
@@ -228,13 +229,70 @@ private class InMemoryWriteTx(private val name: Entity,
 }
 
 private fun matchRulesImpl(rules: Set<Rule>, subject: Node?, predicate: Entity?, `object`: Node?): Flow<Rule> {
-    TODO("Not yet implemented")
+    return rules.asFlow().filter {
+        when (subject) {
+            null -> true
+            else -> (subject == it.subject)
+        }
+    }.filter {
+        when (predicate) {
+            null -> true
+            else -> (predicate == it.predicate)
+        }
+    }.filter {
+        when (`object`) {
+            null -> true
+            else -> (`object` == it.`object`)
+        }
+    }
 }
 
 private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
-    TODO("Not yet implemented")
+    return statements.asFlow().filter {
+        when (subject) {
+            null -> true
+            else -> (subject == it.subject)
+        }
+    }.filter {
+        when (predicate) {
+            null -> true
+            else -> (predicate == it.predicate)
+        }
+    }.filter {
+        when (`object`) {
+            null -> true
+            else -> (`object` == it.`object`)
+        }
+    }.filter {
+        when (graph) {
+            null -> true
+            else -> (graph == it.graph)
+        }
+    }
 }
 
 private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
-    TODO("Not yet implemented")
+    return statements.asFlow().filter {
+        when (subject) {
+            null -> true
+            else -> (subject == it.subject)
+        }
+    }.filter {
+        when (predicate) {
+            null -> true
+            else -> (predicate == it.predicate)
+        }
+    }.filter {
+        when (range) {
+            is LangLiteralRange -> (it.`object` is LangLiteral && ((it.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.`object` as LangLiteral).value >= range.start.value && (it.`object` as LangLiteral).value <= range.end.value)
+            is StringLiteralRange -> (it.`object` is StringLiteral && (it.`object` as StringLiteral).value >= range.start && (it.`object` as StringLiteral).value <= range.end)
+            is LongLiteralRange -> (it.`object` is LongLiteral && (it.`object` as LongLiteral).value >= range.start && (it.`object` as LongLiteral).value <= range.end)
+            is DoubleLiteralRange -> (it.`object` is DoubleLiteral && (it.`object` as DoubleLiteral).value >= range.start && (it.`object` as DoubleLiteral).value <= range.end)
+        }
+    }.filter {
+        when (graph) {
+            null -> true
+            else -> (graph == it.graph)
+        }
+    }
 }
