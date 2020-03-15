@@ -111,17 +111,18 @@ private class InMemoryReadTx(name: Entity,
     }
 }
 
-private class InMemoryWriteTx(name: Entity,
-                              collections: ConcurrentHashMap<Entity, CollectionValue>,
+private class InMemoryWriteTx(private val name: Entity,
+                              private val collections: ConcurrentHashMap<Entity, CollectionValue>,
                               lock: ReentrantReadWriteLock): WriteTx {
     private val active = AtomicBoolean(true)
     private val writeLock = lock.writeLock()
+    private var workingState = collections[name] ?: CollectionValue(HashSet.empty(), HashSet.empty())
 
     init {
         writeLock.lock()
     }
 
-    override fun addRule(rule: Rule) {
+    @Synchronized override fun newEntity(): Entity {
         if (active.get()) {
             TODO("Not yet implemented")
         } else {
@@ -129,31 +130,55 @@ private class InMemoryWriteTx(name: Entity,
         }
     }
 
-    override fun addStatement(statement: Statement) {
+    @Synchronized override fun addRule(rule: Rule) {
         if (active.get()) {
-            TODO("Not yet implemented")
+            workingState = CollectionValue(workingState.statements, workingState.rules.add(rule))
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
-    override fun allRules(): Flow<Rule> {
+    @Synchronized override fun addStatement(statement: Statement) {
         if (active.get()) {
-            TODO("Not yet implemented")
+            workingState = CollectionValue(workingState.statements.add(statement), workingState.rules)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
-    override fun allStatements(): Flow<Statement> {
+    @Synchronized override fun removeRule(rule: Rule) {
         if (active.get()) {
-            TODO("Not yet implemented")
+            workingState = CollectionValue(workingState.statements, workingState.rules.remove(rule))
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
-    override fun cancel() {
+    @Synchronized override fun removeStatement(statement: Statement) {
+        if (active.get()) {
+            workingState = CollectionValue(workingState.statements.remove(statement), workingState.rules)
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
+    }
+
+    @Synchronized override fun allRules(): Flow<Rule> {
+        return if (active.get()) {
+            workingState.rules.asFlow()
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
+    }
+
+    @Synchronized override fun allStatements(): Flow<Statement> {
+        return if (active.get()) {
+            workingState.statements.asFlow()
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
+    }
+
+    @Synchronized override fun cancel() {
         if (active.get()) {
             writeLock.unlock()
             active.set(false)
@@ -162,7 +187,17 @@ private class InMemoryWriteTx(name: Entity,
         }
     }
 
-    override fun commit() {
+    @Synchronized override fun commit() {
+        if (active.get()) {
+            collections[name] = workingState
+            active.set(false)
+            writeLock.unlock()
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
+    }
+
+    @Synchronized override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
         if (active.get()) {
             TODO("Not yet implemented")
         } else {
@@ -170,7 +205,7 @@ private class InMemoryWriteTx(name: Entity,
         }
     }
 
-    override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
+    @Synchronized override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
         if (active.get()) {
             TODO("Not yet implemented")
         } else {
@@ -178,39 +213,7 @@ private class InMemoryWriteTx(name: Entity,
         }
     }
 
-    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
-        if (active.get()) {
-            TODO("Not yet implemented")
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
-        if (active.get()) {
-            TODO("Not yet implemented")
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    override fun newEntity(): Entity {
-        if (active.get()) {
-            TODO("Not yet implemented")
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    override fun removeRule(rule: Rule) {
-        if (active.get()) {
-            TODO("Not yet implemented")
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    override fun removeStatement(statement: Statement) {
+    @Synchronized override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
         if (active.get()) {
             TODO("Not yet implemented")
         } else {
