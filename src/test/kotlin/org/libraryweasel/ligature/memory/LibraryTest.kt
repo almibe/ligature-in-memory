@@ -137,11 +137,11 @@ class InMemorySpec: StringSpec({
                 Rule(Entity("This"), a, Entity("test")),
                 Rule(Entity("_:1"), a, Entity("test"))
         )
-        readTx.matchRules(null, a, "test").toSet() shouldBe setOf(
+        readTx.matchRules(null, a, Entity("test")).toSet() shouldBe setOf(
                 Rule(Entity("This"), a, Entity("test")),
                 Rule(Entity("_:1"), a, Entity("test"))
         )
-        readTx.matchRules(null, null, "test").toSet() shouldBe setOf(
+        readTx.matchRules(null, null, Entity("test")).toSet() shouldBe setOf(
                 Rule(Entity("This"), a, Entity("test")),
                 Rule(Entity("_:1"), a, Entity("test"))
         )
@@ -168,11 +168,11 @@ class InMemorySpec: StringSpec({
                 Statement(Entity("This"), a, Entity("test"), default),
                 Statement(Entity("_:1"), a, Entity("test"), default)
         )
-        readTx.matchStatements(null, a, "test").toSet() shouldBe setOf(
+        readTx.matchStatements(null, a, Entity("test")).toSet() shouldBe setOf(
                 Statement(Entity("This"), a, Entity("test"), default),
                 Statement(Entity("_:1"), a, Entity("test"), default)
         )
-        readTx.matchStatements(null, null, "test", null).toSet() shouldBe setOf(
+        readTx.matchStatements(null, null, Entity("test"), null).toSet() shouldBe setOf(
                 Statement(Entity("This"), a, Entity("test"), default),
                 Statement(Entity("_:1"), a, Entity("test"), default)
         )
