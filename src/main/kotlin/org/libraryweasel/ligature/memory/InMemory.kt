@@ -56,7 +56,7 @@ private class InMemoryCollection(private val name: Entity,
 private class InMemoryReadTx(name: Entity,
                              collections: ConcurrentHashMap<Entity, CollectionValue>,
                              lock: ReentrantReadWriteLock): ReadTx {
-    private val collection = collections[name]
+    private val collection = collections[name] ?: CollectionValue(HashSet.empty(), HashSet.empty(), AtomicLong(0))
     private val active = AtomicBoolean(true)
     private val readLock = lock.readLock()
 
@@ -66,7 +66,7 @@ private class InMemoryReadTx(name: Entity,
 
     override fun allRules(): Flow<Rule> {
         return if (active.get()) {
-            collection?.rules?.asFlow() ?: listOf<Rule>().asFlow()
+            collection.rules.asFlow()
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -74,7 +74,7 @@ private class InMemoryReadTx(name: Entity,
 
     override fun allStatements(): Flow<Statement> {
         return if (active.get()) {
-            collection?.statements?.asFlow() ?: listOf<Statement>().asFlow()
+            collection.statements.asFlow()
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -89,25 +89,25 @@ private class InMemoryReadTx(name: Entity,
         }
     }
 
-    override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
-        if (active.get()) {
-            TODO("Not yet implemented")
+    override fun matchRules(subject: Node?, predicate: Entity?, `object`: Node?): Flow<Rule> {
+        return if (active.get()) {
+            matchRulesImpl(collection.rules, subject, predicate, `object`)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
     override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
-        if (active.get()) {
-            TODO("Not yet implemented")
+        return if (active.get()) {
+            matchStatementsImpl(collection.statements, subject, predicate, `object`, graph)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
     override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
-        if (active.get()) {
-            TODO("Not yet implemented")
+        return if (active.get()) {
+            matchStatementsImpl(collection.statements, subject, predicate, range, graph)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -202,27 +202,39 @@ private class InMemoryWriteTx(private val name: Entity,
         }
     }
 
-    @Synchronized override fun matchRules(subject: Entity?, predicate: Entity?, `object`: Node?): Flow<Rule> {
-        if (active.get()) {
-            TODO("Not yet implemented")
+    @Synchronized override fun matchRules(subject: Node?, predicate: Entity?, `object`: Node?): Flow<Rule> {
+        return if (active.get()) {
+            matchRulesImpl(workingState.rules, subject, predicate, `object`)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
     @Synchronized override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
-        if (active.get()) {
-            TODO("Not yet implemented")
+        return if (active.get()) {
+            matchStatementsImpl(workingState.statements, subject, predicate, `object`, graph)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
     @Synchronized override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
-        if (active.get()) {
-            TODO("Not yet implemented")
+        return if (active.get()) {
+            matchStatementsImpl(workingState.statements, subject, predicate, range, graph)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
+}
+
+private fun matchRulesImpl(rules: Set<Rule>, subject: Node?, predicate: Entity?, `object`: Node?): Flow<Rule> {
+    TODO("Not yet implemented")
+}
+
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
+    TODO("Not yet implemented")
+}
+
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
+    TODO("Not yet implemented")
 }
