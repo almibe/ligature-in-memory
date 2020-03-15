@@ -12,9 +12,12 @@ import org.libraryweasel.ligature.*
 import java.lang.RuntimeException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-private data class CollectionValue(val statements: Set<Statement>, val  rules: Set<Rule>)
+private data class CollectionValue(val statements: Set<Statement>,
+                                   val rules: Set<Rule>,
+                                   val counter: AtomicLong)
 
 class InMemoryStore: LigatureStore {
     private val collections = ConcurrentHashMap<Entity, CollectionValue>()
@@ -25,7 +28,7 @@ class InMemoryStore: LigatureStore {
     override fun close() = collections.clear()
 
     override fun createCollection(collectionName: Entity): LigatureCollection {
-        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), HashSet.empty()))
+        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), HashSet.empty(), AtomicLong(0)))
         return InMemoryCollection(collectionName, collections, lock)
     }
 
@@ -116,7 +119,7 @@ private class InMemoryWriteTx(private val name: Entity,
                               lock: ReentrantReadWriteLock): WriteTx {
     private val active = AtomicBoolean(true)
     private val writeLock = lock.writeLock()
-    private var workingState = collections[name] ?: CollectionValue(HashSet.empty(), HashSet.empty())
+    private var workingState = collections[name] ?: CollectionValue(HashSet.empty(), HashSet.empty(), AtomicLong(0))
 
     init {
         writeLock.lock()
@@ -132,7 +135,7 @@ private class InMemoryWriteTx(private val name: Entity,
 
     @Synchronized override fun addRule(rule: Rule) {
         if (active.get()) {
-            workingState = CollectionValue(workingState.statements, workingState.rules.add(rule))
+            workingState = CollectionValue(workingState.statements, workingState.rules.add(rule), workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -140,7 +143,7 @@ private class InMemoryWriteTx(private val name: Entity,
 
     @Synchronized override fun addStatement(statement: Statement) {
         if (active.get()) {
-            workingState = CollectionValue(workingState.statements.add(statement), workingState.rules)
+            workingState = CollectionValue(workingState.statements.add(statement), workingState.rules, workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -148,7 +151,7 @@ private class InMemoryWriteTx(private val name: Entity,
 
     @Synchronized override fun removeRule(rule: Rule) {
         if (active.get()) {
-            workingState = CollectionValue(workingState.statements, workingState.rules.remove(rule))
+            workingState = CollectionValue(workingState.statements, workingState.rules.remove(rule), workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -156,7 +159,7 @@ private class InMemoryWriteTx(private val name: Entity,
 
     @Synchronized override fun removeStatement(statement: Statement) {
         if (active.get()) {
-            workingState = CollectionValue(workingState.statements.remove(statement), workingState.rules)
+            workingState = CollectionValue(workingState.statements.remove(statement), workingState.rules, workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }

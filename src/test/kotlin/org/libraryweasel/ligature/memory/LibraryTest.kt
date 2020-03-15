@@ -9,6 +9,7 @@ import io.kotlintest.shouldNotBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.flow.toList
 import org.libraryweasel.ligature.*
+import javax.swing.plaf.nimbus.State
 
 class InMemorySpec: StringSpec({
     "Create and close store" {
@@ -100,6 +101,21 @@ class InMemorySpec: StringSpec({
         readTx.allRules().toList() shouldBe listOf(Rule(Entity("Also"), a, Entity("test")))
         readTx.cancel()
    }
+
+    "new entity test" {
+        val store = InMemoryStore()
+        val collection = store.createCollection(Entity("test"))
+        collection shouldNotBe null
+        val tx = collection.writeTx()
+        tx.addStatement(Statement(tx.newEntity(), tx.newEntity(), tx.newEntity(), tx.newEntity()))
+        tx.addStatement(Statement(tx.newEntity(), tx.newEntity(), tx.newEntity(), tx.newEntity()))
+        tx.commit()
+        val readTx = collection.readTx()
+        readTx.allRules().toSet() shouldBe setOf(
+                Statement(Entity("_:1"), Entity("_:2"), Entity("_:3"), Entity("_:4")),
+                Statement(Entity("_:5"), Entity("_:6"), Entity("_:7"), Entity("_:8")))
+        readTx.cancel()
+    }
 
 //    "matching statements in collections" {
 //    (let [store (ligature-memory-store)]
