@@ -117,25 +117,69 @@ class InMemorySpec: StringSpec({
         readTx.cancel()
     }
 
-//    "matching statements in collections" {
-//    (let [store (ligature-memory-store)]
-//    (is (not (= (create-collection store "test") nil))) ;TODO maybe check collection type instead of just making sure it's not null
-//    (let [tx (writeTx (collection store "test"))]
-//    (add-statement tx ["This" a "test" _])
-//    (add-statement tx [(new-identifier tx) a "test" _])
-//    (add-statement tx ["a" "knows" "b" _])
-//    (add-statement tx ["b" "knows" "c" _])
-//    (add-statement tx ["c" "knows" "a" _])
-//    (add-statement tx ["c" "knows" "a" _]) ; dupe
-//    (add-statement tx [(new-identifier tx) (new-identifier tx) (new-identifier tx) (new-identifier tx)])
-//    (commit tx))
-//    (let [tx (readTx (collection store "test"))]
-//    (is (= (count (match-statements tx [:? :? :? :?])) 6))
-//    (is (= (count (match-statements tx [:? :? :? _])) 5))
-//    (is (= (set (match-statements tx [:? a :? :?])) #{["_:1" a "test" _] ["This" a "test" _]}))
-//    (is (= (set (match-statements tx [:? a "test" :?])) #{["This" a "test" _] ["_:1" a "test" _]}))
-//    (is (= (set (match-statements tx [:? :? "test" :?])) #{["This" a "test" _] ["_:1" a "test" _]}))
-//    (is (= (set (match-statements tx [:? :? :? "_:5"])) #{["_:2" "_:3" "_:4" "_:5"]}))
-//    (cancel tx))))) ; TODO add test running against a non-existant collection w/ match-statement calls
-//    }
+    "matching rules in collections" {
+        val store = InMemoryStore()
+        val collection = store.createCollection(Entity("test"))
+        collection shouldNotBe null
+        val tx = collection.writeTx()
+        tx.addRule(Rule(Entity("This"), a, Entity("test")))
+        tx.addRule(Rule(tx.newEntity(), a, Entity("test")))
+        tx.addRule(Rule(Entity("a"), Entity("knows"), Entity("b")))
+        tx.addRule(Rule(Entity("b"), Entity("knows"), Entity("c")))
+        tx.addRule(Rule(Entity("c"), Entity("knows"), Entity("a")))
+        tx.addRule(Rule(Entity("c"), Entity("knows"), Entity("a"))) //dupe
+        tx.addRule(Rule(tx.newEntity(), tx.newEntity(), tx.newEntity()))
+        tx.commit()
+        val readTx = collection.readTx()
+        readTx.matchRules().toSet().size shouldBe 6
+        readTx.matchRules(null, null, null).toSet().size shouldBe 6
+        readTx.matchRules(null, a, null).toSet() shouldBe setOf(
+                Rule(Entity("This"), a, Entity("test")),
+                Rule(Entity("_:1"), a, Entity("test"))
+        )
+        readTx.matchRules(null, a, "test").toSet() shouldBe setOf(
+                Rule(Entity("This"), a, Entity("test")),
+                Rule(Entity("_:1"), a, Entity("test"))
+        )
+        readTx.matchRules(null, null, "test").toSet() shouldBe setOf(
+                Rule(Entity("This"), a, Entity("test")),
+                Rule(Entity("_:1"), a, Entity("test"))
+        )
+        readTx.cancel() // TODO add test running against a non-existant collection w/ match-statement calls
+    }
+
+    "matching statements in collections" {
+        val store = InMemoryStore()
+        val collection = store.createCollection(Entity("test"))
+        collection shouldNotBe null
+        val tx = collection.writeTx()
+        tx.addStatement(Statement(Entity("This"), a, Entity("test"), default))
+        tx.addStatement(Statement(tx.newEntity(), a, Entity("test"), default))
+        tx.addStatement(Statement(Entity("a"), Entity("knows"), Entity("b"), default))
+        tx.addStatement(Statement(Entity("b"), Entity("knows"), Entity("c"), default))
+        tx.addStatement(Statement(Entity("c"), Entity("knows"), Entity("a"), default))
+        tx.addStatement(Statement(Entity("c"), Entity("knows"), Entity("a"), default)) //dupe
+        tx.addStatement(Statement(tx.newEntity(), tx.newEntity(), tx.newEntity(), tx.newEntity()))
+        tx.commit()
+        val readTx = collection.readTx()
+        readTx.matchStatements().toSet().size shouldBe 6
+        readTx.matchStatements(null, null, null, default).toSet().size shouldBe 5
+        readTx.matchStatements(null, a, null).toSet() shouldBe setOf(
+                Statement(Entity("This"), a, Entity("test"), default),
+                Statement(Entity("_:1"), a, Entity("test"), default)
+        )
+        readTx.matchStatements(null, a, "test").toSet() shouldBe setOf(
+                Statement(Entity("This"), a, Entity("test"), default),
+                Statement(Entity("_:1"), a, Entity("test"), default)
+        )
+        readTx.matchStatements(null, null, "test", null).toSet() shouldBe setOf(
+                Statement(Entity("This"), a, Entity("test"), default),
+                Statement(Entity("_:1"), a, Entity("test"), default)
+        )
+        readTx.matchStatements(null, null, null, Entity("_:5")).toSet() shouldBe setOf(
+                Statement(Entity("_:2"), Entity("_:3"), Entity("_:4"), Entity("_:5"))
+        )
+        readTx.cancel() // TODO add test running against a non-existant collection w/ match-statement calls
+        // TODO test range queries
+    }
 })
