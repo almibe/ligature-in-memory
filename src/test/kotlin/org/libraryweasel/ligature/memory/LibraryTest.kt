@@ -8,8 +8,8 @@ import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.toSet
 import org.libraryweasel.ligature.*
-import javax.swing.plaf.nimbus.State
 
 class InMemorySpec: StringSpec({
     "Create and close store" {
@@ -111,7 +111,7 @@ class InMemorySpec: StringSpec({
         tx.addStatement(Statement(tx.newEntity(), tx.newEntity(), tx.newEntity(), tx.newEntity()))
         tx.commit()
         val readTx = collection.readTx()
-        readTx.allRules().toSet() shouldBe setOf(
+        readTx.allStatements().toSet() shouldBe setOf(
                 Statement(Entity("_:1"), Entity("_:2"), Entity("_:3"), Entity("_:4")),
                 Statement(Entity("_:5"), Entity("_:6"), Entity("_:7"), Entity("_:8")))
         readTx.cancel()

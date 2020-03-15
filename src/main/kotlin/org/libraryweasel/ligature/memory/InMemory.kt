@@ -127,7 +127,9 @@ private class InMemoryWriteTx(private val name: Entity,
 
     @Synchronized override fun newEntity(): Entity {
         if (active.get()) {
-            TODO("Not yet implemented")
+            val newId = workingState.counter.incrementAndGet()
+            workingState = CollectionValue(workingState.statements, workingState.rules, workingState.counter)
+            return Entity("_:$newId")
         } else {
             throw RuntimeException("Transaction is closed.")
         }
