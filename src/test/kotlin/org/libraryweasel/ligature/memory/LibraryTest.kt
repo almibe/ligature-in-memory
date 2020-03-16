@@ -180,6 +180,59 @@ class InMemorySpec: StringSpec({
                 Statement(Entity("_:2"), Entity("_:3"), Entity("_:4"), Entity("_:5"))
         )
         readTx.cancel() // TODO add test running against a non-existant collection w/ match-statement calls
-        // TODO test range queries
     }
+
+    "matching statements with literals and ranges in collections" {
+        val store = InMemoryStore()
+        val collection = store.createCollection(Entity("test"))
+        collection shouldNotBe null
+        val tx = collection.writeTx()
+        tx.addStatement(Statement(Entity("This"), Entity("test"), StringLiteral("aa"), default))
+        tx.addStatement(Statement(Entity("This"), Entity("test"), StringLiteral("bb"), default))
+        tx.addStatement(Statement(Entity("This"), Entity("test"), StringLiteral("cc"), default))
+        tx.addStatement(Statement(Entity("This"), Entity("test"), StringLiteral("cd"), default))
+        tx.addStatement(Statement(tx.newEntity(), Entity("test"), LangLiteral("le test", "fr"), default))
+        tx.addStatement(Statement(tx.newEntity(), Entity("test"), LangLiteral("le test", "en"), default))
+        tx.addStatement(Statement(tx.newEntity(), Entity("test"), LangLiteral("le test2", "fr"), default))
+        tx.addStatement(Statement(tx.newEntity(), Entity("test"), LangLiteral("le test3", "fr"), default))
+        tx.addStatement(Statement(Entity("a"), Entity("test"), LongLiteral(100L), default))
+        tx.addStatement(Statement(Entity("a"), Entity("test2"), LongLiteral(100L), default))
+        tx.addStatement(Statement(Entity("b"), Entity("test"), LongLiteral(1000L), default))
+        tx.addStatement(Statement(Entity("c"), Entity("test"), DoubleLiteral(42.0), default))
+        tx.addStatement(Statement(Entity("c"), Entity("test"), DoubleLiteral(42.0), default)) //dupe
+        tx.addStatement(Statement(Entity("c"), Entity("test"), DoubleLiteral(2.0), default))
+        tx.addStatement(Statement(tx.newEntity(), tx.newEntity(), tx.newEntity(), tx.newEntity()))
+        tx.commit()
+        val readTx = collection.readTx()
+        readTx.matchStatements().toSet().size shouldBe 14
+        readTx.matchStatements(null, null, LongLiteral(100L), default).toSet().size shouldBe 2
+        readTx.matchStatements(null, null, StringLiteralRange("b", "cc")).toSet() shouldBe setOf(
+                Statement(Entity("This"), Entity("test"), StringLiteral("bb"), default),
+                Statement(Entity("This"), Entity("test"), StringLiteral("cc"), default)
+        )
+        readTx.matchStatements(null, null, LangLiteralRange(LangLiteral("le test", "fr"), LangLiteral("le test2", "fr"))).toSet() shouldBe setOf(
+                Statement(Entity("_:1"), Entity("test"), LangLiteral("le test", "fr"), default),
+                Statement(Entity("_:3"), Entity("test"), LangLiteral("le test2", "fr"), default)
+        )
+        readTx.matchStatements(null, null, LongLiteralRange(99L,100L), null).toSet() shouldBe setOf(
+                Statement(Entity("a"), Entity("test"), LongLiteral(100L), default),
+                Statement(Entity("a"), Entity("test2"), LongLiteral(100L), default)
+        )
+        readTx.matchStatements(null, null, DoubleLiteralRange(2.1, 42.0), default).toSet() shouldBe setOf(
+                Statement(Entity("c"), Entity("test"), DoubleLiteral(42.0), default)
+        )
+        readTx.cancel() // TODO add test running against a non-existant collection w/ match-statement calls
+    }
+
+//    "matching statements with collection literals in collections" {
+//        val store = InMemoryStore()
+//        val collection = store.createCollection(Entity("test"))
+//        collection shouldNotBe null
+//        val tx = collection.writeTx()
+//        TODO("Add values")
+//        tx.commit()
+//        val readTx = collection.readTx()
+//        TODO("Add assertions")
+//        readTx.cancel() // TODO add test running against a non-existant collection w/ match-statement calls
+//    }
 })
