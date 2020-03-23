@@ -1,0 +1,10 @@
+[package]
+name = "ligature-in-memory"
+version = "0.1.0-SNAPSHOT"
+authors = ["Alex Michael Berry <berry3@indiana.edu>"]
+edition = "2018"
+license = "MPLv2"
+
+[dependencies]
+ligature = { git = "https://github.com/almibe/ligature" }
+im-rc = "14.3.0"
