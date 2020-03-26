@@ -2,6 +2,6 @@
 An in-memory implementation of Ligature.
 
 ## Building
-This project requires Cargo to be installed.
-See https://www.rust-lang.org/learn/get-started for installation instructions.
-Once that is set up use `cargo test` to run tests `cargo build` to build the artifact.
+This project requires Gradle to be installed.
+See https://gradle.org for installation instructions.
+Once that is set up use `gradle test` to run tests `gradle install` to install the artifact locally.
