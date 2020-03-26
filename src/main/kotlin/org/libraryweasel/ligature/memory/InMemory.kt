@@ -39,8 +39,6 @@ class InMemoryStore: LigatureStore {
     override fun deleteCollection(collectionName: Entity) {
         collections.remove(collectionName)
     }
-
-    override fun details(): Map<String, String> = mapOf("location" to "memory")
 }
 
 private class InMemoryCollection(private val name: Entity,
@@ -90,7 +88,7 @@ private class InMemoryReadTx(name: Entity,
         }
     }
 
-    override fun matchRules(subject: Node?, predicate: Entity?, `object`: Node?): Flow<Rule> {
+    override fun matchRules(subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Rule> {
         return if (active.get()) {
             matchRulesImpl(collection.rules, subject, predicate, `object`)
         } else {
@@ -98,17 +96,17 @@ private class InMemoryReadTx(name: Entity,
         }
     }
 
-    override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
+    override fun matchStatements(subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
         return if (active.get()) {
-            matchStatementsImpl(collection.statements, subject, predicate, `object`, graph)
+            matchStatementsImpl(collection.statements, subject, predicate, `object`, context)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
-    override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
+    override fun matchStatements(subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
         return if (active.get()) {
-            matchStatementsImpl(collection.statements, subject, predicate, range, graph)
+            matchStatementsImpl(collection.statements, subject, predicate, range, context)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -203,7 +201,7 @@ private class InMemoryWriteTx(private val name: Entity,
         }
     }
 
-    @Synchronized override fun matchRules(subject: Node?, predicate: Entity?, `object`: Node?): Flow<Rule> {
+    @Synchronized override fun matchRules(subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Rule> {
         return if (active.get()) {
             matchRulesImpl(workingState.rules, subject, predicate, `object`)
         } else {
@@ -211,24 +209,24 @@ private class InMemoryWriteTx(private val name: Entity,
         }
     }
 
-    @Synchronized override fun matchStatements(subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
+    @Synchronized override fun matchStatements(subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
         return if (active.get()) {
-            matchStatementsImpl(workingState.statements, subject, predicate, `object`, graph)
+            matchStatementsImpl(workingState.statements, subject, predicate, `object`, context)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 
-    @Synchronized override fun matchStatements(subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
+    @Synchronized override fun matchStatements(subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
         return if (active.get()) {
-            matchStatementsImpl(workingState.statements, subject, predicate, range, graph)
+            matchStatementsImpl(workingState.statements, subject, predicate, range, context)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
     }
 }
 
-private fun matchRulesImpl(rules: Set<Rule>, subject: Node?, predicate: Entity?, `object`: Node?): Flow<Rule> {
+private fun matchRulesImpl(rules: Set<Rule>, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Rule> {
     return rules.asFlow().filter {
         when (subject) {
             null -> true
@@ -247,7 +245,7 @@ private fun matchRulesImpl(rules: Set<Rule>, subject: Node?, predicate: Entity?,
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, predicate: Entity?, `object`: Node?, graph: Entity?): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
@@ -264,14 +262,14 @@ private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, pred
             else -> (`object` == it.`object`)
         }
     }.filter {
-        when (graph) {
+        when (context) {
             null -> true
-            else -> (graph == it.graph)
+            else -> (context == it.context)
         }
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, predicate: Entity?, range: Range<*>, graph: Entity?): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
@@ -290,9 +288,9 @@ private fun matchStatementsImpl(statements: Set<Statement>, subject: Node?, pred
             is DoubleLiteralRange -> (it.`object` is DoubleLiteral && (it.`object` as DoubleLiteral).value >= range.start && (it.`object` as DoubleLiteral).value <= range.end)
         }
     }.filter {
-        when (graph) {
+        when (context) {
             null -> true
-            else -> (graph == it.graph)
+            else -> (context == it.context)
         }
     }
 }
