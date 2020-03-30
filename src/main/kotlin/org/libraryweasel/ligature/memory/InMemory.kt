@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 private data class CollectionValue(val statements: Set<Statement>,
-                                   val rules: Set<Rule>,
                                    val counter: AtomicLong)
 
 class InMemoryStore: LigatureStore {
@@ -29,7 +28,7 @@ class InMemoryStore: LigatureStore {
     override fun close() = collections.clear()
 
     override fun createCollection(collectionName: Entity): LigatureCollection {
-        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), HashSet.empty(), AtomicLong(0)))
+        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), AtomicLong(0)))
         return InMemoryCollection(collectionName, collections, lock)
     }
 
@@ -55,20 +54,12 @@ private class InMemoryCollection(private val name: Entity,
 private class InMemoryReadTx(name: Entity,
                              collections: ConcurrentHashMap<Entity, CollectionValue>,
                              lock: ReentrantReadWriteLock): ReadTx {
-    private val collection = collections[name] ?: CollectionValue(HashSet.empty(), HashSet.empty(), AtomicLong(0))
+    private val collection = collections[name] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
     private val active = AtomicBoolean(true)
     private val readLock = lock.readLock()
 
     init {
         readLock.lock()
-    }
-
-    override fun allRules(): Flow<Rule> {
-        return if (active.get()) {
-            collection.rules.asFlow()
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
     }
 
     override fun allStatements(): Flow<Statement> {
@@ -83,14 +74,6 @@ private class InMemoryReadTx(name: Entity,
         if (active.get()) {
             readLock.unlock()
             active.set(false)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    override fun matchRules(subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Rule> {
-        return if (active.get()) {
-            matchRulesImpl(collection.rules, subject, predicate, `object`)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -118,7 +101,7 @@ private class InMemoryWriteTx(private val name: Entity,
                               lock: ReentrantReadWriteLock): WriteTx {
     private val active = AtomicBoolean(true)
     private val writeLock = lock.writeLock()
-    private var workingState = collections[name] ?: CollectionValue(HashSet.empty(), HashSet.empty(), AtomicLong(0))
+    private var workingState = collections[name] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
 
     init {
         writeLock.lock()
@@ -127,16 +110,8 @@ private class InMemoryWriteTx(private val name: Entity,
     @Synchronized override fun newEntity(): Entity {
         if (active.get()) {
             val newId = workingState.counter.incrementAndGet()
-            workingState = CollectionValue(workingState.statements, workingState.rules, workingState.counter)
+            workingState = CollectionValue(workingState.statements, workingState.counter)
             return Entity("_:$newId")
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized override fun addRule(rule: Rule) {
-        if (active.get()) {
-            workingState = CollectionValue(workingState.statements, workingState.rules.add(rule), workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -144,15 +119,7 @@ private class InMemoryWriteTx(private val name: Entity,
 
     @Synchronized override fun addStatement(statement: Statement) {
         if (active.get()) {
-            workingState = CollectionValue(workingState.statements.add(statement), workingState.rules, workingState.counter)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized override fun removeRule(rule: Rule) {
-        if (active.get()) {
-            workingState = CollectionValue(workingState.statements, workingState.rules.remove(rule), workingState.counter)
+            workingState = CollectionValue(workingState.statements.add(statement), workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -160,15 +127,7 @@ private class InMemoryWriteTx(private val name: Entity,
 
     @Synchronized override fun removeStatement(statement: Statement) {
         if (active.get()) {
-            workingState = CollectionValue(workingState.statements.remove(statement), workingState.rules, workingState.counter)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized override fun allRules(): Flow<Rule> {
-        return if (active.get()) {
-            workingState.rules.asFlow()
+            workingState = CollectionValue(workingState.statements.remove(statement), workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -201,14 +160,6 @@ private class InMemoryWriteTx(private val name: Entity,
         }
     }
 
-    @Synchronized override fun matchRules(subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Rule> {
-        return if (active.get()) {
-            matchRulesImpl(workingState.rules, subject, predicate, `object`)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
     @Synchronized override fun matchStatements(subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
         return if (active.get()) {
             matchStatementsImpl(workingState.statements, subject, predicate, `object`, context)
@@ -222,25 +173,6 @@ private class InMemoryWriteTx(private val name: Entity,
             matchStatementsImpl(workingState.statements, subject, predicate, range, context)
         } else {
             throw RuntimeException("Transaction is closed.")
-        }
-    }
-}
-
-private fun matchRulesImpl(rules: Set<Rule>, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Rule> {
-    return rules.asFlow().filter {
-        when (subject) {
-            null -> true
-            else -> (subject == it.subject)
-        }
-    }.filter {
-        when (predicate) {
-            null -> true
-            else -> (predicate == it.predicate)
-        }
-    }.filter {
-        when (`object`) {
-            null -> true
-            else -> (`object` == it.`object`)
         }
     }
 }
