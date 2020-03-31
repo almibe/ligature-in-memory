@@ -60,8 +60,14 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         TODO("Not yet implemented")
     }
 
-    override fun collection(collectionName: CollectionName): CollectionReadTx? =
-        TODO("Not yet implemented")
+    override fun collection(collectionName: CollectionName): CollectionReadTx? {
+        val collection = collections.get(collectionName)
+        return if (collection == null) {
+            null
+        } else {
+            InMemoryCollectionReadTx(collectionName, collection, active)
+        }
+    }
 }
 
 private class InMemoryWriteTx(private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
@@ -83,8 +89,8 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
     }
 
     override fun collection(collectionName: CollectionName): CollectionWriteTx {
-        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), AtomicLong(0)))
-        return InMemoryCollectionWriteTx(collectionName, collections, lock)
+        val collection = collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), AtomicLong(0)))
+        return InMemoryCollectionWriteTx(collectionName, collections[collectionName]!!, active)
     }
 
     override fun collections(): Flow<CollectionName>  = collections.keys.asFlow()
@@ -115,16 +121,8 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
 }
 
 private class InMemoryCollectionReadTx(override val collectionName: CollectionName,
-                             collections: ConcurrentHashMap<CollectionName, CollectionValue>,
-                             lock: ReentrantReadWriteLock): CollectionReadTx {
-    private val collection = collections[collectionName] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
-    private val active = AtomicBoolean(true)
-    private val readLock = lock.readLock()
-
-    init {
-        readLock.lock()
-    }
-
+                             private val collection: CollectionValue,
+                             private val active: AtomicBoolean): CollectionReadTx {
     override fun allStatements(): Flow<Statement> {
         return if (active.get()) {
             collection.statements.asFlow()
@@ -151,15 +149,9 @@ private class InMemoryCollectionReadTx(override val collectionName: CollectionNa
 }
 
 private class InMemoryCollectionWriteTx(override val collectionName: CollectionName,
-                              private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
-                              lock: ReentrantReadWriteLock): CollectionWriteTx {
-    private val active = AtomicBoolean(true)
-    private val writeLock = lock.writeLock()
-    private var workingState = collections[collectionName] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
-
-    init {
-        writeLock.lock()
-    }
+                              private val collection: CollectionValue,
+                              private val active: AtomicBoolean): CollectionWriteTx {
+    private var workingState = collection
 
     @Synchronized override fun newEntity(): Entity {
         if (active.get()) {
