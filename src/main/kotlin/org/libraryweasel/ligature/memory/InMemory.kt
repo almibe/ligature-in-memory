@@ -20,41 +20,98 @@ private data class CollectionValue(val statements: Set<Statement>,
                                    val counter: AtomicLong)
 
 class InMemoryStore: LigatureStore {
-    private val collections = ConcurrentHashMap<Entity, CollectionValue>()
+    private val collections = ConcurrentHashMap<CollectionName, CollectionValue>()
     private val lock = ReentrantReadWriteLock()
-
-    override fun allCollections(): Flow<Entity> = collections.keys.asFlow()
 
     override fun close() = collections.clear()
 
-    override fun createCollection(collectionName: Entity): LigatureCollection {
-        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), AtomicLong(0)))
-        return InMemoryCollection(collectionName, collections, lock)
+    override fun readTx(): ReadTx {
+        return InMemoryReadTx(collections, lock)
     }
 
-    override fun collection(collectionName: Entity): LigatureCollection =
-        InMemoryCollection(collectionName, collections, lock)
+    override fun writeTx(): WriteTx {
+        return InMemoryWriteTx(collections, lock)
+    }
+}
+
+private class InMemoryReadTx(private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
+                             private val lock: ReentrantReadWriteLock): ReadTx {
+    override fun cancel() {
+        TODO("Not yet implemented")
+    }
+
+    override fun collections(): Flow<CollectionName> = collections.keys.asFlow()
+    override fun collections(prefix: CollectionName): Flow<CollectionName> {
+        TODO("Not yet implemented")
+    }
+    override fun collections(from: CollectionName, to: CollectionName): Flow<CollectionName> {
+        TODO("Not yet implemented")
+    }
+
+    override fun collection(collectionName: CollectionName): CollectionReadTx? =
+        TODO("Not yet implemented")
+
+}
+
+private class InMemoryWriteTx(private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
+                              private val lock: ReentrantReadWriteLock): WriteTx {
+    private fun createCollection(collectionName: CollectionName): CollectionWriteTx {
+        collections.putIfAbsent(collectionName, CollectionValue(HashSet.empty(), AtomicLong(0)))
+        return InMemoryCollectionWriteTx(collectionName, collections, lock)
+    }
+
+    override fun cancel() {
+        TODO("Not yet implemented")
+    }
+
+//    override fun cancel() {
+//        if (active.get()) {
+//            readLock.unlock()
+//            active.set(false)
+//        } else {
+//            throw RuntimeException("Transaction is closed.")
+//        }
+//    }
+
+    override fun collection(collectionName: CollectionName): CollectionWriteTx {
+        TODO("Not yet implemented")
+    }
+
+    override fun collections(): Flow<CollectionName> {
+        TODO("Not yet implemented")
+    }
+
+    override fun collections(prefix: CollectionName): Flow<CollectionName> {
+        TODO("Not yet implemented")
+    }
+
+    override fun collections(from: CollectionName, to: CollectionName): Flow<CollectionName> {
+        TODO("Not yet implemented")
+    }
+
+    override fun commit() {
+        TODO("Not yet implemented")
+    }
+
+//    @Synchronized override fun commit() {
+//        if (active.get()) {
+//            collections[name] = workingState
+//            active.set(false)
+//            writeLock.unlock()
+//        } else {
+//            throw RuntimeException("Transaction is closed.")
+//        }
+//    }
 
     override fun deleteCollection(collectionName: Entity) {
         collections.remove(collectionName)
     }
 }
 
-private class InMemoryCollection(private val name: Entity,
-                                 private val collections: ConcurrentHashMap<Entity, CollectionValue>,
-                                 private val lock: ReentrantReadWriteLock): LigatureCollection {
-    override val collectionName: Entity
-        get() = name
-
-    override fun readTx(): ReadTx = InMemoryReadTx(name, collections, lock)
-
-    override fun writeTx(): WriteTx = InMemoryWriteTx(name, collections, lock)
-}
-
-private class InMemoryReadTx(name: Entity,
-                             collections: ConcurrentHashMap<Entity, CollectionValue>,
-                             lock: ReentrantReadWriteLock): ReadTx {
-    private val collection = collections[name] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
+private class InMemoryCollectionReadTx(override val collectionName: CollectionName,
+                             collections: ConcurrentHashMap<CollectionName, CollectionValue>,
+                             lock: ReentrantReadWriteLock): CollectionReadTx {
+    private val collection = collections[collectionName] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
     private val active = AtomicBoolean(true)
     private val readLock = lock.readLock()
 
@@ -65,15 +122,6 @@ private class InMemoryReadTx(name: Entity,
     override fun allStatements(): Flow<Statement> {
         return if (active.get()) {
             collection.statements.asFlow()
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    override fun cancel() {
-        if (active.get()) {
-            readLock.unlock()
-            active.set(false)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -96,12 +144,12 @@ private class InMemoryReadTx(name: Entity,
     }
 }
 
-private class InMemoryWriteTx(private val name: Entity,
-                              private val collections: ConcurrentHashMap<Entity, CollectionValue>,
-                              lock: ReentrantReadWriteLock): WriteTx {
+private class InMemoryCollectionWriteTx(override val collectionName: CollectionName,
+                              private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
+                              lock: ReentrantReadWriteLock): CollectionWriteTx {
     private val active = AtomicBoolean(true)
     private val writeLock = lock.writeLock()
-    private var workingState = collections[name] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
+    private var workingState = collections[collectionName] ?: CollectionValue(HashSet.empty(), AtomicLong(0))
 
     init {
         writeLock.lock()
@@ -136,25 +184,6 @@ private class InMemoryWriteTx(private val name: Entity,
     @Synchronized override fun allStatements(): Flow<Statement> {
         return if (active.get()) {
             workingState.statements.asFlow()
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized override fun cancel() {
-        if (active.get()) {
-            writeLock.unlock()
-            active.set(false)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized override fun commit() {
-        if (active.get()) {
-            collections[name] = workingState
-            active.set(false)
-            writeLock.unlock()
         } else {
             throw RuntimeException("Transaction is closed.")
         }
