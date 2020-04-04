@@ -101,7 +101,8 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
 
     override fun addStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
-//            workingState[collection] = CollectionValue(workingState[collection].statements.add(statement), workingState.counter)
+            createCollection(collection)
+            workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(statement), workingState[collection]!!.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -117,30 +118,33 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
     }
 
     override fun commit() {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            collections.clear()
+            collections.putAll(workingState)
+            writeLock.unlock()
+            active.set(false)
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun createCollection(collection: CollectionName) {
-        collections.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
+        if (active.get()) {
+            workingState.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
-//    @Synchronized override fun commit() {
-//        if (active.get()) {
-//            collections[name] = workingState
-//            active.set(false)
-//            writeLock.unlock()
-//        } else {
-//            throw RuntimeException("Transaction is closed.")
-//        }
-//    }
-
-    override fun deleteCollection(collectionName: CollectionName) {
-        collections.remove(collectionName)
+    override fun deleteCollection(collection: CollectionName) {
+        if (active.get()) {
+            workingState.remove(collection)
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
-    override fun isOpen(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isOpen(): Boolean = active.get()
 
     override fun newEntity(collection: CollectionName): Entity {
         TODO("Not yet implemented")
