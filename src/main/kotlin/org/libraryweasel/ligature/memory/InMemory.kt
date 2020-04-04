@@ -168,18 +168,15 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
     @Synchronized override fun isOpen(): Boolean = active.get()
 
     @Synchronized override fun newEntity(collection: CollectionName): Entity {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            createCollection(collection)
+            val newId = workingState[collection]!!.counter.incrementAndGet()
+            workingState[collection] = CollectionValue(workingState[collection]!!.statements, workingState[collection]!!.counter)
+            return Entity("_:$newId")
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
-
-//    @Synchronized fun newEntity(): Entity {
-//        if (active.get()) {
-//            val newId = workingState.counter.incrementAndGet()
-//            workingState = CollectionValue(workingState.statements, workingState.counter)
-//            return Entity("_:$newId")
-//        } else {
-//            throw RuntimeException("Transaction is closed.")
-//        }
-//    }
 
     @Synchronized override fun removeStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
