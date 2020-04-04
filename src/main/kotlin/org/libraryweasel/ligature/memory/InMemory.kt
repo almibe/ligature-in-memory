@@ -86,28 +86,28 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
     override fun isOpen(): Boolean = active.get()
 
     override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
-        TODO("Not yet implemented")
+        return if (active.get()) {
+            if (collections.containsKey(collection)) {
+                matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`, context)
+            } else {
+                setOf<Statement>().asFlow()
+            }
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
-        TODO("Not yet implemented")
+        return if (active.get()) {
+            if (collections.containsKey(collection)) {
+                matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range, context)
+            } else {
+                setOf<Statement>().asFlow()
+            }
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
-
-//    fun matchStatements(subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
-//        return if (active.get()) {
-//            matchStatementsImpl(collection.statements, subject, predicate, `object`, context)
-//        } else {
-//            throw RuntimeException("Transaction is closed.")
-//        }
-//    }
-//
-//    fun matchStatements(subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
-//        return if (active.get()) {
-//            matchStatementsImpl(collection.statements, subject, predicate, range, context)
-//        } else {
-//            throw RuntimeException("Transaction is closed.")
-//        }
-//    }
 }
 
 private class InMemoryWriteTx(private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
