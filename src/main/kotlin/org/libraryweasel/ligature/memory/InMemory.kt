@@ -77,11 +77,9 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
 
     override fun collections(): Flow<CollectionName> = collections.keys.asFlow()
 
-    override fun collections(prefix: CollectionName): Flow<CollectionName> = collectionsImpl(prefix, collections)
+    override fun collections(prefix: CollectionName): Flow<CollectionName> = collectionsImpl(collections, prefix)
 
-    override fun collections(from: CollectionName, to: CollectionName): Flow<CollectionName> {
-        TODO("Not yet implemented")
-    }
+    override fun collections(from: CollectionName, to: CollectionName): Flow<CollectionName> = collectionsImpl(collections, from, to)
 
     override fun isOpen(): Boolean = active.get()
 
@@ -189,9 +187,15 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
     }
 }
 
-private fun collectionsImpl(prefix: CollectionName, collections: ConcurrentHashMap<CollectionName, CollectionValue>): Flow<CollectionName> {
+private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, prefix: CollectionName): Flow<CollectionName> {
     return collections.keys.asFlow().filter {
         it != null && it.name.startsWith(prefix.name)
+    }
+}
+
+private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, from: CollectionName, to: CollectionName): Flow<CollectionName> {
+    return collections.keys.asFlow().filter {
+        it != null && it.name >= from.name && it.name < to.name
     }
 }
 
