@@ -92,6 +92,22 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
     override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
+
+//    fun matchStatements(subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
+//        return if (active.get()) {
+//            matchStatementsImpl(collection.statements, subject, predicate, `object`, context)
+//        } else {
+//            throw RuntimeException("Transaction is closed.")
+//        }
+//    }
+//
+//    fun matchStatements(subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
+//        return if (active.get()) {
+//            matchStatementsImpl(collection.statements, subject, predicate, range, context)
+//        } else {
+//            throw RuntimeException("Transaction is closed.")
+//        }
+//    }
 }
 
 private class InMemoryWriteTx(private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
@@ -155,87 +171,21 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         TODO("Not yet implemented")
     }
 
+//    @Synchronized fun newEntity(): Entity {
+//        if (active.get()) {
+//            val newId = workingState.counter.incrementAndGet()
+//            workingState = CollectionValue(workingState.statements, workingState.counter)
+//            return Entity("_:$newId")
+//        } else {
+//            throw RuntimeException("Transaction is closed.")
+//        }
+//    }
+
     @Synchronized override fun removeStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
             if (workingState.containsKey(collection)) {
                 workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(statement), workingState[collection]!!.counter)
             }
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-}
-
-private class InMemoryCollectionReadTx(val collectionName: CollectionName,
-                             private val collection: CollectionValue,
-                             private val active: AtomicBoolean) {
-    fun allStatements(): Flow<Statement> {
-        return if (active.get()) {
-            collection.statements.asFlow()
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    fun matchStatements(subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
-        return if (active.get()) {
-            matchStatementsImpl(collection.statements, subject, predicate, `object`, context)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    fun matchStatements(subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
-        return if (active.get()) {
-            matchStatementsImpl(collection.statements, subject, predicate, range, context)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-}
-
-private class InMemoryCollectionWriteTx(val collectionName: CollectionName,
-                              private val collection: CollectionValue,
-                              private val active: AtomicBoolean) {
-    private var workingState = collection
-
-    @Synchronized fun newEntity(): Entity {
-        if (active.get()) {
-            val newId = workingState.counter.incrementAndGet()
-            workingState = CollectionValue(workingState.statements, workingState.counter)
-            return Entity("_:$newId")
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized fun removeStatement(statement: Statement) {
-        if (active.get()) {
-            workingState = CollectionValue(workingState.statements.remove(statement), workingState.counter)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized fun allStatements(): Flow<Statement> {
-        return if (active.get()) {
-            workingState.statements.asFlow()
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized fun matchStatements(subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
-        return if (active.get()) {
-            matchStatementsImpl(workingState.statements, subject, predicate, `object`, context)
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized fun matchStatements(subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
-        return if (active.get()) {
-            matchStatementsImpl(workingState.statements, subject, predicate, range, context)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
