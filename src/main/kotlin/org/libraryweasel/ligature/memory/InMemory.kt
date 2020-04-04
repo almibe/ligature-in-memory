@@ -58,7 +58,12 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
     }
 
     override fun allStatements(collection: CollectionName): Flow<Statement> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+            val result = collections[collection]?.statements?.toSet()?.asFlow()
+            return result ?: setOf<Statement>().asFlow()
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun cancel() {
@@ -99,7 +104,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         writeLock.lock()
     }
 
-    override fun addStatement(collection: CollectionName, statement: Statement) {
+    @Synchronized override fun addStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
             createCollection(collection)
             workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(statement), workingState[collection]!!.counter)
@@ -108,7 +113,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    override fun cancel() {
+    @Synchronized override fun cancel() {
         if (active.get()) {
             writeLock.unlock()
             active.set(false)
@@ -117,7 +122,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    override fun commit() {
+    @Synchronized override fun commit() {
         if (active.get()) {
             collections.clear()
             collections.putAll(workingState)
@@ -128,7 +133,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    override fun createCollection(collection: CollectionName) {
+    @Synchronized override fun createCollection(collection: CollectionName) {
         if (active.get()) {
             workingState.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
         } else {
@@ -136,7 +141,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    override fun deleteCollection(collection: CollectionName) {
+    @Synchronized override fun deleteCollection(collection: CollectionName) {
         if (active.get()) {
             workingState.remove(collection)
         } else {
@@ -144,14 +149,20 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    override fun isOpen(): Boolean = active.get()
+    @Synchronized override fun isOpen(): Boolean = active.get()
 
-    override fun newEntity(collection: CollectionName): Entity {
+    @Synchronized override fun newEntity(collection: CollectionName): Entity {
         TODO("Not yet implemented")
     }
 
-    override fun removeStatement(collection: CollectionName, statement: Statement) {
-        TODO("Not yet implemented")
+    @Synchronized override fun removeStatement(collection: CollectionName, statement: Statement) {
+        if (active.get()) {
+            if (workingState.containsKey(collection)) {
+                workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(statement), workingState[collection]!!.counter)
+            }
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 }
 
