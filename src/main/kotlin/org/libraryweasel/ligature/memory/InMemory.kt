@@ -22,16 +22,30 @@ private data class CollectionValue(val statements: Set<Statement>,
 class InMemoryStore: LigatureStore {
     private val collections = ConcurrentHashMap<CollectionName, CollectionValue>()
     private val lock = ReentrantReadWriteLock()
+    private val open = AtomicBoolean(true)
 
-    override fun close() = collections.clear()
-
-    override fun readTx(): ReadTx {
-        return InMemoryReadTx(collections, lock)
+    override suspend fun close() {
+        open.set(false)
+        collections.clear()
     }
 
-    override fun writeTx(): WriteTx {
-        return InMemoryWriteTx(collections, lock)
+    override suspend fun readTx(): ReadTx {
+        if (open.get()) {
+            return InMemoryReadTx(collections, lock)
+        } else {
+            throw RuntimeException("Store is closed.")
+        }
     }
+
+    override suspend fun writeTx(): WriteTx {
+        if (open.get()) {
+            return InMemoryWriteTx(collections, lock)
+        } else {
+            throw RuntimeException("Store is closed.")
+        }
+    }
+
+    override suspend fun isOpen(): Boolean = open.get()
 }
 
 private class InMemoryReadTx(private val collections: ConcurrentHashMap<CollectionName, CollectionValue>,
@@ -64,6 +78,8 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         TODO("Not yet implemented")
     }
 
+    override fun isOpen(): Boolean = active.get()
+
     override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
         TODO("Not yet implemented")
     }
@@ -77,17 +93,18 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
                               private val lock: ReentrantReadWriteLock): WriteTx {
     private val writeLock = lock.writeLock()
     private val active = AtomicBoolean(true)
+    private val workingState = ConcurrentHashMap(collections)
 
     init {
         writeLock.lock()
     }
 
     override fun addStatement(collection: CollectionName, statement: Statement) {
-        TODO("Not yet implemented")
-    }
-
-    override fun allStatements(collection: CollectionName): Flow<Statement> {
-        TODO("Not yet implemented")
+        if (active.get()) {
+//            workingState[collection] = CollectionValue(workingState[collection].statements.add(statement), workingState.counter)
+        } else {
+            throw RuntimeException("Transaction is closed.")
+        }
     }
 
     override fun cancel() {
@@ -99,20 +116,12 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    override fun collections(): Flow<CollectionName>  = collections.keys.asFlow()
-
-    override fun collections(prefix: CollectionName): Flow<CollectionName> = collectionsImpl(prefix, collections)
-
-    override fun collections(from: CollectionName, to: CollectionName): Flow<CollectionName> {
-        TODO("Not yet implemented")
-    }
-
     override fun commit() {
         TODO("Not yet implemented")
     }
 
     override fun createCollection(collection: CollectionName) {
-        TODO("Not yet implemented")
+        collections.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
     }
 
 //    @Synchronized override fun commit() {
@@ -129,11 +138,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         collections.remove(collectionName)
     }
 
-    override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
-        TODO("Not yet implemented")
-    }
-
-    override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
+    override fun isOpen(): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -184,14 +189,6 @@ private class InMemoryCollectionWriteTx(val collectionName: CollectionName,
             val newId = workingState.counter.incrementAndGet()
             workingState = CollectionValue(workingState.statements, workingState.counter)
             return Entity("_:$newId")
-        } else {
-            throw RuntimeException("Transaction is closed.")
-        }
-    }
-
-    @Synchronized fun addStatement(statement: Statement) {
-        if (active.get()) {
-            workingState = CollectionValue(workingState.statements.add(statement), workingState.counter)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
