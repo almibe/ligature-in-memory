@@ -170,7 +170,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
             createCollection(collection)
             val newId = workingState[collection]!!.counter.incrementAndGet()
             workingState[collection] = CollectionValue(workingState[collection]!!.statements, workingState[collection]!!.counter)
-            return Entity("_:$newId")
+            return Entity(newId)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -236,10 +236,10 @@ private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, pr
         }
     }.filter {
         when (range) {
-            is LangLiteralRange -> (it.`object` is LangLiteral && ((it.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.`object` as LangLiteral).value >= range.start.value && (it.`object` as LangLiteral).value <= range.end.value)
-            is StringLiteralRange -> (it.`object` is StringLiteral && (it.`object` as StringLiteral).value >= range.start && (it.`object` as StringLiteral).value <= range.end)
-            is LongLiteralRange -> (it.`object` is LongLiteral && (it.`object` as LongLiteral).value >= range.start && (it.`object` as LongLiteral).value <= range.end)
-            is DoubleLiteralRange -> (it.`object` is DoubleLiteral && (it.`object` as DoubleLiteral).value >= range.start && (it.`object` as DoubleLiteral).value <= range.end)
+            is LangLiteralRange -> (it.`object` is LangLiteral && ((it.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.`object` as LangLiteral).value >= range.start.value && (it.`object` as LangLiteral).value < range.end.value)
+            is StringLiteralRange -> (it.`object` is StringLiteral && (it.`object` as StringLiteral).value >= range.start && (it.`object` as StringLiteral).value < range.end)
+            is LongLiteralRange -> (it.`object` is LongLiteral && (it.`object` as LongLiteral).value >= range.start && (it.`object` as LongLiteral).value < range.end)
+            is DoubleLiteralRange -> (it.`object` is DoubleLiteral && (it.`object` as DoubleLiteral).value >= range.start && (it.`object` as DoubleLiteral).value < range.end)
         }
     }.filter {
         when (context) {
