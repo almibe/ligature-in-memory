@@ -57,7 +57,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         readLock.lock()
     }
 
-    override fun allStatements(collection: CollectionName): Flow<Statement> {
+    override suspend fun allStatements(collection: CollectionName): Flow<Statement> {
         if (active.get()) {
             val result = collections[collection]?.statements?.toSet()?.asFlow()
             return result ?: setOf<Statement>().asFlow()
@@ -66,7 +66,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override fun cancel() {
+    override suspend fun cancel() {
         if (active.get()) {
             readLock.unlock()
             active.set(false)
@@ -75,15 +75,15 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override fun collections(): Flow<CollectionName> = collections.keys.asFlow()
+    override suspend fun collections(): Flow<CollectionName> = collections.keys.asFlow()
 
-    override fun collections(prefix: CollectionName): Flow<CollectionName> = collectionsImpl(collections, prefix)
+    override suspend fun collections(prefix: CollectionName): Flow<CollectionName> = collectionsImpl(collections, prefix)
 
-    override fun collections(from: CollectionName, to: CollectionName): Flow<CollectionName> = collectionsImpl(collections, from, to)
+    override suspend fun collections(from: CollectionName, to: CollectionName): Flow<CollectionName> = collectionsImpl(collections, from, to)
 
-    override fun isOpen(): Boolean = active.get()
+    override suspend fun isOpen(): Boolean = active.get()
 
-    override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`, context)
@@ -95,7 +95,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range, context)
@@ -118,7 +118,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         writeLock.lock()
     }
 
-    @Synchronized override fun addStatement(collection: CollectionName, statement: Statement) {
+    @Synchronized override suspend fun addStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
             createCollection(collection)
             workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(statement), workingState[collection]!!.counter)
@@ -127,7 +127,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    @Synchronized override fun cancel() {
+    @Synchronized override suspend fun cancel() {
         if (active.get()) {
             writeLock.unlock()
             active.set(false)
@@ -136,7 +136,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    @Synchronized override fun commit() {
+    @Synchronized override suspend fun commit() {
         if (active.get()) {
             collections.clear()
             collections.putAll(workingState)
@@ -147,7 +147,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    @Synchronized override fun createCollection(collection: CollectionName) {
+    @Synchronized override suspend fun createCollection(collection: CollectionName) {
         if (active.get()) {
             workingState.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
         } else {
@@ -155,7 +155,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    @Synchronized override fun deleteCollection(collection: CollectionName) {
+    @Synchronized override suspend fun deleteCollection(collection: CollectionName) {
         if (active.get()) {
             workingState.remove(collection)
         } else {
@@ -163,9 +163,9 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    @Synchronized override fun isOpen(): Boolean = active.get()
+    @Synchronized override suspend fun isOpen(): Boolean = active.get()
 
-    @Synchronized override fun newEntity(collection: CollectionName): Entity {
+    @Synchronized override suspend fun newEntity(collection: CollectionName): Entity {
         if (active.get()) {
             createCollection(collection)
             val newId = workingState[collection]!!.counter.incrementAndGet()
@@ -176,7 +176,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    @Synchronized override fun removeStatement(collection: CollectionName, statement: Statement) {
+    @Synchronized override suspend fun removeStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
             if (workingState.containsKey(collection)) {
                 workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(statement), workingState[collection]!!.counter)
