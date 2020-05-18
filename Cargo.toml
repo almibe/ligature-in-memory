@@ -1,0 +1,9 @@
+[package]
+name = "ligature-in-memory"
+version = "0.1.0-SNAPSHOT"
+authors = ["Alex Michael Berry <berry3@indiana.edu>"]
+edition = "2018"
+
+[dependencies]
+futures = "0.3.4"
+im = "15.0.0"
