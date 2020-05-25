@@ -8,33 +8,35 @@ use im::HashMap;
 use futures::Stream;
 
 struct InMemoryStore {
+    is_open: bool,
     store: HashMap<String, OrdSet<Statement>>
 }
 
 impl LigatureStore for InMemoryStore {
     fn read_tx(&self) -> &dyn ReadTx {
-        unimplemented!()
+        &InMemoryReadTx { is_open: true }
     }
 
     fn write_tx(&self) -> &dyn WriteTx {
-        unimplemented!()
+        &InMemoryWriteTx { is_open: true }
     }
 
-    fn close(&self) {
-        unimplemented!()
+    fn close(&mut self) {
+        self.is_open = false;
+        self.store = HashMap::new()
     }
 
     fn is_open(&self) -> bool {
-        unimplemented!()
+        is_open
     }
 }
 
 pub fn ligature_in_memory() -> Box<dyn LigatureStore> {
-    Box::new(InMemoryStore { store: HashMap::new() })
+    Box::new(InMemoryStore { is_open: true, store: HashMap::new() })
 }
 
 struct InMemoryReadTx {
-
+    is_open: bool
 }
 
 impl ReadTx for InMemoryReadTx {
@@ -72,7 +74,7 @@ impl ReadTx for InMemoryReadTx {
 }
 
 struct InMemoryWriteTx {
-
+    is_open: bool
 }
 
 impl WriteTx for InMemoryWriteTx {
