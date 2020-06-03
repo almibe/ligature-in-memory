@@ -14,7 +14,7 @@ struct InMemoryStore {
 
 impl LigatureStore for InMemoryStore {
     fn read_tx(&self) -> &dyn ReadTx {
-        &InMemoryReadTx { is_open: true }
+        &InMemoryReadTx { is_open: true, store: self }
     }
 
     fn write_tx(&self) -> &dyn WriteTx {
@@ -27,7 +27,7 @@ impl LigatureStore for InMemoryStore {
     }
 
     fn is_open(&self) -> bool {
-        is_open
+        self.is_open
     }
 }
 
@@ -35,11 +35,12 @@ pub fn ligature_in_memory() -> Box<dyn LigatureStore> {
     Box::new(InMemoryStore { is_open: true, store: HashMap::new() })
 }
 
-struct InMemoryReadTx {
-    is_open: bool
+struct InMemoryReadTx<'a> {
+    is_open: bool,
+    store: &'a InMemoryStore
 }
 
-impl ReadTx for InMemoryReadTx {
+impl <'a>ReadTx for InMemoryReadTx<'a> {
     fn collections(&self) -> &dyn Stream<Item=CollectionName> {
         unimplemented!()
     }

@@ -2,21 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use futures::stream::Stream;
+use std::collections::HashSet;
+use ligature::LigatureStore;
+use ligature_in_memory::ligature_in_memory;
+
 #[test]
 fn test() {
     assert_eq!(true, true);
 }
 
-fn creation_function() -> LigatureStore {
-
+fn creation_function() -> Box<LigatureStore> {
+    ligature_in_memory()
 }
 
 #[test]
-fn create_and_close_store {
-    let store = creation_function();
-    store.compute { tx ->
-        tx.collections()
-    }.toSet() shouldBe setOf()
+fn create_and_close_store() {
+    let mut store = creation_function();
+    let tx = store.read_tx();
+    let collections = tx.collections();
     store.close()
 }
 
