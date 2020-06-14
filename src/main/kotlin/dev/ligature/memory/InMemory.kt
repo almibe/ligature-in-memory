@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.libraryweasel.ligature.memory
+package dev.ligature.memory
 
 import io.vavr.collection.HashSet
 import io.vavr.collection.Set
@@ -83,7 +83,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
 
     override suspend fun isOpen(): Boolean = active.get()
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: NamedEntity?, `object`: Object?, context: Entity?): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`, context)
@@ -95,7 +95,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: NamedEntity?, range: Range<*>, context: Entity?): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range, context)
@@ -165,15 +165,19 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
 
     @Synchronized override suspend fun isOpen(): Boolean = active.get()
 
-    @Synchronized override suspend fun newEntity(collection: CollectionName): Entity {
+    @Synchronized override suspend fun newEntity(collection: CollectionName): AnonymousEntity {
         if (active.get()) {
             createCollection(collection)
             val newId = workingState[collection]!!.counter.incrementAndGet()
             workingState[collection] = CollectionValue(workingState[collection]!!.statements, workingState[collection]!!.counter)
-            return Entity(newId)
+            return AnonymousEntity(newId)
         } else {
             throw RuntimeException("Transaction is closed.")
         }
+    }
+
+    override suspend fun removeEntity(entity: Entity) {
+        TODO("Not yet implemented")
     }
 
     @Synchronized override suspend fun removeStatement(collection: CollectionName, statement: Statement) {
@@ -199,7 +203,7 @@ private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, Colle
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: NamedEntity?, `object`: Object?, context: Entity?): Flow<Statement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
@@ -223,7 +227,7 @@ private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, pr
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: NamedEntity?, range: Range<*>, context: Entity?): Flow<Statement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
