@@ -5,6 +5,6 @@
 package dev.ligature.memory
 
 import io.kotlintest.specs.StringSpec
-import org.libraryweasel.ligature.test.createSpec
+import dev.ligature.test.createSpec
 
 class InMemorySpec: StringSpec({createSpec { InMemoryStore() }()})

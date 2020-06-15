@@ -1,6 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.jvm").version("1.3.70")
-    maven
+    `maven-publish`
 }
 
 project.group = "dev.ligature"
@@ -22,4 +22,12 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
 }

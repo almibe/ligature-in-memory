@@ -9,7 +9,7 @@ import io.vavr.collection.Set
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.filter
-import org.libraryweasel.ligature.*
+import dev.ligature.*
 import java.lang.RuntimeException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -75,7 +75,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override suspend fun collections(): Flow<CollectionName> = collections.keys.asFlow()
+    override suspend fun collections(): Flow<NamedEntity> = collections.keys.asFlow()
 
     override suspend fun collections(prefix: CollectionName): Flow<CollectionName> = collectionsImpl(collections, prefix)
 
@@ -83,7 +83,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
 
     override suspend fun isOpen(): Boolean = active.get()
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: NamedEntity?, `object`: Object?, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`, context)
@@ -95,7 +95,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: NamedEntity?, range: Range<*>, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range, context)
@@ -176,7 +176,7 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         }
     }
 
-    override suspend fun removeEntity(entity: Entity) {
+    override suspend fun removeEntity(collection: CollectionName, entity: Entity) {
         TODO("Not yet implemented")
     }
 
@@ -191,13 +191,13 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
     }
 }
 
-private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, prefix: CollectionName): Flow<CollectionName> {
+private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, prefix: NamedEntity): Flow<CollectionName> {
     return collections.keys.asFlow().filter {
         it != null && it.name.startsWith(prefix.name)
     }
 }
 
-private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, from: CollectionName, to: CollectionName): Flow<CollectionName> {
+private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, from: NamedEntity, to: NamedEntity): Flow<NamedEntity> {
     return collections.keys.asFlow().filter {
         it != null && it.name >= from.name && it.name < to.name
     }
