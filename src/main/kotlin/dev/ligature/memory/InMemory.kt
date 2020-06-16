@@ -75,7 +75,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override suspend fun collections(): Flow<NamedEntity> = collections.keys.asFlow()
+    override suspend fun collections(): Flow<CollectionName> = collections.keys.asFlow()
 
     override suspend fun collections(prefix: CollectionName): Flow<CollectionName> = collectionsImpl(collections, prefix)
 
@@ -83,10 +83,10 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
 
     override suspend fun isOpen(): Boolean = active.get()
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
-                matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`, context)
+                matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
             } else {
                 setOf<Statement>().asFlow()
             }
@@ -95,10 +95,10 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>, context: Entity?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<Statement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
-                matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range, context)
+                matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
             } else {
                 setOf<Statement>().asFlow()
             }
@@ -180,6 +180,10 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         TODO("Not yet implemented")
     }
 
+    override suspend fun removePredicate(collection: CollectionName, predicate: Predicate) {
+        TODO("Not yet implemented")
+    }
+
     @Synchronized override suspend fun removeStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
             if (workingState.containsKey(collection)) {
@@ -191,19 +195,19 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
     }
 }
 
-private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, prefix: NamedEntity): Flow<CollectionName> {
+private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, prefix: CollectionName): Flow<CollectionName> {
     return collections.keys.asFlow().filter {
-        it != null && it.name.startsWith(prefix.name)
+        it != null && it.identifier.startsWith(prefix.identifier)
     }
 }
 
-private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, from: NamedEntity, to: NamedEntity): Flow<NamedEntity> {
+private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, CollectionValue>, from: CollectionName, to: CollectionName): Flow<CollectionName> {
     return collections.keys.asFlow().filter {
-        it != null && it.name >= from.name && it.name < to.name
+        it != null && it.identifier >= from.identifier && it.identifier < to.identifier
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: NamedEntity?, `object`: Object?, context: Entity?): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Statement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
@@ -219,15 +223,10 @@ private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, pr
             null -> true
             else -> (`object` == it.`object`)
         }
-    }.filter {
-        when (context) {
-            null -> true
-            else -> (context == it.context)
-        }
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: NamedEntity?, range: Range<*>, context: Entity?): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<Statement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
@@ -244,11 +243,6 @@ private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, pr
             is StringLiteralRange -> (it.`object` is StringLiteral && (it.`object` as StringLiteral).value >= range.start && (it.`object` as StringLiteral).value < range.end)
             is LongLiteralRange -> (it.`object` is LongLiteral && (it.`object` as LongLiteral).value >= range.start && (it.`object` as LongLiteral).value < range.end)
             is DoubleLiteralRange -> (it.`object` is DoubleLiteral && (it.`object` as DoubleLiteral).value >= range.start && (it.`object` as DoubleLiteral).value < range.end)
-        }
-    }.filter {
-        when (context) {
-            null -> true
-            else -> (context == it.context)
         }
     }
 }
