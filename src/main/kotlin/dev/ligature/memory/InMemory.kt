@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-private data class CollectionValue(val statements: Set<Statement>,
+private data class CollectionValue(val statements: Set<PersistedStatement>,
                                    val counter: AtomicLong)
 
 class InMemoryStore: LigatureStore {
@@ -57,10 +57,10 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         readLock.lock()
     }
 
-    override suspend fun allStatements(collection: CollectionName): Flow<Statement> {
+    override suspend fun allStatements(collection: CollectionName): Flow<PersistedStatement> {
         if (active.get()) {
             val result = collections[collection]?.statements?.toSet()?.asFlow()
-            return result ?: setOf<Statement>().asFlow()
+            return result ?: setOf<PersistedStatement>().asFlow()
         } else {
             throw RuntimeException("Transaction is closed.")
         }
@@ -83,7 +83,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
 
     override suspend fun isOpen(): Boolean = active.get()
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<PersistedStatement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
@@ -95,7 +95,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
         }
     }
 
-    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<Statement> {
+    override suspend fun matchStatements(collection: CollectionName, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<PersistedStatement> {
         return if (active.get()) {
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
@@ -118,10 +118,13 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
         writeLock.lock()
     }
 
-    @Synchronized override suspend fun addStatement(collection: CollectionName, statement: Statement) {
+    @Synchronized override suspend fun addStatement(collection: CollectionName, statement: Statement): PersistedStatement {
         if (active.get()) {
             createCollection(collection)
-            workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(statement), workingState[collection]!!.counter)
+            val context = newEntity(collection)
+            val persistedStatement = PersistedStatement(collection, statement, context)
+            workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(persistedStatement), workingState[collection]!!.counter)
+            return persistedStatement
         } else {
             throw RuntimeException("Transaction is closed.")
         }
