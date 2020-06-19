@@ -6,10 +6,8 @@ package dev.ligature.memory
 
 import io.vavr.collection.HashSet
 import io.vavr.collection.Set
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filter
 import dev.ligature.*
+import kotlinx.coroutines.flow.*
 import java.lang.RuntimeException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -88,7 +86,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
             } else {
-                setOf<Statement>().asFlow()
+                setOf<PersistedStatement>().asFlow()
             }
         } else {
             throw RuntimeException("Transaction is closed.")
@@ -100,7 +98,7 @@ private class InMemoryReadTx(private val collections: ConcurrentHashMap<Collecti
             if (collections.containsKey(collection)) {
                 matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
             } else {
-                setOf<Statement>().asFlow()
+                setOf<PersistedStatement>().asFlow()
             }
         } else {
             throw RuntimeException("Transaction is closed.")
@@ -190,7 +188,13 @@ private class InMemoryWriteTx(private val collections: ConcurrentHashMap<Collect
     @Synchronized override suspend fun removeStatement(collection: CollectionName, statement: Statement) {
         if (active.get()) {
             if (workingState.containsKey(collection)) {
-                workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(statement), workingState[collection]!!.counter)
+                val persistedStatement = matchStatementsImpl(workingState[collection]!!.statements,
+                    statement.subject,
+                    statement.predicate,
+                    statement.`object`).toList()
+                if (persistedStatement.size == 1) {
+                    workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(persistedStatement.first()), workingState[collection]!!.counter)
+                }
             }
         } else {
             throw RuntimeException("Transaction is closed.")
@@ -210,42 +214,42 @@ private fun collectionsImpl(collections: ConcurrentHashMap<CollectionName, Colle
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<PersistedStatement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
-            else -> (subject == it.subject)
+            else -> (subject == it.statement.subject)
         }
     }.filter {
         when (predicate) {
             null -> true
-            else -> (predicate == it.predicate)
+            else -> (predicate == it.statement.predicate)
         }
     }.filter {
         when (`object`) {
             null -> true
-            else -> (`object` == it.`object`)
+            else -> (`object` == it.statement.`object`)
         }
     }
 }
 
-private fun matchStatementsImpl(statements: Set<Statement>, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<Statement> {
+private fun matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<PersistedStatement> {
     return statements.asFlow().filter {
         when (subject) {
             null -> true
-            else -> (subject == it.subject)
+            else -> (subject == it.statement.subject)
         }
     }.filter {
         when (predicate) {
             null -> true
-            else -> (predicate == it.predicate)
+            else -> (predicate == it.statement.predicate)
         }
     }.filter {
         when (range) {
-            is LangLiteralRange -> (it.`object` is LangLiteral && ((it.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.`object` as LangLiteral).value >= range.start.value && (it.`object` as LangLiteral).value < range.end.value)
-            is StringLiteralRange -> (it.`object` is StringLiteral && (it.`object` as StringLiteral).value >= range.start && (it.`object` as StringLiteral).value < range.end)
-            is LongLiteralRange -> (it.`object` is LongLiteral && (it.`object` as LongLiteral).value >= range.start && (it.`object` as LongLiteral).value < range.end)
-            is DoubleLiteralRange -> (it.`object` is DoubleLiteral && (it.`object` as DoubleLiteral).value >= range.start && (it.`object` as DoubleLiteral).value < range.end)
+            is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
+            is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
+            is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
+            is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
         }
     }
 }
