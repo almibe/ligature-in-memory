@@ -4,7 +4,9 @@
 
 package dev.ligature.memory
 
-import io.kotlintest.specs.StringSpec
-import dev.ligature.test.createSpec
+import dev.ligature.LigatureStore
+import dev.ligature.test.LigatureSuite
 
-class InMemorySpec: StringSpec({createSpec { InMemoryStore() }()})
+class InMemorySpec extends LigatureSuite {
+  override def createStore(): LigatureStore = new InMemoryStore()
+}
