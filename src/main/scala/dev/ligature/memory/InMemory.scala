@@ -4,34 +4,34 @@
 
 package dev.ligature.memory
 
-import java.util
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.Resource
 import dev.ligature._
 import monix.eval.Task
+import monix.execution.atomic.{Atomic, AtomicAny, AtomicBoolean, AtomicLong}
 import monix.reactive.Observable
 
-private case class CollectionValue(statements: util.Set[PersistedStatement],
+import scala.collection.immutable.HashMap
+
+private case class CollectionValue(statements: AtomicAny[Set[PersistedStatement]],
                                    counter: AtomicLong)
 
 class InMemoryStore extends LigatureStore {
-  private val collections = new ConcurrentHashMap[NamedEntity, CollectionValue]()
+  private val collections = Atomic(new HashMap[NamedEntity, CollectionValue]())
   private val lock = new ReentrantReadWriteLock()
-  private val open = new AtomicBoolean(true)
+  private val open = Atomic(true)
 
   override def close() {
     open.set(false)
-    collections.clear()
+    collections.set(new HashMap[NamedEntity, CollectionValue]())
   }
 
   override def readTx(): Resource[Task, ReadTx] = {
     if (open.get()) {
       Resource.make(
         Task {
-          new InMemoryReadTx(collections, lock.readLock())
+          new InMemoryReadTx(collections.get(), lock.readLock())
         }) { in: ReadTx =>
           Task {
             if (in.isOpen)
@@ -55,17 +55,18 @@ class InMemoryStore extends LigatureStore {
   override def isOpen(): Boolean = open.get()
 }
 
-private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, CollectionValue],
+private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue],
     private val lock: ReentrantReadWriteLock.ReadLock) extends ReadTx {
-  private val active = new AtomicBoolean(true)
+  private val active = Atomic(true)
 
   lock.lock()
 
-  override def allStatements(collection: NamedEntity): Observable[PersistedStatement] = {
+  override def allStatements(collectionName: NamedEntity): Observable[PersistedStatement] = {
     if (active.get()) {
-      if (store.contains(collection)) {
-        val result = store.get(collection).statements
-        Observable.from(result)
+      val collection = store.get(collectionName)
+      if (collection.nonEmpty) {
+        val result = collection.get.statements
+        Observable.from(result.get())
       } else {
         Observable.empty
       }
@@ -93,26 +94,27 @@ private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, C
     collectionsImpl(from, to)
 
   private def collectionsImpl(prefix: NamedEntity): Observable[NamedEntity] = {
-    Observable.from(store.keySet.stream().filter { in =>
+    Observable.from(store.keySet.filter { in =>
       in != null && in.identifier.startsWith(prefix.identifier)
     })
   }
 
   private def collectionsImpl(from: NamedEntity, to: NamedEntity): Observable[NamedEntity] = {
-    Observable.from(store.keySet.stream().filter { in =>
+    Observable.from(store.keySet.filter { in =>
       in != null && in.identifier >= from.identifier && in.identifier < to.identifier
     })
   }
 
   override def isOpen(): Boolean = active.get()
 
-  override def matchStatements(collection: NamedEntity,
+  override def matchStatements(collectionName: NamedEntity,
                                subject: Entity = null,
                                predicate: Predicate = null,
                                `object`: Object = null): Observable[PersistedStatement] = {
     if (active.get()) {
-      if (store.containsKey(collection)) {
-        matchStatementsImpl(store.get(collection).statements, subject, predicate, `object`)
+      val collection = store.get(collectionName)
+      if (collection.nonEmpty) {
+        matchStatementsImpl(collection.get.statements.get(), subject, predicate, `object`)
       } else {
         Observable.empty
       }
@@ -121,13 +123,14 @@ private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, C
     }
   }
 
-  override def matchStatements(collection: NamedEntity,
+  override def matchStatements(collectionName: NamedEntity,
                                subject: Entity,
                                predicate: Predicate,
                                range: Range[_]): Observable[PersistedStatement] = {
     if (active.get()) {
-      if (store.containsKey(collection)) {
-        matchStatementsImpl(store.get(collection).statements, subject, predicate, range)
+      val collection = store.get(collectionName)
+      if (collection.nonEmpty) {
+        matchStatementsImpl(collection.get.statements.get(), subject, predicate, range)
       } else {
         Observable.empty
       }
