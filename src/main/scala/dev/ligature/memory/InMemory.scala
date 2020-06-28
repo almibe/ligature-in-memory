@@ -13,6 +13,7 @@ import monix.execution.atomic.{Atomic, AtomicAny, AtomicBoolean, AtomicLong}
 import monix.reactive.Observable
 
 import scala.collection.immutable.HashMap
+import scala.util.Try
 
 private case class CollectionValue(statements: AtomicAny[Set[PersistedStatement]],
                                    counter: AtomicLong)
@@ -47,7 +48,7 @@ class InMemoryStore extends LigatureStore {
     if (open.get()) {
       Resource.make(
         Task {
-          new InMemoryWrite(collections, lock)
+          new InMemoryWriteTx(collections, lock.writeLock())
         }) { tx: WriteTx =>
           Task {
             if (tx.isOpen) {
@@ -55,7 +56,6 @@ class InMemoryStore extends LigatureStore {
             }
           }
       }
-      )
     } else {
       throw new RuntimeException("Store is closed.")
     }
@@ -200,69 +200,74 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
 private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, CollectionValue]],
                               private val lock: ReentrantReadWriteLock.WriteLock) extends WriteTx {
   private val active = Atomic(true)
-  private val workingState = scala.collection.mutable.HashMap(collections)
+  private var workingState = store.get()
 
   lock.lock()
 
-  override def addStatement(collection: NamedEntity, statement: Statement): PersistedStatement = {
-    if (active.get()) {
-      createCollection(collection)
-      val context = newEntity(collection)
-      val persistedStatement = PersistedStatement(collection, statement, context)
-      workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(persistedStatement), workingState[collection]!!.counter)
-      persistedStatement
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+  override def addStatement(collection: NamedEntity, statement: Statement): Try[PersistedStatement] = {
+    ???
+//    if (active.get()) {
+//      createCollection(collection)
+//      val context = newEntity(collection)
+//      val persistedStatement = PersistedStatement(collection, statement, context)
+//      workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(persistedStatement), workingState[collection]!!.counter)
+//      persistedStatement
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 
   override def cancel() {
     if (active.get()) {
-      writeLock.unlock()
       active.set(false)
+      lock.unlock()
     } else {
       throw new RuntimeException("Transaction is closed.")
     }
   }
 
-  override def commit() {
-    if (active.get()) {
-      collections.clear()
-      collections.putAll(workingState)
-      writeLock.unlock()
-      active.set(false)
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+  override def commit(): Try[Unit] = {
+    ???
+//    if (active.get()) {
+//      collections.clear()
+//      collections.putAll(workingState)
+//      writeLock.unlock()
+//      active.set(false)
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 
-  override def createCollection(collection: NamedEntity) {
-    if (active.get()) {
-      workingState.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+  override def createCollection(collection: NamedEntity): Try[NamedEntity] = {
+    ???
+//    if (active.get()) {
+//      workingState.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 
-  override def deleteCollection(collection: NamedEntity) {
-    if (active.get()) {
-      workingState.remove(collection)
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+  override def deleteCollection(collection: NamedEntity): Try[NamedEntity] = {
+    ???
+//    if (active.get()) {
+//      workingState.remove(collection)
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 
   override def isOpen(): Boolean = active.get()
 
-  override def newEntity(collection: NamedEntity): AnonymousEntity = {
-    if (active.get()) {
-      createCollection(collection)
-      val newId = workingState[collection]!!.counter.incrementAndGet()
-      workingState[collection] = CollectionValue(workingState[collection]!!.statements, workingState[collection]!!.counter)
-      return AnonymousEntity(newId)
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+  override def newEntity(collection: NamedEntity): Try[AnonymousEntity] = {
+    ???
+//    if (active.get()) {
+//      createCollection(collection)
+//      val newId = workingState[collection]!!.counter.incrementAndGet()
+//      workingState[collection] = CollectionValue(workingState[collection]!!.statements, workingState[collection]!!.counter)
+//      return AnonymousEntity(newId)
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 
   override def removeEntity(collection: NamedEntity, entity: Entity) = {
@@ -273,19 +278,20 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
     ???
   }
 
-  override def removeStatement(collection: NamedEntity, statement: Statement) {
-    if (active.get()) {
-      if (workingState.containsKey(collection)) {
-        val persistedStatement = matchStatementsImpl(workingState[collection]!!.statements,
-                                                     statement.subject,
-                                                     statement.predicate,
-                                                     statement.`object`).toList()
-        if (persistedStatement.size == 1) {
-          workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(persistedStatement.first()), workingState[collection]!!.counter)
-        }
-      }
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+  override def removeStatement(collection: NamedEntity, statement: Statement): Try[Statement] = {
+    ???
+//    if (active.get()) {
+//      if (workingState.containsKey(collection)) {
+//        val persistedStatement = matchStatementsImpl(workingState[collection]!!.statements,
+//                                                     statement.subject,
+//                                                     statement.predicate,
+//                                                     statement.`object`).toList()
+//        if (persistedStatement.size == 1) {
+//          workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(persistedStatement.first()), workingState[collection]!!.counter)
+//        }
+//      }
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 }
