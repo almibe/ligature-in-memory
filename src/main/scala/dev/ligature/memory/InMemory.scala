@@ -63,8 +63,12 @@ private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, C
 
   override def allStatements(collection: NamedEntity): Observable[PersistedStatement] = {
     if (active.get()) {
-      val result = collections[collection]?.statements?.toSet()?.asFlow()
-      return result ?: setOf<PersistedStatement>().asFlow()
+      if (store.contains(collection)) {
+        val result = store.get(collection).statements
+        Observable.from(result)
+      } else {
+        Observable.empty
+      }
     } else {
       throw new RuntimeException("Transaction is closed.")
     }
@@ -79,39 +83,54 @@ private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, C
     }
   }
 
-  override def collections(): Observable[NamedEntity> = collections.keys.asFlow()
+  override def collections(): Observable[NamedEntity] =
+    Observable.from(store.keys)
 
-  override def collections(prefix: NamedEntity): Observable[NamedEntity> = collectionsImpl(collections, prefix)
+  override def collections(prefix: NamedEntity): Observable[NamedEntity] =
+    collectionsImpl(collections, prefix)
 
-  override def collections(from: NamedEntity, to: NamedEntity): Observable[NamedEntity> = collectionsImpl(collections, from, to)
+  override def collections(from: NamedEntity, to: NamedEntity): Observable[NamedEntity] =
+    collectionsImpl(collections, from, to)
+
+  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, prefix: NamedEntity): Observable[NamedEntity> {
+    return collections.keys.asFlow().filter {
+      it != null && it.identifier.startsWith(prefix.identifier)
+    }
+  }
+
+  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, from: NamedEntity, to: NamedEntity): Observable[NamedEntity> {
+    return collections.keys.asFlow().filter {
+      it != null && it.identifier >= from.identifier && it.identifier < to.identifier
+    }
+  }
 
   override def isOpen(): Boolean = active.get()
 
   override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, `object`: Object?): Observable[PersistedStatement> {
-  return if (active.get()) {
-  if (collections.containsKey(collection)) {
-  matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
-} else {
-  setOf<PersistedStatement>().asFlow()
-}
-} else {
-  throw RuntimeException("Transaction is closed.")
-}
-}
+    return if (active.get()) {
+      if (collections.containsKey(collection)) {
+        matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
+      } else {
+        setOf<PersistedStatement>().asFlow()
+      }
+    } else {
+      throw RuntimeException("Transaction is closed.")
+    }
+  }
 
   override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, range: Range<*>): Observable[PersistedStatement> {
-  return if (active.get()) {
-  if (collections.containsKey(collection)) {
-  matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
-} else {
-  setOf<PersistedStatement>().asFlow()
+    return if (active.get()) {
+      if (collections.containsKey(collection)) {
+        matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
+      } else {
+        setOf<PersistedStatement>().asFlow()
+      }
+    } else {
+      throw RuntimeException("Transaction is closed.")
+    }
+  }
 }
-} else {
-  throw RuntimeException("Transaction is closed.")
-}
-}
-}
-//
+
 //  private class InMemoryWriteTx(private val collections: ConcurrentHashMap<NamedEntity, CollectionValue>,
 //  private val lock: ReentrantReadWriteLock): WriteTx {
 //  private val writeLock = lock.writeLock()
@@ -208,17 +227,6 @@ private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, C
 //}
 //}
 //
-//  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, prefix: NamedEntity): Observable[NamedEntity> {
-//  return collections.keys.asFlow().filter {
-//  it != null && it.identifier.startsWith(prefix.identifier)
-//}
-//}
-//
-//  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, from: NamedEntity, to: NamedEntity): Observable[NamedEntity> {
-//  return collections.keys.asFlow().filter {
-//  it != null && it.identifier >= from.identifier && it.identifier < to.identifier
-//}
-//}
 //
 //  private def matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, `object`: Object?): Observable[PersistedStatement> {
 //  return statements.asFlow().filter {
