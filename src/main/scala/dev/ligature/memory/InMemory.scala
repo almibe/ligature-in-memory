@@ -87,47 +87,101 @@ private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, C
     Observable.from(store.keys)
 
   override def collections(prefix: NamedEntity): Observable[NamedEntity] =
-    collectionsImpl(collections, prefix)
+    collectionsImpl(prefix)
 
   override def collections(from: NamedEntity, to: NamedEntity): Observable[NamedEntity] =
-    collectionsImpl(collections, from, to)
+    collectionsImpl(from, to)
 
-  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, prefix: NamedEntity): Observable[NamedEntity> {
-    return collections.keys.asFlow().filter {
-      it != null && it.identifier.startsWith(prefix.identifier)
-    }
+  private def collectionsImpl(prefix: NamedEntity): Observable[NamedEntity] = {
+    Observable.from(store.keySet.stream().filter { in =>
+      in != null && in.identifier.startsWith(prefix.identifier)
+    })
   }
 
-  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, from: NamedEntity, to: NamedEntity): Observable[NamedEntity> {
-    return collections.keys.asFlow().filter {
-      it != null && it.identifier >= from.identifier && it.identifier < to.identifier
-    }
+  private def collectionsImpl(from: NamedEntity, to: NamedEntity): Observable[NamedEntity] = {
+    Observable.from(store.keySet.stream().filter { in =>
+      in != null && in.identifier >= from.identifier && in.identifier < to.identifier
+    })
   }
 
   override def isOpen(): Boolean = active.get()
 
-  override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, `object`: Object?): Observable[PersistedStatement> {
-    return if (active.get()) {
-      if (collections.containsKey(collection)) {
-        matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
+  override def matchStatements(collection: NamedEntity,
+                               subject: Entity = null,
+                               predicate: Predicate = null,
+                               `object`: Object = null): Observable[PersistedStatement] = {
+    if (active.get()) {
+      if (store.containsKey(collection)) {
+        matchStatementsImpl(store.get(collection).statements, subject, predicate, `object`)
       } else {
-        setOf<PersistedStatement>().asFlow()
+        Observable.empty
       }
     } else {
-      throw RuntimeException("Transaction is closed.")
+      throw new RuntimeException("Transaction is closed.")
     }
   }
 
-  override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, range: Range<*>): Observable[PersistedStatement> {
-    return if (active.get()) {
-      if (collections.containsKey(collection)) {
-        matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
+  override def matchStatements(collection: NamedEntity,
+                               subject: Entity,
+                               predicate: Predicate,
+                               range: Range[_]): Observable[PersistedStatement] = {
+    if (active.get()) {
+      if (store.containsKey(collection)) {
+        matchStatementsImpl(store.get(collection).statements, subject, predicate, range)
       } else {
-        setOf<PersistedStatement>().asFlow()
+        Observable.empty
       }
     } else {
-      throw RuntimeException("Transaction is closed.")
+      throw new RuntimeException("Transaction is closed.")
     }
+  }
+
+  private def matchStatementsImpl(statements: Set[PersistedStatement],
+                                  subject: Entity,
+                                  predicate: Predicate,
+                                  `object`: Object): Observable[PersistedStatement] = {
+    ???
+//    statements.filter {
+//      match (subject) {
+//        null -> true
+//        else -> (subject == it.statement.subject)
+//      }
+//    }.filter {
+//      when (predicate) {
+//        null -> true
+//        else -> (predicate == it.statement.predicate)
+//      }
+//    }.filter {
+//      when (`object`) {
+//        null -> true
+//        else -> (`object` == it.statement.`object`)
+//      }
+//    }
+  }
+
+  private def matchStatementsImpl(statements: Set[PersistedStatement],
+                                  subject: Entity,
+                                  predicate: Predicate,
+                                  range: Range[_]): Observable[PersistedStatement] = {
+    ???
+//    statements.asFlow().filter {
+//      when (subject) {
+//        null -> true
+//        else -> (subject == it.statement.subject)
+//      }
+//    }.filter {
+//      when (predicate) {
+//        null -> true
+//        else -> (predicate == it.statement.predicate)
+//      }
+//    }.filter {
+//      when (range) {
+//        is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
+//        is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
+//        is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
+//        is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
+//      }
+//    }
   }
 }
 
@@ -228,42 +282,3 @@ private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, C
 //}
 //
 //
-//  private def matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, `object`: Object?): Observable[PersistedStatement> {
-//  return statements.asFlow().filter {
-//  when (subject) {
-//  null -> true
-//  else -> (subject == it.statement.subject)
-//}
-//}.filter {
-//  when (predicate) {
-//  null -> true
-//  else -> (predicate == it.statement.predicate)
-//}
-//}.filter {
-//  when (`object`) {
-//  null -> true
-//  else -> (`object` == it.statement.`object`)
-//}
-//}
-//}
-//
-//  private def matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, range: Range<*>): Observable[PersistedStatement> {
-//  return statements.asFlow().filter {
-//  when (subject) {
-//  null -> true
-//  else -> (subject == it.statement.subject)
-//}
-//}.filter {
-//  when (predicate) {
-//  null -> true
-//  else -> (predicate == it.statement.predicate)
-//}
-//}.filter {
-//  when (range) {
-//  is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
-//  is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
-//  is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
-//  is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
-//}
-//}
-//}
