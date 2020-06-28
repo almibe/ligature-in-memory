@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import cats.effect.Resource
 import dev.ligature._
 import monix.eval.Task
+import monix.reactive.Observable
 
 private case class CollectionValue(statements: util.Set[PersistedStatement],
                                    counter: AtomicLong)
@@ -27,12 +28,19 @@ class InMemoryStore extends LigatureStore {
   }
 
   override def readTx(): Resource[Task, ReadTx] = {
-    ???
-    //    if (open.get()) {
-    //      return InMemoryReadTx(collections, lock)
-    //    } else {
-    //      throw RuntimeException("Store is closed.")
-    //    }
+    if (open.get()) {
+      Resource.make(
+        Task {
+          new InMemoryReadTx(collections, lock.readLock())
+        }) { in: ReadTx =>
+          Task {
+            if (in.isOpen)
+              in.cancel()
+          }
+        }
+    } else {
+      throw new RuntimeException("Store is closed.")
+    }
   }
 
   override def writeTx(): Resource[Task, WriteTx] = {
@@ -46,66 +54,63 @@ class InMemoryStore extends LigatureStore {
 
   override def isOpen(): Boolean = open.get()
 }
-//
-//  private class InMemoryReadTx(private val collections: ConcurrentHashMap<NamedEntity, CollectionValue>,
-//  private val lock: ReentrantReadWriteLock): ReadTx {
-//  private val readLock = lock.readLock()
-//  private val active = AtomicBoolean(true)
-//
-//  init {
-//  readLock.lock()
-//}
-//
-//  override def allStatements(collection: NamedEntity): Flow<PersistedStatement> {
-//  if (active.get()) {
-//  val result = collections[collection]?.statements?.toSet()?.asFlow()
-//  return result ?: setOf<PersistedStatement>().asFlow()
-//} else {
-//  throw RuntimeException("Transaction is closed.")
-//}
-//}
-//
-//  override def cancel() {
-//  if (active.get()) {
-//  readLock.unlock()
-//  active.set(false)
-//} else {
-//  throw RuntimeException("Transaction is closed.")
-//}
-//}
-//
-//  override def collections(): Flow<NamedEntity> = collections.keys.asFlow()
-//
-//  override def collections(prefix: NamedEntity): Flow<NamedEntity> = collectionsImpl(collections, prefix)
-//
-//  override def collections(from: NamedEntity, to: NamedEntity): Flow<NamedEntity> = collectionsImpl(collections, from, to)
-//
-//  override def isOpen(): Boolean = active.get()
-//
-//  override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<PersistedStatement> {
-//  return if (active.get()) {
-//  if (collections.containsKey(collection)) {
-//  matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
-//} else {
-//  setOf<PersistedStatement>().asFlow()
-//}
-//} else {
-//  throw RuntimeException("Transaction is closed.")
-//}
-//}
-//
-//  override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<PersistedStatement> {
-//  return if (active.get()) {
-//  if (collections.containsKey(collection)) {
-//  matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
-//} else {
-//  setOf<PersistedStatement>().asFlow()
-//}
-//} else {
-//  throw RuntimeException("Transaction is closed.")
-//}
-//}
-//}
+
+private class InMemoryReadTx(private val store: ConcurrentHashMap[NamedEntity, CollectionValue],
+    private val lock: ReentrantReadWriteLock.ReadLock) extends ReadTx {
+  private val active = new AtomicBoolean(true)
+
+  lock.lock()
+
+  override def allStatements(collection: NamedEntity): Observable[PersistedStatement] = {
+    if (active.get()) {
+      val result = collections[collection]?.statements?.toSet()?.asFlow()
+      return result ?: setOf<PersistedStatement>().asFlow()
+    } else {
+      throw new RuntimeException("Transaction is closed.")
+    }
+  }
+
+  override def cancel() {
+    if (active.get()) {
+      lock.unlock()
+      active.set(false)
+    } else {
+      throw new RuntimeException("Transaction is closed.")
+    }
+  }
+
+  override def collections(): Observable[NamedEntity> = collections.keys.asFlow()
+
+  override def collections(prefix: NamedEntity): Observable[NamedEntity> = collectionsImpl(collections, prefix)
+
+  override def collections(from: NamedEntity, to: NamedEntity): Observable[NamedEntity> = collectionsImpl(collections, from, to)
+
+  override def isOpen(): Boolean = active.get()
+
+  override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, `object`: Object?): Observable[PersistedStatement> {
+  return if (active.get()) {
+  if (collections.containsKey(collection)) {
+  matchStatementsImpl(collections[collection]!!.statements, subject, predicate, `object`)
+} else {
+  setOf<PersistedStatement>().asFlow()
+}
+} else {
+  throw RuntimeException("Transaction is closed.")
+}
+}
+
+  override def matchStatements(collection: NamedEntity, subject: Entity?, predicate: Predicate?, range: Range<*>): Observable[PersistedStatement> {
+  return if (active.get()) {
+  if (collections.containsKey(collection)) {
+  matchStatementsImpl(collections[collection]!!.statements, subject, predicate, range)
+} else {
+  setOf<PersistedStatement>().asFlow()
+}
+} else {
+  throw RuntimeException("Transaction is closed.")
+}
+}
+}
 //
 //  private class InMemoryWriteTx(private val collections: ConcurrentHashMap<NamedEntity, CollectionValue>,
 //  private val lock: ReentrantReadWriteLock): WriteTx {
@@ -203,19 +208,19 @@ class InMemoryStore extends LigatureStore {
 //}
 //}
 //
-//  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, prefix: NamedEntity): Flow<NamedEntity> {
+//  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, prefix: NamedEntity): Observable[NamedEntity> {
 //  return collections.keys.asFlow().filter {
 //  it != null && it.identifier.startsWith(prefix.identifier)
 //}
 //}
 //
-//  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, from: NamedEntity, to: NamedEntity): Flow<NamedEntity> {
+//  private def collectionsImpl(collections: ConcurrentHashMap<NamedEntity, CollectionValue>, from: NamedEntity, to: NamedEntity): Observable[NamedEntity> {
 //  return collections.keys.asFlow().filter {
 //  it != null && it.identifier >= from.identifier && it.identifier < to.identifier
 //}
 //}
 //
-//  private def matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, `object`: Object?): Flow<PersistedStatement> {
+//  private def matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, `object`: Object?): Observable[PersistedStatement> {
 //  return statements.asFlow().filter {
 //  when (subject) {
 //  null -> true
@@ -234,7 +239,7 @@ class InMemoryStore extends LigatureStore {
 //}
 //}
 //
-//  private def matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, range: Range<*>): Flow<PersistedStatement> {
+//  private def matchStatementsImpl(statements: Set<PersistedStatement>, subject: Entity?, predicate: Predicate?, range: Range<*>): Observable[PersistedStatement> {
 //  return statements.asFlow().filter {
 //  when (subject) {
 //  null -> true
