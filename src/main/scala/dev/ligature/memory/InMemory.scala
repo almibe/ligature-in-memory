@@ -70,14 +70,14 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
 
   lock.lock()
 
-  override def allStatements(collectionName: NamedEntity): Observable[PersistedStatement] = {
+  override def allStatements(collectionName: NamedEntity): Task[Observable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
         val result = collection.get.statements
-        Observable.from(result.get())
+        Task { Observable.from(result.get()) }
       } else {
-        Observable.empty
+        Task { Observable.empty }
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -93,14 +93,14 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
     }
   }
 
-  override def collections(): Observable[NamedEntity] =
-    Observable.from(store.keys)
+  override def collections(): Task[Observable[NamedEntity]] =
+    Task { Observable.from(store.keys) }
 
-  override def collections(prefix: NamedEntity): Observable[NamedEntity] =
-    collectionsImpl(prefix)
+  override def collections(prefix: NamedEntity): Task[Observable[NamedEntity]] =
+    Task { collectionsImpl(prefix) }
 
-  override def collections(from: NamedEntity, to: NamedEntity): Observable[NamedEntity] =
-    collectionsImpl(from, to)
+  override def collections(from: NamedEntity, to: NamedEntity): Task[Observable[NamedEntity]] =
+    Task { collectionsImpl(from, to) }
 
   private def collectionsImpl(prefix: NamedEntity): Observable[NamedEntity] = {
     Observable.from(store.keySet.filter { in =>
@@ -119,13 +119,13 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   override def matchStatements(collectionName: NamedEntity,
                                subject: Entity = null,
                                predicate: Predicate = null,
-                               `object`: Object = null): Observable[PersistedStatement] = {
+                               `object`: Object = null): Task[Observable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
-        matchStatementsImpl(collection.get.statements.get(), subject, predicate, `object`)
+        Task { matchStatementsImpl(collection.get.statements.get(), subject, predicate, `object`) }
       } else {
-        Observable.empty
+        Task { Observable.empty }
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -135,13 +135,13 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   override def matchStatements(collectionName: NamedEntity,
                                subject: Entity,
                                predicate: Predicate,
-                               range: Range[_]): Observable[PersistedStatement] = {
+                               range: Range[_]): Task[Observable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
-        matchStatementsImpl(collection.get.statements.get(), subject, predicate, range)
+        Task { matchStatementsImpl(collection.get.statements.get(), subject, predicate, range) }
       } else {
-        Observable.empty
+        Task { Observable.empty }
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -204,7 +204,7 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
 
   lock.lock()
 
-  override def addStatement(collection: NamedEntity, statement: Statement): Try[PersistedStatement] = {
+  override def addStatement(collection: NamedEntity, statement: Statement): Task[Try[PersistedStatement]] = {
     ???
 //    if (active.get()) {
 //      createCollection(collection)
@@ -237,7 +237,7 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
     }
   }
 
-  override def createCollection(collection: NamedEntity): Try[NamedEntity] = {
+  override def createCollection(collection: NamedEntity): Task[Try[NamedEntity]] = {
     if (active.get()) {
       if (!workingState.get().contains(collection)) {
         val oldState = workingState.get()
@@ -245,29 +245,29 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
           CollectionValue(Atomic(new HashSet[PersistedStatement]()),
             AtomicLong(0)))
         val result = workingState.compareAndSet(oldState, newState)
-        if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection."))
+        Task { if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection.")) }
       } else {
-        Success(collection) //collection exists
+        Task { Success(collection) } //collection exists
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
     }
   }
 
-  override def deleteCollection(collection: NamedEntity): Try[NamedEntity] = {
+  override def deleteCollection(collection: NamedEntity): Task[Try[NamedEntity]] = {
     if (active.get()) {
       val oldState = workingState.get()
       val newState = oldState.removed(collection)
       workingState.compareAndSet(oldState, newState)
-      Success(collection)
+      Task { Success(collection) }
     } else {
-      Failure(new RuntimeException("Transaction is closed."))
+      Task { Failure(new RuntimeException("Transaction is closed.")) }
     }
   }
 
   override def isOpen(): Boolean = active.get()
 
-  override def newEntity(collection: NamedEntity): Try[AnonymousEntity] = {
+  override def newEntity(collection: NamedEntity): Task[Try[AnonymousEntity]] = {
     ???
 //    if (active.get()) {
 //      createCollection(collection)
@@ -279,15 +279,15 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
 //    }
   }
 
-  override def removeEntity(collection: NamedEntity, entity: Entity) = {
+  override def removeEntity(collection: NamedEntity, entity: Entity): Task[Try[Entity]] = {
     ???
   }
 
-  override def removePredicate(collection: NamedEntity, predicate: Predicate) = {
+  override def removePredicate(collection: NamedEntity, predicate: Predicate): Task[Try[Predicate]] = {
     ???
   }
 
-  override def removeStatement(collection: NamedEntity, statement: Statement): Try[Statement] = {
+  override def removeStatement(collection: NamedEntity, statement: Statement): Task[Try[Statement]] = {
     ???
 //    if (active.get()) {
 //      if (workingState.containsKey(collection)) {
