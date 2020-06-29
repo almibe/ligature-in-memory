@@ -12,8 +12,8 @@ import monix.eval.Task
 import monix.execution.atomic.{Atomic, AtomicAny, AtomicBoolean, AtomicLong}
 import monix.reactive.Observable
 
-import scala.collection.immutable.HashMap
-import scala.util.Try
+import scala.collection.immutable.{HashMap, HashSet}
+import scala.util.{Failure, Success, Try}
 
 private case class CollectionValue(statements: AtomicAny[Set[PersistedStatement]],
                                    counter: AtomicLong)
@@ -200,7 +200,7 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
 private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, CollectionValue]],
                               private val lock: ReentrantReadWriteLock.WriteLock) extends WriteTx {
   private val active = Atomic(true)
-  private var workingState = store.get()
+  private val workingState = Atomic(store.get())
 
   lock.lock()
 
@@ -227,24 +227,24 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
   }
 
   override def commit(): Try[Unit] = {
-    ???
-//    if (active.get()) {
-//      collections.clear()
-//      collections.putAll(workingState)
-//      writeLock.unlock()
-//      active.set(false)
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+    if (active.get()) {
+      store.set(workingState.get())
+      lock.unlock()
+      active.set(false)
+      Success(Unit)
+    } else {
+      Failure(new RuntimeException("Transaction is closed."))
+    }
   }
 
   override def createCollection(collection: NamedEntity): Try[NamedEntity] = {
-    ???
-//    if (active.get()) {
-//      workingState.putIfAbsent(collection, CollectionValue(HashSet.empty(), AtomicLong(0)))
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+    if (active.get()) {
+      if (!workingState.contains(collection)) {
+        workingState.concat(collection, CollectionValue(HashSet[PersistedStatement](), AtomicLong(0)))
+      }
+    } else {
+      throw new RuntimeException("Transaction is closed.")
+    }
   }
 
   override def deleteCollection(collection: NamedEntity): Try[NamedEntity] = {
