@@ -244,7 +244,7 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
         val newState = oldState.updated(collection,
           CollectionValue(Atomic(new HashSet[PersistedStatement]()),
             AtomicLong(0)))
-        val result = store.compareAndSet(oldState, newState)
+        val result = workingState.compareAndSet(oldState, newState)
         if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection."))
       } else {
         Success(collection) //collection exists
@@ -255,12 +255,14 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
   }
 
   override def deleteCollection(collection: NamedEntity): Try[NamedEntity] = {
-    ???
-//    if (active.get()) {
-//      workingState.remove(collection)
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+    if (active.get()) {
+      val oldState = workingState.get()
+      val newState = oldState.removed(collection)
+      workingState.compareAndSet(oldState, newState)
+      Success(collection)
+    } else {
+      Failure(new RuntimeException("Transaction is closed."))
+    }
   }
 
   override def isOpen(): Boolean = active.get()
