@@ -15,7 +15,7 @@ import monix.reactive.Observable
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.util.{Failure, Success, Try}
 
-private case class CollectionValue(statements: AtomicAny[Set[PersistedStatement]],
+private case class CollectionValue(statements: AtomicAny[HashSet[PersistedStatement]],
                                    counter: AtomicLong)
 
 class InMemoryStore extends LigatureStore {
@@ -231,7 +231,7 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
       store.set(workingState.get())
       lock.unlock()
       active.set(false)
-      Success(Unit)
+      Success(())
     } else {
       Failure(new RuntimeException("Transaction is closed."))
     }
@@ -239,8 +239,15 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
 
   override def createCollection(collection: NamedEntity): Try[NamedEntity] = {
     if (active.get()) {
-      if (!workingState.contains(collection)) {
-        workingState.concat(collection, CollectionValue(HashSet[PersistedStatement](), AtomicLong(0)))
+      if (!workingState.get().contains(collection)) {
+        val oldState = workingState.get()
+        val newState = oldState.updated(collection,
+          CollectionValue(Atomic(new HashSet[PersistedStatement]()),
+            AtomicLong(0)))
+        val result = store.compareAndSet(oldState, newState)
+        if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection."))
+      } else {
+        Success(collection) //collection exists
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
