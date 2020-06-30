@@ -265,23 +265,22 @@ private object Match {
                                   subject: Entity,
                                   predicate: Predicate,
                                   `object`: Object): Observable[PersistedStatement] = {
-    ???
-    //    statements.filter {
-    //      match (subject) {
-    //        null -> true
-    //        else -> (subject == it.statement.subject)
-    //      }
-    //    }.filter {
-    //      when (predicate) {
-    //        null -> true
-    //        else -> (predicate == it.statement.predicate)
-    //      }
-    //    }.filter {
-    //      when (`object`) {
-    //        null -> true
-    //        else -> (`object` == it.statement.`object`)
-    //      }
-    //    }
+    Observable.from(statements.filter { statement =>
+      statement.statement.subject match {
+        case null => true
+        case _ => statement.statement.subject == subject
+      }
+    }.filter { statement =>
+      statement.statement.predicate match {
+        case null => true
+        case _ => statement.statement.predicate == predicate
+      }
+    }.filter { statement =>
+      statement.statement.`object` match {
+        case null => true
+        case _ => statement.statement.`object` == `object`
+      }
+    })
   }
 
   def matchStatementsImpl(statements: Set[PersistedStatement],
