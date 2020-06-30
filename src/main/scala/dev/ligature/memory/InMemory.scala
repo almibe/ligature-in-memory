@@ -124,7 +124,7 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
-        Task { matchStatementsImpl(collection.get.statements.get(), subject, predicate, `object`) }
+        Task { Match.matchStatementsImpl(collection.get.statements.get(), subject, predicate, `object`) }
       } else {
         Task { Observable.empty }
       }
@@ -140,7 +140,7 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
-        Task { matchStatementsImpl(collection.get.statements.get(), subject, predicate, range) }
+        Task { Match.matchStatementsImpl(collection.get.statements.get(), subject, predicate, range) }
       } else {
         Task { Observable.empty }
       }
