@@ -148,54 +148,6 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
       throw new RuntimeException("Transaction is closed.")
     }
   }
-
-  private def matchStatementsImpl(statements: Set[PersistedStatement],
-                                  subject: Entity,
-                                  predicate: Predicate,
-                                  `object`: Object): Observable[PersistedStatement] = {
-    ???
-//    statements.filter {
-//      match (subject) {
-//        null -> true
-//        else -> (subject == it.statement.subject)
-//      }
-//    }.filter {
-//      when (predicate) {
-//        null -> true
-//        else -> (predicate == it.statement.predicate)
-//      }
-//    }.filter {
-//      when (`object`) {
-//        null -> true
-//        else -> (`object` == it.statement.`object`)
-//      }
-//    }
-  }
-
-  private def matchStatementsImpl(statements: Set[PersistedStatement],
-                                  subject: Entity,
-                                  predicate: Predicate,
-                                  range: Range[_]): Observable[PersistedStatement] = {
-    ???
-//    statements.asFlow().filter {
-//      when (subject) {
-//        null -> true
-//        else -> (subject == it.statement.subject)
-//      }
-//    }.filter {
-//      when (predicate) {
-//        null -> true
-//        else -> (predicate == it.statement.predicate)
-//      }
-//    }.filter {
-//      when (range) {
-//        is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
-//        is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
-//        is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
-//        is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
-//      }
-//    }
-  }
 }
 
 private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, CollectionValue]],
@@ -290,19 +242,70 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
   }
 
   override def removeStatement(collection: NamedEntity, statement: Statement): Task[Try[Statement]] = {
+    if (active.get()) {
+      if (workingState.get().contains(collection)) {
+        for {
+          persistedStatement <- Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
+            statement.subject,
+            statement.predicate,
+            statement.`object`)
+          _ <- Task { workingState.get()(collection).statements.set(workingState.get()(collection).statements.get().-(persistedStatement)) }
+        } yield Success(persistedStatement.statement)
+      } else {
+        Task { Success(statement) }
+      }
+    } else {
+      Task { Failure(new RuntimeException("Transaction is closed.")) }
+    }
+  }
+}
+
+private object Match {
+  def matchStatementsImpl(statements: Set[PersistedStatement],
+                                  subject: Entity,
+                                  predicate: Predicate,
+                                  `object`: Object): Observable[PersistedStatement] = {
     ???
-//    if (active.get()) {
-//      if (workingState.containsKey(collection)) {
-//        val persistedStatement = matchStatementsImpl(workingState[collection]!!.statements,
-//                                                     statement.subject,
-//                                                     statement.predicate,
-//                                                     statement.`object`).toList()
-//        if (persistedStatement.size == 1) {
-//          workingState[collection] = CollectionValue(workingState[collection]!!.statements.remove(persistedStatement.first()), workingState[collection]!!.counter)
-//        }
-//      }
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+    //    statements.filter {
+    //      match (subject) {
+    //        null -> true
+    //        else -> (subject == it.statement.subject)
+    //      }
+    //    }.filter {
+    //      when (predicate) {
+    //        null -> true
+    //        else -> (predicate == it.statement.predicate)
+    //      }
+    //    }.filter {
+    //      when (`object`) {
+    //        null -> true
+    //        else -> (`object` == it.statement.`object`)
+    //      }
+    //    }
+  }
+
+  def matchStatementsImpl(statements: Set[PersistedStatement],
+                                  subject: Entity,
+                                  predicate: Predicate,
+                                  range: Range[_]): Observable[PersistedStatement] = {
+    ???
+    //    statements.asFlow().filter {
+    //      when (subject) {
+    //        null -> true
+    //        else -> (subject == it.statement.subject)
+    //      }
+    //    }.filter {
+    //      when (predicate) {
+    //        null -> true
+    //        else -> (predicate == it.statement.predicate)
+    //      }
+    //    }.filter {
+    //      when (range) {
+    //        is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
+    //        is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
+    //        is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
+    //        is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
+    //      }
+    //    }
   }
 }
