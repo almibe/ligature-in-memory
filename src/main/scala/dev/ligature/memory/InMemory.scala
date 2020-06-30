@@ -249,8 +249,13 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
             statement.subject,
             statement.predicate,
             statement.`object`)
-          _ <- Task { workingState.get()(collection).statements.set(workingState.get()(collection).statements.get().-(persistedStatement)) }
-        } yield Success(persistedStatement.statement)
+          _ <- Observable { workingState
+            .get()(collection)
+            .statements.set(workingState
+            .get()(collection).statements
+            .get().-(persistedStatement)) }
+        } yield ()
+        Task { Success(statement) }
       } else {
         Task { Success(statement) }
       }
