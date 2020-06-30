@@ -287,24 +287,26 @@ private object Match {
                                   subject: Entity,
                                   predicate: Predicate,
                                   range: Range[_]): Observable[PersistedStatement] = {
-    ???
-    //    statements.asFlow().filter {
-    //      when (subject) {
-    //        null -> true
-    //        else -> (subject == it.statement.subject)
-    //      }
-    //    }.filter {
-    //      when (predicate) {
-    //        null -> true
-    //        else -> (predicate == it.statement.predicate)
-    //      }
-    //    }.filter {
-    //      when (range) {
-    //        is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
-    //        is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
-    //        is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
-    //        is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
-    //      }
-    //    }
+    Observable.from(statements.filter { statement =>
+      statement.statement.subject match {
+        case null => true
+        case _ => statement.statement.subject == subject
+      }
+    }.filter { statement =>
+      statement.statement.predicate match {
+        case null => true
+        case _ => statement.statement.predicate == predicate
+      }
+    }.filter { statement =>
+       ???
+//    }.filter {
+//      when (range) {
+//        is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
+//        is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
+//        is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
+//        is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
+//      }
+//    }
+    })
   }
 }
