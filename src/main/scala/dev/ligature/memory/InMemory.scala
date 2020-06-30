@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import cats.effect.Resource
 import dev.ligature._
 import monix.eval.Task
+import monix.execution.Scheduler.Implicits.global
 import monix.execution.atomic.{Atomic, AtomicAny, AtomicBoolean, AtomicLong}
 import monix.reactive.Observable
 
@@ -205,16 +206,18 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
   lock.lock()
 
   override def addStatement(collection: NamedEntity, statement: Statement): Task[Try[PersistedStatement]] = {
-    ???
-//    if (active.get()) {
-//      createCollection(collection)
-//      val context = newEntity(collection)
-//      val persistedStatement = PersistedStatement(collection, statement, context)
-//      workingState[collection] = CollectionValue(workingState[collection]!!.statements.add(persistedStatement), workingState[collection]!!.counter)
-//      persistedStatement
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+    if (active.get()) {
+      val result = for {
+        col     <- createCollection(collection)
+        context <- newEntity(collection)
+        persistedStatement <- Task { PersistedStatement(collection, statement, context.get) }
+        statements <- Task { workingState.get()(collection).statements }
+        _ <- Task { statements.set(statements.get().incl(persistedStatement)) }
+      } yield Success(persistedStatement)
+      result
+    } else {
+      Task { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def cancel() {
@@ -268,15 +271,14 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
   override def isOpen(): Boolean = active.get()
 
   override def newEntity(collection: NamedEntity): Task[Try[AnonymousEntity]] = {
-    ???
-//    if (active.get()) {
-//      createCollection(collection)
-//      val newId = workingState[collection]!!.counter.incrementAndGet()
-//      workingState[collection] = CollectionValue(workingState[collection]!!.statements, workingState[collection]!!.counter)
-//      return AnonymousEntity(newId)
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+    if (active.get()) {
+      for {
+        _ <- createCollection(collection)
+        newId <- Task { workingState.get()(collection).counter.incrementAndGet() }
+      } yield Success(AnonymousEntity(newId))
+    } else {
+      Task { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def removeEntity(collection: NamedEntity, entity: Entity): Task[Try[Entity]] = {
