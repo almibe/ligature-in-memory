@@ -345,19 +345,20 @@ private object Match {
   }
 
   private def matchLangLiteralRange(range: LangLiteralRange, literal: LangLiteral): Boolean = {
-    literal.langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
+    literal.langTag == range.start.langTag && range.start.langTag == range.end.langTag &&
+      literal.value >= range.start.value && literal.value < range.end.value
   }
 
   private def matchStringLiteralRange(range: StringLiteralRange, literal: StringLiteral): Boolean = {
-    l.value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
+    literal.value >= range.start && literal.value < range.end
   }
 
   private def matchLongLiteralRange(range: LongLiteralRange, literal: LongLiteral): Boolean = {
-    l.value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
+    literal.value >= range.start && literal.value < range.end
   }
 
   private def matchDoubleLiteralRange(range: DoubleLiteralRange, literal: DoubleLiteral): Boolean = {
-    l.value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
+    literal.value >= range.start && literal.value < range.end
   }
 
   def statementByContext(context: AnonymousEntity): Task[Option[PersistedStatement]] = {
