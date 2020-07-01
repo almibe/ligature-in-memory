@@ -118,9 +118,9 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   override def isOpen(): Boolean = active.get()
 
   override def matchStatements(collectionName: NamedEntity,
-                               subject: Entity = null,
-                               predicate: Predicate = null,
-                               `object`: Object = null): Task[Observable[PersistedStatement]] = {
+                               subject: Option[Entity] = None,
+                               predicate: Option[Predicate] = None,
+                               `object`: Option[Object] = None): Task[Observable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
@@ -134,8 +134,8 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   }
 
   override def matchStatements(collectionName: NamedEntity,
-                               subject: Entity,
-                               predicate: Predicate,
+                               subject: Option[Entity],
+                               predicate: Option[Predicate],
                                range: Range[_]): Task[Observable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
@@ -148,6 +148,8 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
       throw new RuntimeException("Transaction is closed.")
     }
   }
+
+  override def statementByContext(context: AnonymousEntity): Task[Option[PersistedStatement]] = ???
 }
 
 private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, CollectionValue]],
@@ -235,6 +237,32 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
 
   override def removeEntity(collection: NamedEntity, entity: Entity): Task[Try[Entity]] = {
     ???
+//    if (active.get()) {
+//      if (workingState.get().contains(collection)) {
+//        val subjectMatches = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
+//          Some(entity))
+//        val objectMatches = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
+//          None, None, Some(entity))
+//        val contextMatches = entity match {
+//          case e: AnonymousEntity => Match.statementByContext(e)
+//          case _ => Task {None }
+//        }
+//        Task {
+//          persistedStatement.foreach { p =>
+//            workingState
+//              .get()(collection)
+//              .statements.set(workingState
+//              .get()(collection).statements
+//              .get().excl(p))
+//          }
+//          Success(statement)
+//        }
+//      } else {
+//        Task { Success(statement) }
+//      }
+//    } else {
+//      Task { Failure(new RuntimeException("Transaction is closed.")) }
+//    }
   }
 
   override def removePredicate(collection: NamedEntity, predicate: Predicate): Task[Try[Predicate]] = {
@@ -244,18 +272,20 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
   override def removeStatement(collection: NamedEntity, statement: Statement): Task[Try[Statement]] = {
     if (active.get()) {
       if (workingState.get().contains(collection)) {
-        for {
-          persistedStatement <- Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
-            statement.subject,
-            statement.predicate,
-            statement.`object`)
-          _ <- Observable { workingState
-            .get()(collection)
-            .statements.set(workingState
-            .get()(collection).statements
-            .get().-(persistedStatement)) }
-        } yield ()
-        Task { Success(statement) }
+        val persistedStatement = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
+          Some(statement.subject),
+          Some(statement.predicate),
+          Some(statement.`object`))
+        Task {
+          persistedStatement.foreach { p =>
+            workingState
+              .get()(collection)
+              .statements.set(workingState
+              .get()(collection).statements
+              .get().excl(p))
+          }
+          Success(statement)
+        }
       } else {
         Task { Success(statement) }
       }
@@ -267,51 +297,74 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
 
 private object Match {
   def matchStatementsImpl(statements: Set[PersistedStatement],
-                                  subject: Entity,
-                                  predicate: Predicate,
-                                  `object`: Object): Observable[PersistedStatement] = {
+                          subject: Option[Entity] = None,
+                          predicate: Option[Predicate] = None,
+                          `object`: Option[Object] = None): Observable[PersistedStatement] = {
     Observable.from(statements.filter { statement =>
       statement.statement.subject match {
-        case null => true
-        case _ => statement.statement.subject == subject
+        case _ if subject.isEmpty => true
+        case _ => statement.statement.subject == subject.get
       }
     }.filter { statement =>
       statement.statement.predicate match {
-        case null => true
-        case _ => statement.statement.predicate == predicate
+        case _ if predicate.isEmpty => true
+        case _ => statement.statement.predicate == predicate.get
       }
     }.filter { statement =>
       statement.statement.`object` match {
-        case null => true
-        case _ => statement.statement.`object` == `object`
+        case _ if `object`isEmpty => true
+        case _ => statement.statement.`object` == `object`.get
       }
     })
   }
 
   def matchStatementsImpl(statements: Set[PersistedStatement],
-                                  subject: Entity,
-                                  predicate: Predicate,
-                                  range: Range[_]): Observable[PersistedStatement] = {
+                          subject: Option[Entity],
+                          predicate: Option[Predicate],
+                          range: Range[_]): Observable[PersistedStatement] = {
     Observable.from(statements.filter { statement =>
       statement.statement.subject match {
-        case null => true
-        case _ => statement.statement.subject == subject
+        case _ if subject.isEmpty => true
+        case _ => statement.statement.subject == subject.get
       }
     }.filter { statement =>
       statement.statement.predicate match {
-        case null => true
-        case _ => statement.statement.predicate == predicate
+        case _ if predicate.isEmpty => true
+        case _ => statement.statement.predicate == predicate.get
       }
     }.filter { statement =>
-       ???
-//    }.filter {
-//      when (range) {
-//        is LangLiteralRange -> (it.statement.`object` is LangLiteral && ((it.statement.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
-//        is StringLiteralRange -> (it.statement.`object` is StringLiteral && (it.statement.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
-//        is LongLiteralRange -> (it.statement.`object` is LongLiteral && (it.statement.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
-//        is DoubleLiteralRange -> (it.statement.`object` is DoubleLiteral && (it.statement.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
-//      }
-//    }
+      val s = statement.statement
+      (range, s.`object`) match {
+        case (r: LangLiteralRange, o: LangLiteral) => matchLangLiteralRange(r, o)
+        case (r: StringLiteralRange, o: StringLiteral) => matchStringLiteralRange(r, o)
+        case (r: LongLiteralRange, o: LongLiteral) => matchLongLiteralRange(r, o)
+        case (r: DoubleLiteralRange, o: DoubleLiteral) => matchDoubleLiteralRange(r, o)
+        case _ => false
+      }
     })
+  }
+
+  private def matchLangLiteralRange(r: LangLiteralRange, l: LangLiteral): Boolean = {
+    ???
+    //(s.`object` isInstanceOf[LangLiteral] && ((s.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
+  }
+
+  private def matchStringLiteralRange(r: StringLiteralRange, l: StringLiteral): Boolean = {
+    ???
+    //(s.`object` isInstanceOf[StringLiteral] && (s.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
+  }
+
+  private def matchLongLiteralRange(r: LongLiteralRange, l: LongLiteral): Boolean = {
+    ???
+    //(s.`object` isInstanceOf[LongLiteral] && (s.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
+  }
+
+  private def matchDoubleLiteralRange(r: DoubleLiteralRange, l: DoubleLiteral): Boolean = {
+    ???
+    //(s.`object` isInstanceOf[DoubleLiteral] && (s.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
+  }
+
+  def statementByContext(context: AnonymousEntity): Task[Option[PersistedStatement]] = {
+    ???
   }
 }
