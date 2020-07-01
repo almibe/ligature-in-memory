@@ -312,7 +312,7 @@ private object Match {
       }
     }.filter { statement =>
       statement.statement.`object` match {
-        case _ if `object`isEmpty => true
+        case _ if `object`.isEmpty => true
         case _ => statement.statement.`object` == `object`.get
       }
     })
@@ -344,24 +344,20 @@ private object Match {
     })
   }
 
-  private def matchLangLiteralRange(r: LangLiteralRange, l: LangLiteral): Boolean = {
-    ???
-    //(s.`object` isInstanceOf[LangLiteral] && ((s.`object` as LangLiteral).langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
+  private def matchLangLiteralRange(range: LangLiteralRange, literal: LangLiteral): Boolean = {
+    literal.langTag == range.start.langTag && range.start.langTag == range.end.langTag) && (it.statement.`object` as LangLiteral).value >= range.start.value && (it.statement.`object` as LangLiteral).value < range.end.value)
   }
 
-  private def matchStringLiteralRange(r: StringLiteralRange, l: StringLiteral): Boolean = {
-    ???
-    //(s.`object` isInstanceOf[StringLiteral] && (s.`object` as StringLiteral).value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
+  private def matchStringLiteralRange(range: StringLiteralRange, literal: StringLiteral): Boolean = {
+    l.value >= range.start && (it.statement.`object` as StringLiteral).value < range.end)
   }
 
-  private def matchLongLiteralRange(r: LongLiteralRange, l: LongLiteral): Boolean = {
-    ???
-    //(s.`object` isInstanceOf[LongLiteral] && (s.`object` as LongLiteral).value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
+  private def matchLongLiteralRange(range: LongLiteralRange, literal: LongLiteral): Boolean = {
+    l.value >= range.start && (it.statement.`object` as LongLiteral).value < range.end)
   }
 
-  private def matchDoubleLiteralRange(r: DoubleLiteralRange, l: DoubleLiteral): Boolean = {
-    ???
-    //(s.`object` isInstanceOf[DoubleLiteral] && (s.`object` as DoubleLiteral).value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
+  private def matchDoubleLiteralRange(range: DoubleLiteralRange, literal: DoubleLiteral): Boolean = {
+    l.value >= range.start && (it.statement.`object` as DoubleLiteral).value < range.end)
   }
 
   def statementByContext(context: AnonymousEntity): Task[Option[PersistedStatement]] = {
