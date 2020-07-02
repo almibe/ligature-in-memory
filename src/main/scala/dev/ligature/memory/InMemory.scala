@@ -406,7 +406,6 @@ private object Match {
   }
 
   def statementByContextImpl(statements: Set[PersistedStatement],
-                             context: AnonymousEntity): Option[PersistedStatement] = {
-    ???
-  }
+                             context: AnonymousEntity): Option[PersistedStatement] =
+    statements.find(_.context == context)
 }
