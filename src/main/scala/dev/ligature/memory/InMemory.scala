@@ -149,7 +149,18 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
     }
   }
 
-  override def statementByContext(context: AnonymousEntity): Task[Option[PersistedStatement]] = ???
+  override def statementByContext(collectionName: NamedEntity, context: AnonymousEntity): Task[Option[PersistedStatement]] = {
+    if (active.get()) {
+      val collection = store.get(collectionName)
+      if (collection.nonEmpty) {
+        Task { Match.statementByContextImpl(collection.get.statements.get(), context) }
+      } else {
+        Task { None }
+      }
+    } else {
+      throw new RuntimeException("Transaction is closed.")
+    }
+  }
 }
 
 private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, CollectionValue]],
@@ -242,9 +253,9 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
           Some(entity))
         val objectMatches = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
           None, None, Some(entity))
-        val contextMatches = entity match {
-          case e: AnonymousEntity => Match.statementByContext(e)
-          case _ => Task {None }
+        val contextMatch = entity match {
+          case e: AnonymousEntity => Match.statementByContextImpl(workingState.get()(collection).statements.get(), e)
+          case _ => None
         }
         Task {
           subjectMatches.foreach { p =>
@@ -261,14 +272,12 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
               .get()(collection).statements
               .get().excl(p))
           }
-          contextMatches.foreach { p =>
-            if (p.nonEmpty) {
-              workingState
-                .get()(collection)
-                .statements.set(workingState
-                .get()(collection).statements
-                .get().excl(p.get))
-            }
+          if (contextMatch.nonEmpty) {
+            workingState
+              .get()(collection)
+              .statements.set(workingState
+              .get()(collection).statements
+              .get().excl(contextMatch.get))
           }
           Success(entity)
         }
@@ -396,7 +405,8 @@ private object Match {
     literal.value >= range.start && literal.value < range.end
   }
 
-  def statementByContext(context: AnonymousEntity): Task[Option[PersistedStatement]] = {
+  def statementByContextImpl(statements: Set[PersistedStatement],
+                             context: AnonymousEntity): Option[PersistedStatement] = {
     ???
   }
 }
