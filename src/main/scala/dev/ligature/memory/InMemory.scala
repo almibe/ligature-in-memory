@@ -236,37 +236,72 @@ private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, 
   }
 
   override def removeEntity(collection: NamedEntity, entity: Entity): Task[Try[Entity]] = {
-    ???
-//    if (active.get()) {
-//      if (workingState.get().contains(collection)) {
-//        val subjectMatches = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
-//          Some(entity))
-//        val objectMatches = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
-//          None, None, Some(entity))
-//        val contextMatches = entity match {
-//          case e: AnonymousEntity => Match.statementByContext(e)
-//          case _ => Task {None }
-//        }
-//        Task {
-//          persistedStatement.foreach { p =>
-//            workingState
-//              .get()(collection)
-//              .statements.set(workingState
-//              .get()(collection).statements
-//              .get().excl(p))
-//          }
-//          Success(statement)
-//        }
-//      } else {
-//        Task { Success(statement) }
-//      }
-//    } else {
-//      Task { Failure(new RuntimeException("Transaction is closed.")) }
-//    }
+    if (active.get()) {
+      if (workingState.get().contains(collection)) {
+        val subjectMatches = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
+          Some(entity))
+        val objectMatches = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
+          None, None, Some(entity))
+        val contextMatches = entity match {
+          case e: AnonymousEntity => Match.statementByContext(e)
+          case _ => Task {None }
+        }
+        Task {
+          subjectMatches.foreach { p =>
+            workingState
+              .get()(collection)
+              .statements.set(workingState
+              .get()(collection).statements
+              .get().excl(p))
+          }
+          objectMatches.foreach { p =>
+            workingState
+              .get()(collection)
+              .statements.set(workingState
+              .get()(collection).statements
+              .get().excl(p))
+          }
+          contextMatches.foreach { p =>
+            if (p.nonEmpty) {
+              workingState
+                .get()(collection)
+                .statements.set(workingState
+                .get()(collection).statements
+                .get().excl(p.get))
+            }
+          }
+          Success(entity)
+        }
+      } else {
+        Task { Success(entity) }
+      }
+    } else {
+      Task { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def removePredicate(collection: NamedEntity, predicate: Predicate): Task[Try[Predicate]] = {
-    ???
+    if (active.get()) {
+      if (workingState.get().contains(collection)) {
+        val persistedStatement = Match.matchStatementsImpl(workingState.get()(collection).statements.get(),
+          None,
+          Some(predicate))
+        Task {
+          persistedStatement.foreach { p =>
+            workingState
+              .get()(collection)
+              .statements.set(workingState
+              .get()(collection).statements
+              .get().excl(p))
+          }
+          Success(predicate)
+        }
+      } else {
+        Task { Success(predicate) }
+      }
+    } else {
+      Task { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def removeStatement(collection: NamedEntity, statement: Statement): Task[Try[Statement]] = {
