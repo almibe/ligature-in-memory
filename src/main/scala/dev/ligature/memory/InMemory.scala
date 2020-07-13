@@ -196,8 +196,8 @@ private class InMemoryWriteTx(private val store: AtomicReference[HashMap[NamedEn
       if (!workingState.get().contains(collection)) {
         val oldState = workingState.get()
         val newState = oldState.updated(collection,
-          CollectionValue(Atomic(new HashSet[PersistedStatement]()),
-            AtomicLong(0)))
+          CollectionValue(new AtomicReference(new HashSet[PersistedStatement]()),
+            new AtomicLong(0)))
         val result = workingState.compareAndSet(oldState, newState)
         IO { if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection.")) }
       } else {
@@ -330,7 +330,7 @@ private object Match {
                           subject: Option[Entity] = None,
                           predicate: Option[Predicate] = None,
                           `object`: Option[Object] = None): Iterable[PersistedStatement] = {
-    Stream.fromIterable(statements.filter { statement =>
+    statements.filter { statement =>
       statement.statement.subject match {
         case _ if subject.isEmpty => true
         case _ => statement.statement.subject == subject.get
@@ -345,14 +345,14 @@ private object Match {
         case _ if `object`.isEmpty => true
         case _ => statement.statement.`object` == `object`.get
       }
-    })
+    }
   }
 
   def matchStatementsImpl(statements: Set[PersistedStatement],
                           subject: Option[Entity],
                           predicate: Option[Predicate],
                           range: Range[_]): Iterable[PersistedStatement] = {
-    Stream.fromIterable(statements.filter { statement =>
+    statements.filter { statement =>
       statement.statement.subject match {
         case _ if subject.isEmpty => true
         case _ => statement.statement.subject == subject.get
@@ -371,7 +371,7 @@ private object Match {
         case (r: DoubleLiteralRange, o: DoubleLiteral) => matchDoubleLiteralRange(r, o)
         case _ => false
       }
-    })
+    }
   }
 
   private def matchLangLiteralRange(range: LangLiteralRange, literal: LangLiteral): Boolean = {
