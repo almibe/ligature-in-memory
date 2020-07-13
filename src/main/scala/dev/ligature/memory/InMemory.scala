@@ -45,7 +45,7 @@ class InMemoryStore extends LigatureStore {
       }
     )( tx =>
       IO {
-        tx.cancel()
+        tx.commit()
       }
     )
   }
