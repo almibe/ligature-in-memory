@@ -41,7 +41,7 @@ class InMemoryStore extends LigatureStore {
   override def write(): Resource[IO, WriteTx] = {
     Resource.make(
       IO {
-        new InMemoryWriteTx(collections.get(), lock.writeLock())
+        new InMemoryWriteTx(collections, lock.writeLock())
       }
     )( tx =>
       IO {
@@ -58,14 +58,14 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   private val active = new AtomicBoolean(true)
   lock.lock()
 
-  override def allStatements(collectionName: NamedEntity): Observable[PersistedStatement] = {
+  override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
         val result = collection.get.statements
-        IO { Stream.fromIterable(result.get()) }
+        IO { result.get() }
       } else {
-        IO { Stream.empty }
+        IO { Iterable.empty }
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -81,39 +81,37 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
     }
   }
 
-  override def collections(): Observable[NamedEntity] =
-    Observable.fromIterable(store.keys)
+  override def collections(): IO[Iterable[NamedEntity]] =
+    IO { store.keys }
 
-  override def collections(prefix: NamedEntity): Observable[NamedEntity] =
+  override def collections(prefix: NamedEntity): IO[Iterable[NamedEntity]] =
     IO { collectionsImpl(prefix) }
 
-  override def collections(from: NamedEntity, to: NamedEntity): Observable[NamedEntity] =
+  override def collections(from: NamedEntity, to: NamedEntity): IO[Iterable[NamedEntity]] =
     IO { collectionsImpl(from, to) }
 
-  private def collectionsImpl(prefix: NamedEntity): Observable[NamedEntity] = {
-    Stream.fromIterable(store.keySet.filter { in =>
+  private def collectionsImpl(prefix: NamedEntity): Iterable[NamedEntity] =
+    store.keySet.filter { in =>
       in != null && in.identifier.startsWith(prefix.identifier)
-    })
-  }
+    }
 
-  private def collectionsImpl(from: NamedEntity, to: NamedEntity): Observable[NamedEntity] = {
-    Stream.fromIterable(store.keySet.filter { in =>
+  private def collectionsImpl(from: NamedEntity, to: NamedEntity): Iterable[NamedEntity] =
+    store.keySet.filter { in =>
       in != null && in.identifier >= from.identifier && in.identifier < to.identifier
-    })
-  }
+    }
 
   override def isOpen(): Boolean = active.get()
 
   override def matchStatements(collectionName: NamedEntity,
                                subject: Option[Entity] = None,
                                predicate: Option[Predicate] = None,
-                               `object`: Option[Object] = None): Observable[PersistedStatement] = {
+                               `object`: Option[Object] = None): Iterable[PersistedStatement] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
         IO { Match.matchStatementsImpl(collection.get.statements.get(), subject, predicate, `object`) }
       } else {
-        IO { Observable.empty }
+        IO { Iterable.empty }
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -123,13 +121,13 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   override def matchStatements(collectionName: NamedEntity,
                                subject: Option[Entity],
                                predicate: Option[Predicate],
-                               range: Range[_]): Observable[PersistedStatement] = {
+                               range: Range[_]): Iterable[PersistedStatement] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
         IO { Match.matchStatementsImpl(collection.get.statements.get(), subject, predicate, range) }
       } else {
-        IO { Observable.empty }
+        IO { Iterable.empty }
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -150,10 +148,10 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   }
 }
 
-private class InMemoryWriteTx(private val store: AtomicAny[HashMap[NamedEntity, CollectionValue]],
+private class InMemoryWriteTx(private val store: AtomicReference[HashMap[NamedEntity, CollectionValue]],
                               private val lock: ReentrantReadWriteLock.WriteLock) extends WriteTx {
-  private val active = Atomic(true)
-  private val workingState = Atomic(store.get())
+  private val active = new AtomicBoolean(true)
+  private val workingState = new AtomicReference(store.get())
 
   lock.lock()
 
@@ -330,7 +328,7 @@ private object Match {
   def matchStatementsImpl(statements: Set[PersistedStatement],
                           subject: Option[Entity] = None,
                           predicate: Option[Predicate] = None,
-                          `object`: Option[Object] = None): Observable[PersistedStatement] = {
+                          `object`: Option[Object] = None): Iterable[PersistedStatement] = {
     Stream.fromIterable(statements.filter { statement =>
       statement.statement.subject match {
         case _ if subject.isEmpty => true
@@ -352,7 +350,7 @@ private object Match {
   def matchStatementsImpl(statements: Set[PersistedStatement],
                           subject: Option[Entity],
                           predicate: Option[Predicate],
-                          range: Range[_]): Observable[PersistedStatement] = {
+                          range: Range[_]): Iterable[PersistedStatement] = {
     Stream.fromIterable(statements.filter { statement =>
       statement.statement.subject match {
         case _ if subject.isEmpty => true
