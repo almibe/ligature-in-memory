@@ -105,7 +105,7 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   override def matchStatements(collectionName: NamedEntity,
                                subject: Option[Entity] = None,
                                predicate: Option[Predicate] = None,
-                               `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+                               `object`: Option[Object] = None): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
@@ -121,7 +121,7 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
   override def matchStatements(collectionName: NamedEntity,
                                subject: Option[Entity],
                                predicate: Option[Predicate],
-                               range: Range[_]): Iterable[PersistedStatement] = {
+                               range: Range[_]): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
@@ -134,7 +134,8 @@ private class InMemoryReadTx(private val store: Map[NamedEntity, CollectionValue
     }
   }
 
-  override def statementByContext(collectionName: NamedEntity, context: AnonymousEntity): Option[PersistedStatement] = {
+  override def statementByContext(collectionName: NamedEntity, context: AnonymousEntity):
+      IO[Option[PersistedStatement]] = {
     if (active.get()) {
       val collection = store.get(collectionName)
       if (collection.nonEmpty) {
