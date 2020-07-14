@@ -4,6 +4,7 @@ It does this by making use of immutable Scala collections and Monix atomic primi
 See https://github.com/almibe/ligature for more information.
 
 | Prefixes | Description           | Scodec Pseudocode                                            | Description                                                                        |
+| -------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | 0        | Collection Name -> ID | Byte ~ String -> Long                                        | Prefix ~ Collection Name -> Collection ID                                          |
 | 1        | ID -> Collection Name | Byte ~ Long -> String                                        | Prefix ~ Collection ID -> Collection Name                                          |
 | 2        | CollectionNameCounter | Byte -> Long                                                 | Prefix -> Collection ID Count                                                      |
@@ -28,6 +29,7 @@ See https://github.com/almibe/ligature for more information.
 I probably don't need lookups for boolean, long, or double since I can just use the actual value.
 
 | Type Codes | Value             |
+| ---------- | ----------------- |
 | 0          | Named Entity      |
 | 1          | Anonymous Entity  |
 | 2          | Lang Literal      |
