@@ -4,24 +4,24 @@
 
 package dev.ligature.store.inmemory
 
-import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 
-//TODO eventually remove all references to Set
+import scala.collection.SortedMap
+
 private object Common {
-  def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
+  def collectionExists(store: SortedMap[Array[Byte], Array[Byte]], collectionName: NamedEntity): Boolean = {
     ???
   }
 
-  def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Iterable[PersistedStatement] = {
+  def readAllStatements(store: SortedMap[Array[Byte], Array[Byte]], collectionName: NamedEntity): Iterable[PersistedStatement] = {
     ???
   }
 
-  def collectionId(store: KeyValueStore, collectionName: NamedEntity): Long = {
+  def collectionId(store: SortedMap[Array[Byte], Array[Byte]], collectionName: NamedEntity): Long = {
     ???
   }
 
-  def matchStatementsImpl(store: KeyValueStore,
+  def matchStatementsImpl(store: SortedMap[Array[Byte], Array[Byte]],
                           collectionName: NamedEntity,
                           subject: Option[Entity] = None,
                           predicate: Option[Predicate] = None,
@@ -45,7 +45,7 @@ private object Common {
 //    }
   }
 
-  def matchStatementsImpl(store: KeyValueStore,
+  def matchStatementsImpl(store: SortedMap[Array[Byte], Array[Byte]],
                           collectionName: NamedEntity,
                           subject: Option[Entity],
                           predicate: Option[Predicate],
@@ -90,7 +90,7 @@ private object Common {
     literal.value >= range.start && literal.value < range.end
   }
 
-  def statementByContextImpl(store: KeyValueStore,
+  def statementByContextImpl(store: SortedMap[Array[Byte], Array[Byte]],
                              collectionName: NamedEntity,
                              context: AnonymousEntity): Option[PersistedStatement] = ???
     //statements.find(_.context == context)

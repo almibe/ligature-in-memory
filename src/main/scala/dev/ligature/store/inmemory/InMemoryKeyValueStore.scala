@@ -7,6 +7,8 @@ package dev.ligature.store.inmemory
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
+import cats.effect.{IO, Resource}
+import dev.ligature.{ReadTx, WriteTx}
 import dev.ligature.store.keyvalue.KeyValueStore
 
 import scala.collection.SortedMap
@@ -17,24 +19,28 @@ private class InMemoryKeyValueStore extends KeyValueStore {
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
 
-  def startReadTx(): Unit = {
-    ???
+  override def compute: Resource[IO, ReadTx] = {
+    Resource.make(
+      IO {
+        new InMemoryReadTx(store.get(), lock.readLock())
+      }
+    )( tx =>
+      IO {
+        tx.cancel()
+      }
+    )
   }
 
-  def startWriteTx(): Unit = {
-    ???
-  }
-
-  def endReadTx(): Unit  = {
-    ???
-  }
-
-  def cancelWriteTx(): Unit = {
-    ???
-  }
-
-  def commitWriteTx(): Unit = {
-    ???
+  override def write: Resource[IO, WriteTx] = {
+    Resource.make(
+      IO {
+        new InMemoryWriteTx(store, lock.writeLock())
+      }
+    )( tx =>
+      IO {
+        tx.commit()
+      }
+    )
   }
 
   override def put(key: Array[Byte], value: Array[Byte]): Try[(Array[Byte], Array[Byte])] = ???

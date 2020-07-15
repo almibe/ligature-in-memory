@@ -4,6 +4,8 @@
 
 package dev.ligature.store.keyvalue
 
+import cats.effect.{IO, Resource}
+import dev.ligature.{ReadTx, WriteTx}
 import scala.util.Try
 
 /**
@@ -14,5 +16,7 @@ trait KeyValueStore {
   abstract def delete(key: Array[Byte]): Try[Array[Byte]]
   abstract def scan(start: Array[Byte], end: Array[Byte]): Iterable[(Array[Byte], Array[Byte])]
   abstract def close()
-  abstract def isOpen(): Boolean
+  abstract def isOpen: Boolean
+  abstract def write: Resource[IO, WriteTx]
+  abstract def compute: Resource[IO, ReadTx]
 }

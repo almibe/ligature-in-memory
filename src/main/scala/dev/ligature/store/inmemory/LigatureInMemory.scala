@@ -15,28 +15,12 @@ class LigatureInMemory extends Ligature {
   }
 
   override def compute(): Resource[IO, ReadTx] = {
-    Resource.make(
-      IO {
-        new InMemoryReadTx(store)
-      }
-    )( tx =>
-      IO {
-        tx.cancel()
-      }
-    )
+    store.compute
   }
 
   override def write(): Resource[IO, WriteTx] = {
-    Resource.make(
-      IO {
-        new InMemoryWriteTx(store)
-      }
-    )( tx =>
-      IO {
-        tx.commit()
-      }
-    )
+    store.write
   }
 
-  override def isOpen(): Boolean = store.isOpen()
+  override def isOpen(): Boolean = store.isOpen
 }
