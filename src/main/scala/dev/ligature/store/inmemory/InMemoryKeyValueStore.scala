@@ -17,6 +17,26 @@ private class InMemoryKeyValueStore extends KeyValueStore {
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
 
+  def startReadTx(): Unit = {
+    ???
+  }
+
+  def startWriteTx(): Unit = {
+    ???
+  }
+
+  def endReadTx(): Unit  = {
+    ???
+  }
+
+  def cancelWriteTx(): Unit = {
+    ???
+  }
+
+  def commitWriteTx(): Unit = {
+    ???
+  }
+
   override def put(key: Array[Byte], value: Array[Byte]): Try[(Array[Byte], Array[Byte])] = ???
 
   override def delete(key: Array[Byte]): Try[Array[Byte]] = ???

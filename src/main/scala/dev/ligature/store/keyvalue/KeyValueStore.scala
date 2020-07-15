@@ -14,4 +14,5 @@ trait KeyValueStore {
   abstract def delete(key: Array[Byte]): Try[Array[Byte]]
   abstract def scan(start: Array[Byte], end: Array[Byte]): Iterable[(Array[Byte], Array[Byte])]
   abstract def close()
+  abstract def isOpen(): Boolean
 }
