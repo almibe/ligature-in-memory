@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.memory
+package dev.ligature.store.inmemory
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong, AtomicReference}
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -11,17 +11,14 @@ import cats.effect.{IO, Resource}
 import dev.ligature._
 
 import scala.collection.SortedMap
-import scala.collection.immutable.{HashMap, HashSet}
+import scala.collection.immutable.HashSet
 import scala.util.{Failure, Success, Try}
 
-class InMemoryStore extends LigatureStore {
-  private val store = new AtomicReference(SortedMap[Array[Byte], Array[Byte]]())
-  private val lock = new ReentrantReadWriteLock()
-  private val open = new AtomicBoolean(true)
+class LigatureInMemory extends Ligature {
+  private val store = new InMemoryKeyValueStore()
 
   override def close() {
-    open.set(false)
-    store.set(SortedMap[Array[Byte], Array[Byte]]())
+    store.close()
   }
 
   override def compute(): Resource[IO, ReadTx] = {
@@ -58,10 +55,9 @@ private class InMemoryReadTx(private val store: SortedMap[Array[Byte], Array[Byt
 
   override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
-      val collection = store.get(collectionName)
-      if (collection.nonEmpty) {
-        val result = collection.get.statements
-        IO { result.get() }
+      if (collectionExists(collectionName, store)) {
+        val result = readAllStatements(collectionName, store)
+        IO { result }
       } else {
         IO { Iterable.empty }
       }
@@ -147,7 +143,7 @@ private class InMemoryReadTx(private val store: SortedMap[Array[Byte], Array[Byt
   }
 }
 
-private class InMemoryWriteTx(private val store: AtomicReference[HashMap[NamedEntity, CollectionValue]],
+private class InMemoryWriteTx(private val store: AtomicReference[SortedMap[Array[Byte], Array[Byte]]],
                               private val lock: ReentrantReadWriteLock.WriteLock) extends WriteTx {
   private val active = new AtomicBoolean(true)
   private val workingState = new AtomicReference(store.get())
