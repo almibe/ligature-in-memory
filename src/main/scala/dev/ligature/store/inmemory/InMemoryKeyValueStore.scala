@@ -10,12 +10,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import cats.effect.{IO, Resource}
 import dev.ligature.{ReadTx, WriteTx}
 import dev.ligature.store.keyvalue.KeyValueStore
+import scodec.bits.ByteVector
 
 import scala.collection.SortedMap
 import scala.util.Try
 
 private class InMemoryKeyValueStore extends KeyValueStore {
-  private val store = new AtomicReference(SortedMap[Array[Byte], Array[Byte]]())
+  private val store = new AtomicReference(SortedMap[ByteVector, ByteVector]())
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
 
@@ -43,14 +44,14 @@ private class InMemoryKeyValueStore extends KeyValueStore {
     )
   }
 
-  override def put(key: Array[Byte], value: Array[Byte]): Try[(Array[Byte], Array[Byte])] = ???
+  override def put(key: ByteVector, value: ByteVector): Try[(ByteVector, ByteVector)] = ???
 
-  override def delete(key: Array[Byte]): Try[Array[Byte]] = ???
+  override def delete(key: ByteVector): Try[ByteVector] = ???
 
-  override def scan(start: Array[Byte], end: Array[Byte]): Iterable[(Array[Byte], Array[Byte])] = ???
+  override def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] = ???
 
   override def close(): Unit = {
     open.set(false)
-    store.set(SortedMap[Array[Byte], Array[Byte]]())
+    store.set(SortedMap[ByteVector, ByteVector]())
   }
 }

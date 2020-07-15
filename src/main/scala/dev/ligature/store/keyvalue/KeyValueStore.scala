@@ -6,17 +6,19 @@ package dev.ligature.store.keyvalue
 
 import cats.effect.{IO, Resource}
 import dev.ligature.{ReadTx, WriteTx}
+import scodec.bits.ByteVector
+
 import scala.util.Try
 
 /**
  * A trait that handles lower level access for working with LigatureStores.
  */
 trait KeyValueStore {
-  abstract def put(key: Array[Byte], value: Array[Byte]): Try[(Array[Byte], Array[Byte])]
-  abstract def delete(key: Array[Byte]): Try[Array[Byte]]
-  abstract def scan(start: Array[Byte], end: Array[Byte]): Iterable[(Array[Byte], Array[Byte])]
-  abstract def close()
-  abstract def isOpen: Boolean
-  abstract def write: Resource[IO, WriteTx]
-  abstract def compute: Resource[IO, ReadTx]
+  def put(key: ByteVector, value: ByteVector): Try[(ByteVector, ByteVector)]
+  def delete(key: ByteVector): Try[ByteVector]
+  def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)]
+  def close()
+  def isOpen: Boolean
+  def write: Resource[IO, WriteTx]
+  def compute: Resource[IO, ReadTx]
 }

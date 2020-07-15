@@ -4,16 +4,17 @@
 
 package dev.ligature.store.inmemory
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong, AtomicReference}
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.IO
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, PersistedStatement, Predicate, Statement, WriteTx}
+import scodec.bits.ByteVector
 
 import scala.collection.SortedMap
 import scala.util.{Failure, Success, Try}
 
-private class InMemoryWriteTx(private val store: AtomicReference[SortedMap[Array[Byte], Array[Byte]]],
+private class InMemoryWriteTx(private val store: AtomicReference[SortedMap[ByteVector, ByteVector]],
                               private val lock: ReentrantReadWriteLock.WriteLock) extends WriteTx {
   private val active = new AtomicBoolean(true)
   private val workingState = new AtomicReference(store.get())

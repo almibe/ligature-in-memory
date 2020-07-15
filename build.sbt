@@ -11,6 +11,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "ligature-in-memory",
     libraryDependencies += "dev.ligature" %% "ligature" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "org.scodec" %% "scodec-bits" % "1.1.17",
     libraryDependencies += scalaTest % Test,
     libraryDependencies += "dev.ligature" %% "ligature-test-suite" % "0.1.0-SNAPSHOT" % Test
   )

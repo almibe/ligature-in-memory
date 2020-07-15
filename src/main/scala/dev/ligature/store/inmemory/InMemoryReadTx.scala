@@ -8,12 +8,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.IO
-import dev.ligature.store.keyvalue.{KeyValueStore, Prefixes}
+import dev.ligature.store.keyvalue.Prefixes
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
+import scodec.bits.ByteVector
 
 import scala.collection.SortedMap
 
-private class InMemoryReadTx(private val store: SortedMap[Array[Byte], Array[Byte]],
+private class InMemoryReadTx(private val store: SortedMap[ByteVector, ByteVector],
                              private val lock: ReentrantReadWriteLock.ReadLock) extends ReadTx {
   private val active = new AtomicBoolean(true)
   lock.lock()
