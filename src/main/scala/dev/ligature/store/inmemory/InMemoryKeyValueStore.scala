@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.{IO, Resource}
 import dev.ligature.{ReadTx, WriteTx}
-import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.{KeyValueReadTx, KeyValueWriteTx, KeyValueStore}
 import scodec.bits.ByteVector
 
 import scala.collection.immutable.TreeMap
@@ -19,7 +19,7 @@ object ByteVectorOrdering extends Ordering[ByteVector] {
   def compare(a:ByteVector, b:ByteVector) = b.length compare a.length
 }
 
-private class InMemoryKeyValueStore extends KeyValueStore {
+private final class InMemoryKeyValueStore extends KeyValueStore {
   private val store = new AtomicReference(TreeMap[ByteVector, ByteVector]()(ByteVectorOrdering))
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
@@ -27,7 +27,7 @@ private class InMemoryKeyValueStore extends KeyValueStore {
   override def compute: Resource[IO, ReadTx] = {
     Resource.make(
       IO {
-        new InMemoryReadTx(store.get(), lock.readLock())
+        new KeyValueReadTx(store.get(), lock.readLock())
       }
     )( tx =>
       IO {
@@ -39,7 +39,7 @@ private class InMemoryKeyValueStore extends KeyValueStore {
   override def write: Resource[IO, WriteTx] = {
     Resource.make(
       IO {
-        new InMemoryWriteTx(store, lock.writeLock())
+        new KeyValueWriteTx(store, lock.writeLock())
       }
     )( tx =>
       IO {

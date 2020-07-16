@@ -9,7 +9,7 @@ import scodec.bits.ByteVector
 
 import scala.collection.immutable.TreeMap
 
-private object Common {
+object Common {
   def collectionExists(store: TreeMap[ByteVector, ByteVector], collectionName: NamedEntity): Boolean = {
     ???
   }

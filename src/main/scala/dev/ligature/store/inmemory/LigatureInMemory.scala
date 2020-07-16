@@ -7,7 +7,7 @@ package dev.ligature.store.inmemory
 import cats.effect.{IO, Resource}
 import dev.ligature._
 
-class LigatureInMemory extends Ligature {
+final class LigatureInMemory extends Ligature {
   private val store = new InMemoryKeyValueStore()
 
   override def close() {

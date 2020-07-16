@@ -2,19 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.inmemory
+package dev.ligature.store.keyvalue
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.IO
-import dev.ligature.store.keyvalue.Prefixes
+import dev.ligature.store.inmemory.Common
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
 import scodec.bits.ByteVector
 
 import scala.collection.immutable.TreeMap
 
-private class InMemoryReadTx(private val store: TreeMap[ByteVector, ByteVector],
+final class KeyValueReadTx(private val store: TreeMap[ByteVector, ByteVector],
                              private val lock: ReentrantReadWriteLock.ReadLock) extends ReadTx {
   private val active = new AtomicBoolean(true)
   lock.lock()
