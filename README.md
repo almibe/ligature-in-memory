@@ -1,12 +1,12 @@
 # ligature-keyvalue
-An key value store api for Ligature that also contains an in-memory implementation.
+A key value store api for Ligature that also contains an in-memory implementation.
 It does this by making use of immutable Scala collections.
 See https://github.com/almibe/ligature for more information.
 
-| Prefixes | Description           | Scodec Pseudocode                                            | Description                                                                        |
+| Prefixes | Name                  | Scodec Pseudocode                                            | Description                                                                        |
 | -------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| 0        | Collection Name -> ID | Byte ~ String -> Long                                        | Prefix ~ Collection Name -> Collection ID                                          |
-| 1        | ID -> Collection Name | Byte ~ Long -> String                                        | Prefix ~ Collection ID -> Collection Name                                          |
+| 0        | CollectionNameTOID    | Byte ~ String -> Long                                        | Prefix ~ Collection Name -> Collection ID                                          |
+| 1        | IDToCollectionName    | Byte ~ Long -> String                                        | Prefix ~ Collection ID -> Collection Name                                          |
 | 2        | CollectionNameCounter | Byte -> Long                                                 | Prefix -> Collection ID Count                                                      |
 | 3        | SPOC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Prefix ~ Collection ID ~ Type ~ ID ~ Predicate ID ~ Type ~ Object ID ~ Context ID  |
 | 4        | SOPC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
