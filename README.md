@@ -1,6 +1,6 @@
-# ligature-in-memory
-An in-memory implementation of Ligature.
-It does this by making use of immutable Scala collections and Monix atomic primitives.
+# ligature-keyvalue
+An key value store api for Ligature that also contains an in-memory implementation.
+It does this by making use of immutable Scala collections.
 See https://github.com/almibe/ligature for more information.
 
 | Prefixes | Description           | Scodec Pseudocode                                            | Description                                                                        |
@@ -15,7 +15,7 @@ See https://github.com/almibe/ligature for more information.
 | 7        | OSPC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
 | 8        | OPSC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
 | 9        | CSPO                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
-| 10       | CollectionCounter     | Btye ~ Long -> Long                                          | Prefix ~ Collection ID -> Counter Value                                            |
+| 10       | CollectionCounter     | Byte ~ Long -> Long                                          | Prefix ~ Collection ID -> Counter Value                                            |
 | 11       | NamedEntitiesToID     | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection ID ~ Entity Name -> Entity ID                                  |
 | 12       | IDToNamedEntities     | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection ID ~ Entity ID -> Entity Name                                  |
 | 13       | AnonymousEntities     | Byte ~ Long ~ Long                                           | Prefix ~ Collection ID ~ Anonymous ID                                              |
@@ -26,7 +26,7 @@ See https://github.com/almibe/ligature for more information.
 | 18       | StringToID            | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection ID ~ String -> Literal ID                                      |
 | 19       | IDToString            | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection ID ~ Literal ID -> String                                      |
 
-I probably don't need lookups for boolean, long, or double since I can just use the actual value.
+I probably don't need lookups for boolean, long, or double since I can just use the actual values.
 
 | Type Codes | Value             |
 | ---------- | ----------------- |
