@@ -9,13 +9,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.{IO, Resource}
 import dev.ligature.{ReadTx, WriteTx}
-import dev.ligature.store.keyvalue.{KeyValueReadTx, KeyValueWriteTx, KeyValueStore}
+import dev.ligature.store.keyvalue.KeyValueStore
 import scodec.bits.ByteVector
 
 import scala.collection.immutable.TreeMap
 import scala.util.Try
 
-object ByteVectorOrdering extends Ordering[ByteVector] {
+private object ByteVectorOrdering extends Ordering[ByteVector] {
   def compare(a:ByteVector, b:ByteVector) = b.length compare a.length
 }
 
@@ -27,10 +27,12 @@ private final class InMemoryKeyValueStore extends KeyValueStore {
   override def compute: Resource[IO, ReadTx] = {
     Resource.make(
       IO {
-        new KeyValueReadTx(this)
+        lock.readLock().lock()
+        new InMemoryReadTx(this)
       }
     )( tx =>
       IO {
+        lock.readLock().unlock()
         tx.cancel()
       }
     )
@@ -39,7 +41,7 @@ private final class InMemoryKeyValueStore extends KeyValueStore {
   override def write: Resource[IO, WriteTx] = {
     Resource.make(
       IO {
-        new KeyValueWriteTx(this)
+        new InMemoryWriteTx(this)
       }
     )( tx =>
       IO {

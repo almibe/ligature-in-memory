@@ -2,16 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.keyvalue
+package dev.ligature.store.inmemory
 
 import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature._
+import dev.ligature.store.keyvalue.KeyValueStore
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
-final class KeyValueWriteTx(private val store: KeyValueStore) extends WriteTx {
+final class InMemoryWriteTx(private val store: KeyValueStore) extends WriteTx {
   private val active = new AtomicBoolean(true)
 
   override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {

@@ -2,14 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.keyvalue
+package dev.ligature.store.inmemory
 
 import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
+import dev.ligature.store.keyvalue.{Common, KeyValueStore}
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
 
-final class KeyValueReadTx(private val store: KeyValueStore) extends ReadTx {
+final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
   private val active = new AtomicBoolean(true)
 
   override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
@@ -26,13 +27,7 @@ final class KeyValueReadTx(private val store: KeyValueStore) extends ReadTx {
   }
 
   override def cancel() {
-    ???
-//    if (active.get()) {
-//      lock.unlock()
-//      active.set(false)
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+
   }
 
   override def collections(): IO[Iterable[NamedEntity]] =
