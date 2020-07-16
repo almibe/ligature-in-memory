@@ -4,17 +4,15 @@
 
 package dev.ligature.store.keyvalue
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import cats.effect.IO
 import dev.ligature._
 
 import scala.util.{Failure, Success, Try}
 
-final class KeyValueWriteTx(private val store: AtomicReference[TreeMap[ByteVector, ByteVector]],
-                              private val lock: ReentrantReadWriteLock.WriteLock) extends WriteTx {
+final class KeyValueWriteTx(private val store: KeyValueStore) extends WriteTx {
   private val active = new AtomicBoolean(true)
-  private val workingState = new AtomicReference(store.get())
-
-  lock.lock()
 
   override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {
     ???
@@ -33,23 +31,25 @@ final class KeyValueWriteTx(private val store: AtomicReference[TreeMap[ByteVecto
   }
 
   override def cancel() {
-    if (active.get()) {
-      active.set(false)
-      lock.unlock()
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+    ???
+//    if (active.get()) {
+//      active.set(false)
+//      lock.unlock()
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 
   override def commit(): Try[Unit] = {
-    if (active.get()) {
-      store.set(workingState.get())
-      lock.unlock()
-      active.set(false)
-      Success(())
-    } else {
-      Failure(new RuntimeException("Transaction is closed."))
-    }
+    ???
+//    if (active.get()) {
+//      store.set(workingState.get())
+//      lock.unlock()
+//      active.set(false)
+//      Success(())
+//    } else {
+//      Failure(new RuntimeException("Transaction is closed."))
+//    }
   }
 
   override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {

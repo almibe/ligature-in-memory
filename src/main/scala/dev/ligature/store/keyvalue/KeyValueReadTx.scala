@@ -26,32 +26,33 @@ final class KeyValueReadTx(private val store: KeyValueStore) extends ReadTx {
   }
 
   override def cancel() {
-    if (active.get()) {
-      lock.unlock()
-      active.set(false)
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+    ???
+//    if (active.get()) {
+//      lock.unlock()
+//      active.set(false)
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
   }
 
   override def collections(): IO[Iterable[NamedEntity]] =
     IO {
-      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
-        Array(Prefixes.CollectionNameToId + 1.toByte))
+//      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
+//        Array(Prefixes.CollectionNameToId + 1.toByte))
       ???
     }
 
   override def collections(prefix: NamedEntity): IO[Iterable[NamedEntity]] =
     IO {
-      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
-        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle prefix
+//      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
+//        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle prefix
       ???
     }
 
   override def collections(from: NamedEntity, to: NamedEntity): IO[Iterable[NamedEntity]] =
     IO {
-      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
-        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle range
+//      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
+//        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle range
       ???
     }
 

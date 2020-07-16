@@ -27,7 +27,7 @@ private final class InMemoryKeyValueStore extends KeyValueStore {
   override def compute: Resource[IO, ReadTx] = {
     Resource.make(
       IO {
-        new KeyValueReadTx(store.get(), lock.readLock())
+        new KeyValueReadTx(this)
       }
     )( tx =>
       IO {
@@ -39,7 +39,7 @@ private final class InMemoryKeyValueStore extends KeyValueStore {
   override def write: Resource[IO, WriteTx] = {
     Resource.make(
       IO {
-        new KeyValueWriteTx(store, lock.writeLock())
+        new KeyValueWriteTx(this)
       }
     )( tx =>
       IO {
@@ -58,4 +58,6 @@ private final class InMemoryKeyValueStore extends KeyValueStore {
     open.set(false)
     store.set(null)
   }
+
+  override def isOpen: Boolean = ???
 }
