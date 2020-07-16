@@ -4,15 +4,9 @@
 
 package dev.ligature.store.keyvalue
 
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.ReentrantReadWriteLock
-
 import cats.effect.IO
 import dev.ligature.store.inmemory.Common
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
-import scodec.bits.ByteVector
-
-import scala.collection.immutable.TreeMap
 
 final class KeyValueReadTx(private val store: TreeMap[ByteVector, ByteVector],
                              private val lock: ReentrantReadWriteLock.ReadLock) extends ReadTx {

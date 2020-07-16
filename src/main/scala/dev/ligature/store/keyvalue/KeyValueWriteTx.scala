@@ -4,14 +4,9 @@
 
 package dev.ligature.store.keyvalue
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
-import java.util.concurrent.locks.ReentrantReadWriteLock
-
 import cats.effect.IO
 import dev.ligature._
-import scodec.bits.ByteVector
 
-import scala.collection.immutable.TreeMap
 import scala.util.{Failure, Success, Try}
 
 final class KeyValueWriteTx(private val store: AtomicReference[TreeMap[ByteVector, ByteVector]],
