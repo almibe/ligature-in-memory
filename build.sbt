@@ -9,7 +9,7 @@ resolvers += Resolver.mavenLocal
 
 lazy val root = (project in file("."))
   .settings(
-    name := "ligature-in-memory",
+    name := "ligature-keyvalue",
     libraryDependencies += "dev.ligature" %% "ligature" % "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scodec" %% "scodec-bits" % "1.1.17",
     libraryDependencies += scalaTest % Test,
