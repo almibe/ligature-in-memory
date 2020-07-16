@@ -11,10 +11,10 @@ import cats.effect.IO
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, PersistedStatement, Predicate, Statement, WriteTx}
 import scodec.bits.ByteVector
 
-import scala.collection.SortedMap
+import scala.collection.immutable.TreeMap
 import scala.util.{Failure, Success, Try}
 
-private class InMemoryWriteTx(private val store: AtomicReference[SortedMap[ByteVector, ByteVector]],
+private class InMemoryWriteTx(private val store: AtomicReference[TreeMap[ByteVector, ByteVector]],
                               private val lock: ReentrantReadWriteLock.WriteLock) extends WriteTx {
   private val active = new AtomicBoolean(true)
   private val workingState = new AtomicReference(store.get())

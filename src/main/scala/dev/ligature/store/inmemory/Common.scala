@@ -7,22 +7,22 @@ package dev.ligature.store.inmemory
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 
-import scala.collection.SortedMap
+import scala.collection.immutable.TreeMap
 
 private object Common {
-  def collectionExists(store: SortedMap[ByteVector, ByteVector], collectionName: NamedEntity): Boolean = {
+  def collectionExists(store: TreeMap[ByteVector, ByteVector], collectionName: NamedEntity): Boolean = {
     ???
   }
 
-  def readAllStatements(store: SortedMap[ByteVector, ByteVector], collectionName: NamedEntity): Iterable[PersistedStatement] = {
+  def readAllStatements(store: TreeMap[ByteVector, ByteVector], collectionName: NamedEntity): Iterable[PersistedStatement] = {
     ???
   }
 
-  def collectionId(store: SortedMap[ByteVector, ByteVector], collectionName: NamedEntity): Long = {
+  def collectionId(store: TreeMap[ByteVector, ByteVector], collectionName: NamedEntity): Long = {
     ???
   }
 
-  def matchStatementsImpl(store: SortedMap[ByteVector, ByteVector],
+  def matchStatementsImpl(store: TreeMap[ByteVector, ByteVector],
                           collectionName: NamedEntity,
                           subject: Option[Entity] = None,
                           predicate: Option[Predicate] = None,
@@ -46,7 +46,7 @@ private object Common {
 //    }
   }
 
-  def matchStatementsImpl(store: SortedMap[ByteVector, ByteVector],
+  def matchStatementsImpl(store: TreeMap[ByteVector, ByteVector],
                           collectionName: NamedEntity,
                           subject: Option[Entity],
                           predicate: Option[Predicate],
@@ -91,7 +91,7 @@ private object Common {
     literal.value >= range.start && literal.value < range.end
   }
 
-  def statementByContextImpl(store: SortedMap[ByteVector, ByteVector],
+  def statementByContextImpl(store: TreeMap[ByteVector, ByteVector],
                              collectionName: NamedEntity,
                              context: AnonymousEntity): Option[PersistedStatement] = ???
     //statements.find(_.context == context)

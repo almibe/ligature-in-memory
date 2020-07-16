@@ -12,9 +12,9 @@ import dev.ligature.store.keyvalue.Prefixes
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
 import scodec.bits.ByteVector
 
-import scala.collection.SortedMap
+import scala.collection.immutable.TreeMap
 
-private class InMemoryReadTx(private val store: SortedMap[ByteVector, ByteVector],
+private class InMemoryReadTx(private val store: TreeMap[ByteVector, ByteVector],
                              private val lock: ReentrantReadWriteLock.ReadLock) extends ReadTx {
   private val active = new AtomicBoolean(true)
   lock.lock()

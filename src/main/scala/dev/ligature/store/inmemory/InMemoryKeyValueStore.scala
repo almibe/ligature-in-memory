@@ -12,11 +12,15 @@ import dev.ligature.{ReadTx, WriteTx}
 import dev.ligature.store.keyvalue.KeyValueStore
 import scodec.bits.ByteVector
 
-import scala.collection.SortedMap
+import scala.collection.immutable.TreeMap
 import scala.util.Try
 
+object ByteVectorOrdering extends Ordering[ByteVector] {
+  def compare(a:ByteVector, b:ByteVector) = b.length compare a.length
+}
+
 private class InMemoryKeyValueStore extends KeyValueStore {
-  private val store = new AtomicReference(SortedMap[ByteVector, ByteVector]())
+  private val store = new AtomicReference(TreeMap[ByteVector, ByteVector]()(ByteVectorOrdering))
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
 
@@ -52,6 +56,6 @@ private class InMemoryKeyValueStore extends KeyValueStore {
 
   override def close(): Unit = {
     open.set(false)
-    store.set(SortedMap[ByteVector, ByteVector]())
+    store.set(null)
   }
 }
