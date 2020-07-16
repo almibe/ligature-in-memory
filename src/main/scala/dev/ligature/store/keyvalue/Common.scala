@@ -1,28 +1,22 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-package dev.ligature.store.inmemory
+package dev.ligature.store.keyvalue
 
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 
-import scala.collection.immutable.TreeMap
-
 object Common {
-  def collectionExists(store: TreeMap[ByteVector, ByteVector], collectionName: NamedEntity): Boolean = {
+  def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
     ???
   }
 
-  def readAllStatements(store: TreeMap[ByteVector, ByteVector], collectionName: NamedEntity): Iterable[PersistedStatement] = {
+  def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Iterable[PersistedStatement] = {
     ???
   }
 
-  def collectionId(store: TreeMap[ByteVector, ByteVector], collectionName: NamedEntity): Long = {
+  def collectionId(store: KeyValueStore, collectionName: NamedEntity): Long = {
     ???
   }
 
-  def matchStatementsImpl(store: TreeMap[ByteVector, ByteVector],
+  def matchStatementsImpl(store: KeyValueStore,
                           collectionName: NamedEntity,
                           subject: Option[Entity] = None,
                           predicate: Option[Predicate] = None,
@@ -46,7 +40,7 @@ object Common {
 //    }
   }
 
-  def matchStatementsImpl(store: TreeMap[ByteVector, ByteVector],
+  def matchStatementsImpl(store: KeyValueStore,
                           collectionName: NamedEntity,
                           subject: Option[Entity],
                           predicate: Option[Predicate],
@@ -91,7 +85,7 @@ object Common {
     literal.value >= range.start && literal.value < range.end
   }
 
-  def statementByContextImpl(store: TreeMap[ByteVector, ByteVector],
+  def statementByContextImpl(store: KeyValueStore,
                              collectionName: NamedEntity,
                              context: AnonymousEntity): Option[PersistedStatement] = ???
     //statements.find(_.context == context)

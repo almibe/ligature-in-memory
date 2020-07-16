@@ -4,14 +4,13 @@
 
 package dev.ligature.store.keyvalue
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import cats.effect.IO
-import dev.ligature.store.inmemory.Common
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
 
-final class KeyValueReadTx(private val store: TreeMap[ByteVector, ByteVector],
-                             private val lock: ReentrantReadWriteLock.ReadLock) extends ReadTx {
+final class KeyValueReadTx(private val store: KeyValueStore) extends ReadTx {
   private val active = new AtomicBoolean(true)
-  lock.lock()
 
   override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
