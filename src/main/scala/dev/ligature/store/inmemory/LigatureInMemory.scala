@@ -9,18 +9,8 @@ import dev.ligature._
 
 final class LigatureInMemory extends Ligature {
   private val store = new InMemoryKeyValueStore()
-
-  override def close() {
-    store.close()
-  }
-
-  override def compute(): Resource[IO, ReadTx] = {
-    store.compute
-  }
-
-  override def write(): Resource[IO, WriteTx] = {
-    store.write
-  }
-
+  override def close(): Unit = store.close()
+  override def compute(): Resource[IO, ReadTx] = store.compute
+  override def write(): Resource[IO, WriteTx] = store.write
   override def isOpen(): Boolean = store.isOpen
 }

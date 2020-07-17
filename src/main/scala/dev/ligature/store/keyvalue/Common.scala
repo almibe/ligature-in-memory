@@ -1,9 +1,20 @@
 package dev.ligature.store.keyvalue
 
+import cats.effect.IO
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 
 object Common {
+  def collections(store: KeyValueStore): IO[Iterable[NamedEntity]] = {
+    IO {
+      val collectionNameToId = store.scan(ByteVector.fromByte(Prefixes.CollectionNameToId),
+        ByteVector.fromInt(Prefixes.CollectionNameToId + 1.toByte))
+      collectionNameToId.map { encoded =>
+        encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
+      }
+    }
+  }
+
   def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
     ???
   }

@@ -26,12 +26,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
     }
   }
 
-  override def collections(): IO[Iterable[NamedEntity]] =
-    IO {
-//      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
-//        Array(Prefixes.CollectionNameToId + 1.toByte))
-      ???
-    }
+  override def collections(): IO[Iterable[NamedEntity]] = Common.collections(store)
 
   override def collections(prefix: NamedEntity): IO[Iterable[NamedEntity]] =
     IO {
