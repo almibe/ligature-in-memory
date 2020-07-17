@@ -15,36 +15,37 @@ import scodec.bits.ByteVector
 import scala.collection.immutable.TreeMap
 import scala.util.Try
 
-private object ByteVectorOrdering extends Ordering[ByteVector] {
-  def compare(a:ByteVector, b:ByteVector) = b.length compare a.length
-}
-
 private final class InMemoryKeyValueStore extends KeyValueStore {
   private val store = new AtomicReference(TreeMap[ByteVector, ByteVector]()(ByteVectorOrdering))
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
 
-  override def compute: Resource[IO, ReadTx] = {
+  private object ByteVectorOrdering extends Ordering[ByteVector] {
+    def compare(a:ByteVector, b:ByteVector): Int = b.length compare a.length
+  }
+
+  def compute: Resource[IO, ReadTx] = {
     Resource.make(
       IO {
         lock.readLock().lock()
         new InMemoryReadTx(this)
       }
-    )( tx =>
+    )( _ =>
       IO {
         lock.readLock().unlock()
-        tx.cancel()
       }
     )
   }
 
-  override def write: Resource[IO, WriteTx] = {
+  def write: Resource[IO, WriteTx] = {
     Resource.make(
       IO {
+        lock.writeLock().lock()
         new InMemoryWriteTx(this)
       }
     )( tx =>
       IO {
+        lock.writeLock().unlock()
         tx.commit()
       }
     )
@@ -56,10 +57,10 @@ private final class InMemoryKeyValueStore extends KeyValueStore {
 
   override def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] = ???
 
-  override def close(): Unit = {
+  def close(): Unit = {
     open.set(false)
     store.set(null)
   }
 
-  override def isOpen: Boolean = ???
+  def isOpen: Boolean = open.get()
 }

@@ -12,7 +12,7 @@ import dev.ligature.store.keyvalue.KeyValueStore
 
 import scala.util.Try
 
-final class InMemoryWriteTx(private val store: KeyValueStore) extends WriteTx {
+private final class InMemoryWriteTx(private val store: KeyValueStore) extends WriteTx {
   private val active = new AtomicBoolean(true)
 
   override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {
@@ -41,7 +41,7 @@ final class InMemoryWriteTx(private val store: KeyValueStore) extends WriteTx {
 //    }
   }
 
-  override def commit(): Try[Unit] = {
+  def commit(): Try[Unit] = {
     ???
 //    if (active.get()) {
 //      store.set(workingState.get())
