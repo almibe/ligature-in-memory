@@ -1,10 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package dev.ligature.store.keyvalue
 
 import cats.effect.IO
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
+import scodec.codecs.utf8
+import scodec.codecs.byte
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 object Common {
   def collections(store: KeyValueStore): IO[Iterable[NamedEntity]] = {
@@ -18,21 +24,19 @@ object Common {
   }
 
   def createCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
-    ???
-//    if (!store.get().contains(collection)) {
-//      val oldState = workingState.get()
-//      val newState = oldState.updated(collection,
-//        CollectionValue(new AtomicReference(new HashSet[PersistedStatement]()),
-//          new AtomicLong(0)))
-//      val result = workingState.compareAndSet(oldState, newState)
-//      IO { if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection.")) }
-//    } else {
-//      IO { Success(collection) } //collection exists
-//    }
+    if (!collectionExists(store, collection)) {
+      IO {
+        ???
+      }
+    } else {
+      IO { Success(collection) }
+    }
   }
 
   def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
-    ???
+    val encoder = byte ~ utf8
+    val encoded = encoder.encode(Prefixes.CollectionNameToId, collectionName.identifier).require.bytes
+    store.get(encoded).nonEmpty
   }
 
   def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Iterable[PersistedStatement] = {

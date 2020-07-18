@@ -18,6 +18,8 @@ import scala.util.{Success, Try}
 private final class InMemoryKeyValueStore(private val data: AtomicReference[TreeMap[ByteVector, ByteVector]])
   extends KeyValueStore {
 
+  override def get(key: ByteVector): Option[ByteVector] = data.get().get(key)
+
   override def put(key: ByteVector, value: ByteVector): Try[(ByteVector, ByteVector)] = {
     val current = data.get()
     val newValue = current.updated(key, value)
@@ -45,7 +47,13 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
 
 private object InMemoryKeyValueStore {
   private object ByteVectorOrdering extends Ordering[ByteVector] {
-    def compare(a:ByteVector, b:ByteVector): Int = b.length compare a.length
+    def compare(a:ByteVector, b:ByteVector): Int = if (a === b) {
+      0
+    } else if (a > b) {
+      1
+    } else {
+      -1
+    }
   }
 
   def newStore(): InMemoryKeyValueStore = {
