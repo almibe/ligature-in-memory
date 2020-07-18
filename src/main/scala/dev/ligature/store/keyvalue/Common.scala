@@ -4,6 +4,8 @@ import cats.effect.IO
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 
+import scala.util.Try
+
 object Common {
   def collections(store: KeyValueStore): IO[Iterable[NamedEntity]] = {
     IO {
@@ -12,6 +14,23 @@ object Common {
       collectionNameToId.map { encoded =>
         encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
       }
+    }
+  }
+
+  def createCollection(store: KeyValueStore): IO[Try[NamedEntity]] = {
+    if (active.get()) {
+      if (!workingState.get().contains(collection)) {
+        val oldState = workingState.get()
+        val newState = oldState.updated(collection,
+          CollectionValue(new AtomicReference(new HashSet[PersistedStatement]()),
+            new AtomicLong(0)))
+        val result = workingState.compareAndSet(oldState, newState)
+        IO { if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection.")) }
+      } else {
+        IO { Success(collection) } //collection exists
+      }
+    } else {
+      throw new RuntimeException("Transaction is closed.")
     }
   }
 

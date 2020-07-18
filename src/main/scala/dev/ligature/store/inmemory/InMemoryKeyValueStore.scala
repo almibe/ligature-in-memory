@@ -4,63 +4,34 @@
 
 package dev.ligature.store.inmemory
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
-import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.atomic.AtomicReference
 
-import cats.effect.{IO, Resource}
-import dev.ligature.{ReadTx, WriteTx}
 import dev.ligature.store.keyvalue.KeyValueStore
 import scodec.bits.ByteVector
 
 import scala.collection.immutable.TreeMap
-import scala.util.Try
+import scala.util.{Success, Try}
 
-private final class InMemoryKeyValueStore extends KeyValueStore {
-  private val store = new AtomicReference(TreeMap[ByteVector, ByteVector]()(ByteVectorOrdering))
-  private val lock = new ReentrantReadWriteLock()
-  private val open = new AtomicBoolean(true)
+/**
+ * An implementation of KeyValueStore that uses an AtomicReference to a TreeMap to store its data.
+ */
+private final class InMemoryKeyValueStore(private val data: AtomicReference[TreeMap[ByteVector, ByteVector]])
+  extends KeyValueStore {
 
-  private object ByteVectorOrdering extends Ordering[ByteVector] {
-    def compare(a:ByteVector, b:ByteVector): Int = b.length compare a.length
+  override def put(key: ByteVector, value: ByteVector): Try[(ByteVector, ByteVector)] = {
+    val current = data.get()
+    val newValue = current.updated(key, value)
+    data.set(newValue)
+    Success((key, value))
   }
 
-  def compute: Resource[IO, ReadTx] = {
-    Resource.make(
-      IO {
-        lock.readLock().lock()
-        new InMemoryReadTx(this)
-      }
-    )( _ =>
-      IO {
-        lock.readLock().unlock()
-      }
-    )
+  override def delete(key: ByteVector): Try[ByteVector] = {
+    val current = data.get()
+    val newValue = current.removed(key)
+    data.set(newValue)
+    Success(key)
   }
 
-  def write: Resource[IO, WriteTx] = {
-    Resource.make(
-      IO {
-        lock.writeLock().lock()
-        new InMemoryWriteTx(this)
-      }
-    )( tx =>
-      IO {
-        lock.writeLock().unlock()
-        tx.commit()
-      }
-    )
-  }
-
-  override def put(key: ByteVector, value: ByteVector): Try[(ByteVector, ByteVector)] = ???
-
-  override def delete(key: ByteVector): Try[ByteVector] = ???
-
-  override def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] = ???
-
-  def close(): Unit = {
-    open.set(false)
-    store.set(null)
-  }
-
-  def isOpen: Boolean = open.get()
+  override def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] =
+    data.get().range(start, end)
 }

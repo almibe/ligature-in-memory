@@ -4,16 +4,17 @@
 
 package dev.ligature.store.inmemory
 
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 import cats.effect.IO
 import dev.ligature._
-import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.{Common, KeyValueStore}
 
 import scala.util.Try
 
-private final class InMemoryWriteTx(private val store: KeyValueStore) extends WriteTx {
+private final class InMemoryWriteTx(val store: AtomicReference[InMemoryKeyValueStore]) extends WriteTx {
   private val active = new AtomicBoolean(true)
+  private val workingState = new AtomicReference(store.get())
 
   override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {
     ???
@@ -53,23 +54,8 @@ private final class InMemoryWriteTx(private val store: KeyValueStore) extends Wr
 //    }
   }
 
-  override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
-    ???
-//    if (active.get()) {
-//      if (!workingState.get().contains(collection)) {
-//        val oldState = workingState.get()
-//        val newState = oldState.updated(collection,
-//          CollectionValue(new AtomicReference(new HashSet[PersistedStatement]()),
-//            new AtomicLong(0)))
-//        val result = workingState.compareAndSet(oldState, newState)
-//        IO { if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection.")) }
-//      } else {
-//        IO { Success(collection) } //collection exists
-//      }
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
-  }
+  override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] =
+    Common.createCollection(store.get())
 
   override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
     ???

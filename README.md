@@ -1,6 +1,10 @@
 # ligature-keyvalue
 A key value store api for Ligature that also contains an in-memory implementation.
 It does this by making use of immutable Scala collections.
+The main idea of this project is to set up a shared code base for storing Ligature data in key value stores
+with maximal code reuse.
+This is why the in-memory store uses a single ordered map of ByteVectors to store data instead of using
+domain objects directly, since stores like RocksDB or FoundationDB work with bytes and not JVM objects.
 See https://github.com/almibe/ligature for more information.
 
 | Prefixes | Name                  | Scodec Pseudocode                                            | Description                                                                        |
