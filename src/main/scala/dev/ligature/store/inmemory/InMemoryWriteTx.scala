@@ -4,19 +4,17 @@
 
 package dev.ligature.store.inmemory
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature._
 import dev.ligature.store.keyvalue.Common
-import scodec.bits.ByteVector
 
-import scala.collection.immutable.TreeMap
 import scala.util.Try
 
-private final class InMemoryWriteTx(val data: InMemoryKeyValueStore) extends WriteTx {
+private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends WriteTx {
   private val active = new AtomicBoolean(true)
-  private val workingState = data.copy()
+  private val workingState = store.copy()
 
   override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {
     ???
@@ -57,7 +55,11 @@ private final class InMemoryWriteTx(val data: InMemoryKeyValueStore) extends Wri
   }
 
   override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] =
-    Common.createCollection(store.get())
+    if (active.get()) {
+      Common.createCollection(workingState, collection)
+    } else {
+      throw new RuntimeException("Transaction is closed.")
+    }
 
   override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
     ???

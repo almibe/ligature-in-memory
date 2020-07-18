@@ -40,7 +40,7 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
     new InMemoryKeyValueStore(ref)
   }
 
-  def clear(): Unit = ???
+  def clear(): Unit = data.set(null)
 }
 
 private object InMemoryKeyValueStore {

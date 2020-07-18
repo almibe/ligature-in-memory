@@ -26,7 +26,12 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
     }
   }
 
-  override def collections(): IO[Iterable[NamedEntity]] = Common.collections(store)
+  override def collections(): IO[Iterable[NamedEntity]] =
+    if (active.get()) {
+      Common.collections(store)
+    } else {
+      throw new RuntimeException("Transaction is closed.")
+    }
 
   override def collections(prefix: NamedEntity): IO[Iterable[NamedEntity]] =
     IO {

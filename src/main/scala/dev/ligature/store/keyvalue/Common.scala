@@ -17,21 +17,18 @@ object Common {
     }
   }
 
-  def createCollection(store: KeyValueStore): IO[Try[NamedEntity]] = {
-    if (active.get()) {
-      if (!workingState.get().contains(collection)) {
-        val oldState = workingState.get()
-        val newState = oldState.updated(collection,
-          CollectionValue(new AtomicReference(new HashSet[PersistedStatement]()),
-            new AtomicLong(0)))
-        val result = workingState.compareAndSet(oldState, newState)
-        IO { if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection.")) }
-      } else {
-        IO { Success(collection) } //collection exists
-      }
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
+  def createCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
+    ???
+//    if (!store.get().contains(collection)) {
+//      val oldState = workingState.get()
+//      val newState = oldState.updated(collection,
+//        CollectionValue(new AtomicReference(new HashSet[PersistedStatement]()),
+//          new AtomicLong(0)))
+//      val result = workingState.compareAndSet(oldState, newState)
+//      IO { if (result) Success(collection) else Failure(new RuntimeException("Couldn't persist new collection.")) }
+//    } else {
+//      IO { Success(collection) } //collection exists
+//    }
   }
 
   def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
