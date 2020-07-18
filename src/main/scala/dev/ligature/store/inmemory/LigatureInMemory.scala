@@ -9,30 +9,22 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.{IO, Resource}
 import dev.ligature._
-import scodec.bits.ByteVector
-
-import scala.collection.immutable.TreeMap
 
 final class LigatureInMemory extends Ligature {
-  private val data = new AtomicReference(
-    TreeMap[ByteVector, ByteVector]()(ByteVectorOrdering))
+  private val data = InMemoryKeyValueStore.newStore()
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
 
-  private object ByteVectorOrdering extends Ordering[ByteVector] {
-    def compare(a:ByteVector, b:ByteVector): Int = b.length compare a.length
-  }
-
   override def close(): Unit = {
     open.set(false)
-    data.set(null)
+    data.clear()
   }
 
   override def compute: Resource[IO, ReadTx] = {
     Resource.make(
       IO {
         lock.readLock().lock()
-        new InMemoryReadTx(new InMemoryKeyValueStore(data))
+        new InMemoryReadTx(data)
       }
     )( _ =>
       IO {

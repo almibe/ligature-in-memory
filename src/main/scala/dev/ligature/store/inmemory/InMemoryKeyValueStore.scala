@@ -34,4 +34,22 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
 
   override def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] =
     data.get().range(start, end)
+
+  def copy(): InMemoryKeyValueStore = {
+    val ref = new AtomicReference(this.data.get())
+    new InMemoryKeyValueStore(ref)
+  }
+
+  def clear(): Unit = ???
+}
+
+private object InMemoryKeyValueStore {
+  private object ByteVectorOrdering extends Ordering[ByteVector] {
+    def compare(a:ByteVector, b:ByteVector): Int = b.length compare a.length
+  }
+
+  def newStore(): InMemoryKeyValueStore = {
+    new InMemoryKeyValueStore(new AtomicReference(
+      TreeMap[ByteVector, ByteVector]()(ByteVectorOrdering)))
+  }
 }
