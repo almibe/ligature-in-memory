@@ -47,12 +47,30 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
 
 private object InMemoryKeyValueStore {
   object ByteVectorOrdering extends Ordering[ByteVector] {
-    def compare(a:ByteVector, b:ByteVector): Int = if (a === b) {
-      0
-    } else if (a > b) {
-      1
-    } else {
-      -1
+    //TODO from https://github.com/scodec/scodec-bits/pull/196
+    def compare(a:ByteVector, b:ByteVector): Int = {
+      if (a.eq(b)) {
+        0
+      } else {
+        val thisLength = a.length
+        val thatLength = b.length
+        val commonLength = thisLength.min(thatLength)
+        var i = 0
+        while (i < commonLength) {
+          val cmp = a(i).compare(b(i))
+          if (cmp != 0) {
+            return cmp
+          }
+          i = i + 1
+        }
+        if (thisLength < thatLength) {
+          -1
+        } else if (thisLength > thatLength) {
+          1
+        } else {
+          0
+        }
+      }
     }
   }
 

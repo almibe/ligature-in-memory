@@ -27,8 +27,8 @@ object Common {
         val nextId = nextCollectionNameId(store)
         val collectionNameToIdEncoder = byte ~ utf8
         val idToCollectionNameEncoder = byte ~ long(64)
-        val collectionNameToIdEncodedKey = collectionNameToIdEncoder.encode(???).require.bytes
-        val idToCollectionNameEncodedKey = idToCollectionNameEncoder.encode(???).require.bytes
+        val collectionNameToIdEncodedKey = collectionNameToIdEncoder.encode((Prefixes.CollectionNameToId, collection.identifier)).require.bytes
+        val idToCollectionNameEncodedKey = idToCollectionNameEncoder.encode((Prefixes.IdToCollectionName, nextId)).require.bytes
         store.put(collectionNameToIdEncodedKey, long(64).encode(nextId).require.bytes)
         store.put(idToCollectionNameEncodedKey, utf8.encode(collection.identifier).require.bytes)
         Success(collection)
@@ -39,7 +39,19 @@ object Common {
   }
 
   def nextCollectionNameId(store: KeyValueStore): Long = {
-    ???
+    val currentId = store.get(byte.encode(Prefixes.CollectionNameCounter).require.bytes)
+    currentId match {
+      case Some(bv) => {
+        val nextId = bv.toLong() + 1
+        store.put(byte.encode(Prefixes.CollectionNameCounter).require.bytes, long(64).encode(nextId).require.bytes)
+        nextId
+      }
+      case None => {
+        val nextId = 0
+        store.put(byte.encode(Prefixes.CollectionNameCounter).require.bytes, long(64).encode(nextId).require.bytes)
+        nextId
+      }
+    }
   }
 
   def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
