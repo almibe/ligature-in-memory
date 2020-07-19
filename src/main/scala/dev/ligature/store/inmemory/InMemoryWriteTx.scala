@@ -10,7 +10,7 @@ import cats.effect.IO
 import dev.ligature._
 import dev.ligature.store.keyvalue.Common
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends WriteTx {
   private val active = new AtomicBoolean(true)
@@ -43,15 +43,13 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   }
 
   def commit(): Try[Unit] = {
-    ???
-//    if (active.get()) {
-//      store.set(workingState.get())
-//      lock.unlock()
-//      active.set(false)
-//      Success(())
-//    } else {
-//      Failure(new RuntimeException("Transaction is closed."))
-//    }
+    if (active.get()) {
+      store.commit(workingState)
+      active.set(false)
+      Success(())
+    } else {
+      Failure(new RuntimeException("Transaction is closed."))
+    }
   }
 
   override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] =

@@ -43,6 +43,10 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
   }
 
   def clear(): Unit = data.set(null)
+
+  def commit(newValue: InMemoryKeyValueStore): Unit = {
+    this.data.set(newValue.data.get())
+  }
 }
 
 private object InMemoryKeyValueStore {
