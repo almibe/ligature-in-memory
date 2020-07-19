@@ -46,7 +46,7 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
 }
 
 private object InMemoryKeyValueStore {
-  private object ByteVectorOrdering extends Ordering[ByteVector] {
+  object ByteVectorOrdering extends Ordering[ByteVector] {
     def compare(a:ByteVector, b:ByteVector): Int = if (a === b) {
       0
     } else if (a > b) {

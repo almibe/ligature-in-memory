@@ -4,7 +4,7 @@
 
 package dev.ligature.store.inmemory
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.{IO, Resource}

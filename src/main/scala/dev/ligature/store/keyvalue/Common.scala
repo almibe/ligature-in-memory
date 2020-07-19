@@ -7,9 +7,7 @@ package dev.ligature.store.keyvalue
 import cats.effect.IO
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
-import scodec.codecs.utf8
-import scodec.codecs.byte
-
+import scodec.codecs.{utf8, byte, long}
 import scala.util.{Success, Try}
 
 object Common {
@@ -26,11 +24,22 @@ object Common {
   def createCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
     if (!collectionExists(store, collection)) {
       IO {
-        ???
+        val nextId = nextCollectionNameId(store)
+        val collectionNameToIdEncoder = byte ~ utf8
+        val idToCollectionNameEncoder = byte ~ long(64)
+        val collectionNameToIdEncodedKey = collectionNameToIdEncoder.encode(???).require.bytes
+        val idToCollectionNameEncodedKey = idToCollectionNameEncoder.encode(???).require.bytes
+        store.put(collectionNameToIdEncodedKey, long(64).encode(nextId).require.bytes)
+        store.put(idToCollectionNameEncodedKey, utf8.encode(collection.identifier).require.bytes)
+        Success(collection)
       }
     } else {
       IO { Success(collection) }
     }
+  }
+
+  def nextCollectionNameId(store: KeyValueStore): Long = {
+    ???
   }
 
   def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
