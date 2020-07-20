@@ -5,16 +5,19 @@
 package dev.ligature.store.keyvalue
 
 import cats.effect.IO
+import dev.ligature.store.inmemory.InMemoryKeyValueStore
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
-import scodec.codecs.{utf8, byte, long}
+import scodec.codecs.{byte, long, utf8} //TODO get rid of this import
+import dev.ligature.store.keyvalue.Encoders.{byteString, byteBytes}
+
 import scala.util.{Success, Try}
 
 object Common {
-  def collections(store: KeyValueStore): IO[Iterable[NamedEntity]] = {
+  def collections(store: InMemoryKeyValueStore): IO[Iterable[NamedEntity]] = {
     IO {
       val collectionNameToId = store.scan(ByteVector.fromByte(Prefixes.CollectionNameToId),
-        ByteVector.fromInt(Prefixes.CollectionNameToId + 1.toByte))
+        ByteVector.fromByte((Prefixes.CollectionNameToId + 1.toByte).toByte))
       collectionNameToId.map { encoded =>
         encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
       }
@@ -22,7 +25,7 @@ object Common {
   }
 
   def createCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
-    if (!collectionExists(store, collection)) {
+    if (collectionExists(store, collection).isEmpty) {
       IO {
         val nextId = nextCollectionNameId(store)
         val collectionNameToIdEncoder = byte ~ utf8
@@ -35,6 +38,22 @@ object Common {
       }
     } else {
       IO { Success(collection) }
+    }
+  }
+
+  def deleteCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
+    IO {
+      val id = collectionExists(store, collection).orNull
+      if (id != null) {
+        store.delete(byteString.encode(Prefixes.CollectionNameToId, collection.identifier).require.bytes)
+        store.delete(byteBytes.encode(Prefixes.IdToCollectionName, id).require.bytes)
+        Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
+          store.delete(byteBytes.encode(prefix.toByte, id).require.bytes)
+        }
+        Success(collection)
+      } else {
+        Success(collection)
+      }
     }
   }
 
@@ -54,10 +73,10 @@ object Common {
     }
   }
 
-  def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Boolean = {
+  def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Option[ByteVector] = {
     val encoder = byte ~ utf8
     val encoded = encoder.encode(Prefixes.CollectionNameToId, collectionName.identifier).require.bytes
-    store.get(encoded).nonEmpty
+    store.get(encoded)
   }
 
   def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Iterable[PersistedStatement] = {

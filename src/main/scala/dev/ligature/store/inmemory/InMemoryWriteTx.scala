@@ -56,19 +56,15 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     if (active.get()) {
       Common.createCollection(workingState, collection)
     } else {
-      throw new RuntimeException("Transaction is closed.")
+      IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
 
   override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
-    ???
-//    if (active.get()) {
-//      val oldState = workingState.get()
-//      val newState = oldState.removed(collection)
-//      workingState.compareAndSet(oldState, newState)
-//      IO { Success(collection) }
-//    } else {
-//      IO { Failure(new RuntimeException("Transaction is closed.")) }
-//    }
+    if (active.get()) {
+      Common.deleteCollection(store, collection)
+    } else {
+      IO { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def isOpen(): Boolean = active.get()

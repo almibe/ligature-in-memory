@@ -10,12 +10,12 @@ import cats.effect.IO
 import dev.ligature.store.keyvalue.{Common, KeyValueStore}
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
 
-private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
+private final class InMemoryReadTx(private val store: InMemoryKeyValueStore) extends ReadTx {
   private val active = new AtomicBoolean(true)
 
   override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
-      if (Common.collectionExists(store, collectionName)) {
+      if (Common.collectionExists(store, collectionName).nonEmpty) {
         val result = Common.readAllStatements(store, collectionName)
         IO { result }
       } else {
