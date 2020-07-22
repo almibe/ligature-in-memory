@@ -5,16 +5,16 @@
 package dev.ligature.store.keyvalue
 
 import cats.effect.IO
-import dev.ligature.store.inmemory.InMemoryKeyValueStore
-import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, StringLiteral, StringLiteralRange}
+import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
-import scodec.codecs.{byte, long, utf8} //TODO get rid of this import
-import dev.ligature.store.keyvalue.Encoders.{byteString, byteBytes}
+import scodec.codecs.{byte, long, utf8}
+import dev.ligature.store.keyvalue.Encoders.{byteBytes, byteString, spoc}
+import javax.security.auth.Subject
 
 import scala.util.{Success, Try}
 
 object Common {
-  def collections(store: InMemoryKeyValueStore): IO[Iterable[NamedEntity]] = {
+  def collections(store: KeyValueStore): IO[Iterable[NamedEntity]] = {
     IO {
       val collectionNameToId = store.scan(ByteVector.fromByte(Prefixes.CollectionNameToId),
         ByteVector.fromByte((Prefixes.CollectionNameToId + 1.toByte).toByte))
@@ -25,7 +25,7 @@ object Common {
   }
 
   def createCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
-    if (collectionExists(store, collection).isEmpty) {
+    if (fetchCollectionId(store, collection).isEmpty) {
       IO {
         val nextId = nextCollectionNameId(store)
         val collectionNameToIdEncoder = byte ~ utf8
@@ -43,7 +43,7 @@ object Common {
 
   def deleteCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
     IO {
-      val id = collectionExists(store, collection).orNull
+      val id = fetchCollectionId(store, collection).orNull
       if (id != null) {
         store.delete(byteString.encode(Prefixes.CollectionNameToId, collection.identifier).require.bytes)
         store.delete(byteBytes.encode(Prefixes.IdToCollectionName, id).require.bytes)
@@ -73,17 +73,49 @@ object Common {
     }
   }
 
-  def collectionExists(store: KeyValueStore, collectionName: NamedEntity): Option[ByteVector] = {
+  def fetchCollectionId(store: KeyValueStore, collectionName: NamedEntity): Option[ByteVector] = {
     val encoder = byte ~ utf8
     val encoded = encoder.encode(Prefixes.CollectionNameToId, collectionName.identifier).require.bytes
     store.get(encoded)
   }
 
-  def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Iterable[PersistedStatement] = {
+  def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Option[Iterable[PersistedStatement]] = {
+    val collectionId = fetchCollectionId(store, collectionName)
+    if (collectionId.nonEmpty) {
+      val itr = store.scan(byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes,
+        byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes)
+      Some(itr.map { entry: (ByteVector, ByteVector) =>
+        val attempt = spoc.decode(entry._1.bits)
+        if (attempt.isSuccessful) {
+          val (_, _, sType, eSubject, ePredicate, oType, eObj, eContext) = attempt.require.value
+          val subject = handleSubject(store, collectionId.get, sType, eSubject)
+          val predicate = handlePredicate(store, collectionId.get, ePredicate)
+          val obj = handleObject(store, collectionId.get, oType, eObj)
+          val context = handleContext(store, collectionId.get, eContext)
+          val statement = Statement(subject, predicate, obj)
+          PersistedStatement(collectionName, statement, context)
+        } else {
+          ???
+        }
+      })
+    } else {
+      None
+    }
+  }
+
+  def handleSubject(store: KeyValueStore, collection: ByteVector, subjectType: Byte, subjectId: Long): Entity = {
     ???
   }
 
-  def collectionId(store: KeyValueStore, collectionName: NamedEntity): Long = {
+  def handlePredicate(store: KeyValueStore, collection: ByteVector,  predicateId: Long): Predicate = {
+    ???
+  }
+
+  def handleObject(store: KeyValueStore, collection: ByteVector,  objectType: Byte, objectValue: Long): Object = {
+    ???
+  }
+
+  def handleContext(store: KeyValueStore, collection: ByteVector,  context: Long): AnonymousEntity = {
     ???
   }
 

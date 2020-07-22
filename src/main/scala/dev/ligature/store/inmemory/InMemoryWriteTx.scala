@@ -61,7 +61,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
     if (active.get()) {
-      Common.deleteCollection(store, collection)
+      Common.deleteCollection(workingState, collection)
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }

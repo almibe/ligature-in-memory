@@ -9,26 +9,26 @@ See https://github.com/almibe/ligature for more information.
 
 | Prefixes | Name                  | Scodec Pseudocode                                            | Description                                                                        |
 | -------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| 0        | CollectionNameTOID    | Byte ~ String -> Long                                        | Prefix ~ Collection Name -> Collection ID                                          |
-| 1        | IDToCollectionName    | Byte ~ Long -> String                                        | Prefix ~ Collection ID -> Collection Name                                          |
-| 2        | CollectionNameCounter | Byte -> Long                                                 | Prefix -> Collection ID Count                                                      |
-| 3        | SPOC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Prefix ~ Collection ID ~ Type ~ ID ~ Predicate ID ~ Type ~ Object ID ~ Context ID  |
-| 4        | SOPC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
-| 5        | PSOC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
-| 6        | POSC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
-| 7        | OSPC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
-| 8        | OPSC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
-| 9        | CSPO                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Similar to above                                                                   |
-| 10       | CollectionCounter     | Byte ~ Long -> Long                                          | Prefix ~ Collection ID -> Counter Value                                            |
-| 11       | NamedEntitiesToID     | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection ID ~ Entity Name -> Entity ID                                  |
-| 12       | IDToNamedEntities     | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection ID ~ Entity ID -> Entity Name                                  |
-| 13       | AnonymousEntities     | Byte ~ Long ~ Long                                           | Prefix ~ Collection ID ~ Anonymous ID                                              |
-| 14       | PredicatesToID        | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection ID ~ Predicate -> Predicate ID                                 |
-| 15       | IDToPredicates        | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection ID ~ Predicate ID -> Predicate                                 |
-| 16       | LangLiteralToID       | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection ID ~ Lang Literal -> Literal ID                                |
-| 17       | IDToLangLiteral       | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection ID ~ Literal ID -> Lang Literal                                |
-| 18       | StringToID            | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection ID ~ String -> Literal ID                                      |
-| 19       | IDToString            | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection ID ~ Literal ID -> String                                      |
+| 0        | CollectionNameToId    | Byte ~ String -> Long                                        | Prefix ~ Collection Name -> Collection Id                                          |
+| 1        | IdToCollectionName    | Byte ~ Long -> String                                        | Prefix ~ Collection Id -> Collection Name                                          |
+| 2        | CollectionNameCounter | Byte -> Long                                                 | Prefix -> Collection Id Count                                                      |
+| 3        | SPOC                  | Byte ~ Long ~ Byte ~ Long ~ Long ~ Byte ~ Long ~ Long        | Prefix ~ Collection Id ~ Type ~ Id ~ Predicate Id ~ Type ~ Object Id ~ Context Id  |
+| 4        | SOPC                  | Similar to above                                             | Similar to above                                                                   |
+| 5        | PSOC                  | Similar to above                                             | Similar to above                                                                   |
+| 6        | POSC                  | Similar to above                                             | Similar to above                                                                   |
+| 7        | OSPC                  | Similar to above                                             | Similar to above                                                                   |
+| 8        | OPSC                  | Similar to above                                             | Similar to above                                                                   |
+| 9        | CSPO                  | Similar to above                                             | Similar to above                                                                   |
+| 10       | CollectionCounter     | Byte ~ Long -> Long                                          | Prefix ~ Collection Id -> Counter Value                                            |
+| 11       | NamedEntitiesToId     | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection Id ~ Entity Name -> Entity Id                                  |
+| 12       | IdToNamedEntities     | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection Id ~ Entity Id -> Entity Name                                  |
+| 13       | AnonymousEntities     | Byte ~ Long ~ Long                                           | Prefix ~ Collection Id ~ Anonymous Id                                              |
+| 14       | PredicatesToId        | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection Id ~ Predicate -> Predicate Id                                 |
+| 15       | IdToPredicates        | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection Id ~ Predicate Id -> Predicate                                 |
+| 16       | LangLiteralToId       | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection Id ~ Lang Literal -> Literal Id                                |
+| 17       | IdToLangLiteral       | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection Id ~ Literal Id -> Lang Literal                                |
+| 18       | StringToId            | Byte ~ Long ~ String -> Long                                 | Prefix ~ Collection Id ~ String -> Literal Id                                      |
+| 19       | IdToString            | Byte ~ Long ~ Long -> String                                 | Prefix ~ Collection Id ~ Literal Id -> String                                      |
 
 I probably don't need lookups for boolean, long, or double since I can just use the actual values.
 

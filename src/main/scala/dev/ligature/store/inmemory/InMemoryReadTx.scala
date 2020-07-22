@@ -15,7 +15,7 @@ private final class InMemoryReadTx(private val store: InMemoryKeyValueStore) ext
 
   override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
-      if (Common.collectionExists(store, collectionName).nonEmpty) {
+      if (Common.fetchCollectionId(store, collectionName).nonEmpty) {
         val result = Common.readAllStatements(store, collectionName)
         IO { result }
       } else {
