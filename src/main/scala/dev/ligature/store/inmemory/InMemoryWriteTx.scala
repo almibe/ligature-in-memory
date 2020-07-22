@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature._
-import dev.ligature.store.keyvalue.Common
+import dev.ligature.store.keyvalue.KeyValueOperations
 
 import scala.util.{Failure, Success, Try}
 
@@ -17,35 +17,23 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   private val workingState = store.copy()
 
   override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {
-    ???
-//    if (active.get()) {
-//      val result = for {
-//        col     <- createCollection(collection)
-//        context <- newEntity(collection)
-//        persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
-//        statements <- IO { workingState.get()(collection).statements }
-//        _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
-//      } yield Success(persistedStatement)
-//      result
-//    } else {
-//      IO { Failure(new RuntimeException("Transaction is closed.")) }
-//    }
+    if (active.get()) {
+      IO { KeyValueOperations.addStatement(workingState, collection, statement) }
+    } else {
+      IO { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def cancel() {
-    ???
-//    if (active.get()) {
-//      active.set(false)
-//      lock.unlock()
-//    } else {
-//      throw new RuntimeException("Transaction is closed.")
-//    }
+    active.set(false)
+    workingState.clear()
   }
 
   def commit(): Try[Unit] = {
     if (active.get()) {
       store.commit(workingState)
       active.set(false)
+      workingState.clear()
       Success(())
     } else {
       Failure(new RuntimeException("Transaction is closed."))
@@ -54,14 +42,14 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] =
     if (active.get()) {
-      Common.createCollection(workingState, collection)
+      KeyValueOperations.createCollection(workingState, collection)
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
 
   override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
     if (active.get()) {
-      Common.deleteCollection(workingState, collection)
+      KeyValueOperations.deleteCollection(workingState, collection)
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }

@@ -4,14 +4,16 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
+import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity,
+  LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object,
+  PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long, utf8}
 import dev.ligature.store.keyvalue.Encoders.{byteBytes, byteString, spoc}
 
 import scala.util.{Success, Try}
 
-object Common {
+object KeyValueOperations {
   def collections(store: KeyValueStore): Iterable[NamedEntity] = {
     val collectionNameToId = store.scan(ByteVector.fromByte(Prefixes.CollectionNameToId),
       ByteVector.fromByte((Prefixes.CollectionNameToId + 1.toByte).toByte))
@@ -81,10 +83,10 @@ object Common {
         val attempt = spoc.decode(entry._1.bits)
         if (attempt.isSuccessful) {
           val (_, _, sType, eSubject, ePredicate, oType, eObj, eContext) = attempt.require.value
-          val subject = handleSubject(store, collectionId.get, sType, eSubject)
-          val predicate = handlePredicate(store, collectionId.get, ePredicate)
-          val obj = handleObject(store, collectionId.get, oType, eObj)
-          val context = handleContext(store, collectionId.get, eContext)
+          val subject = handleSubjectLookup(store, collectionId.get, sType, eSubject)
+          val predicate = handlePredicateLookup(store, collectionId.get, ePredicate)
+          val obj = handleObjectLookup(store, collectionId.get, oType, eObj)
+          val context = handleContextLookup(store, collectionId.get, eContext)
           val statement = Statement(subject, predicate, obj)
           PersistedStatement(collectionName, statement, context)
         } else {
@@ -96,38 +98,60 @@ object Common {
     }
   }
 
-  def handleSubject(store: KeyValueStore, collection: ByteVector, subjectType: Byte, subjectId: Long): Entity = {
+  def handleSubjectLookup(store: KeyValueStore, collection: ByteVector, subjectType: Byte, subjectId: Long): Entity = {
     ???
   }
 
-  def handlePredicate(store: KeyValueStore, collection: ByteVector,  predicateId: Long): Predicate = {
+  def handlePredicateLookup(store: KeyValueStore, collection: ByteVector, predicateId: Long): Predicate = {
     ???
   }
 
-  def handleObject(store: KeyValueStore, collection: ByteVector,  objectType: Byte, objectValue: Long): Object = {
+  def handleObjectLookup(store: KeyValueStore, collection: ByteVector, objectType: Byte, objectValue: Long): Object = {
     ???
   }
 
-  def handleContext(store: KeyValueStore, collection: ByteVector,  context: Long): AnonymousEntity = {
+  def handleContextLookup(store: KeyValueStore, collection: ByteVector, context: Long): AnonymousEntity = {
+    ???
+  }
+
+  /**
+   * Creates an new AnonymousEntity for the given collection name.
+   * Returns a tuple of a the id for the new entity as a ByteVector and the actual AnonymousEntity.
+   */
+  def newEntity(store: KeyValueStore, collectionName: NamedEntity): (ByteVector, AnonymousEntity) = {
     ???
   }
 
   def addStatement(store: KeyValueStore,
                    collectionName: NamedEntity,
                    statement: Statement): Try[PersistedStatement] = {
-    var id = fetchCollectionId(store, collectionName)
+    //TODO check if statement already exists
+    var id = fetchCollectionId(store, collectionName).orNull
     if (id.isEmpty) {
-      id = createCollection(store, collectionName)
+      id = long(64).encode(createCollection(store, collectionName).get).require.bytes
     }
-
-//    val result = for {
-//      col     <- createCollection(collection)
-//      context <- newEntity(collection)
+    val context = newEntity(store, collectionName)
+    val subject = fetchOrCreateSubject(store, collectionName, statement.subject)
+    val predicate = fetchOrCreatePredicate(store, collectionName, statement.predicate)
+    val obj = fetchOrCreateObject(store, collectionName, statement.`object`)
+    ???
 //      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
 //      statements <- IO { workingState.get()(collection).statements }
 //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
 //    } yield Success(persistedStatement)
 //    result
+  }
+
+  def fetchOrCreateSubject(store: KeyValueStore, entity: NamedEntity, entity1: Entity): ByteVector = {
+    ???
+  }
+
+  def fetchOrCreatePredicate(store: KeyValueStore, entity: NamedEntity, predicate: Predicate): ByteVector = {
+    ???
+  }
+
+  def fetchOrCreateObject(store: KeyValueStore, entity: NamedEntity, value: Object): ByteVector = {
+    ???
   }
 
   def matchStatementsImpl(store: KeyValueStore,
