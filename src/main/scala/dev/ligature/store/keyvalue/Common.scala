@@ -4,56 +4,49 @@
 
 package dev.ligature.store.keyvalue
 
-import cats.effect.IO
 import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long, utf8}
 import dev.ligature.store.keyvalue.Encoders.{byteBytes, byteString, spoc}
-import javax.security.auth.Subject
 
 import scala.util.{Success, Try}
 
 object Common {
-  def collections(store: KeyValueStore): IO[Iterable[NamedEntity]] = {
-    IO {
-      val collectionNameToId = store.scan(ByteVector.fromByte(Prefixes.CollectionNameToId),
-        ByteVector.fromByte((Prefixes.CollectionNameToId + 1.toByte).toByte))
-      collectionNameToId.map { encoded =>
-        encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
-      }
+  def collections(store: KeyValueStore): Iterable[NamedEntity] = {
+    val collectionNameToId = store.scan(ByteVector.fromByte(Prefixes.CollectionNameToId),
+      ByteVector.fromByte((Prefixes.CollectionNameToId + 1.toByte).toByte))
+    collectionNameToId.map { encoded =>
+      encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
     }
   }
 
-  def createCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
-    if (fetchCollectionId(store, collection).isEmpty) {
-      IO {
-        val nextId = nextCollectionNameId(store)
-        val collectionNameToIdEncoder = byte ~ utf8
-        val idToCollectionNameEncoder = byte ~ long(64)
-        val collectionNameToIdEncodedKey = collectionNameToIdEncoder.encode((Prefixes.CollectionNameToId, collection.identifier)).require.bytes
-        val idToCollectionNameEncodedKey = idToCollectionNameEncoder.encode((Prefixes.IdToCollectionName, nextId)).require.bytes
-        store.put(collectionNameToIdEncodedKey, long(64).encode(nextId).require.bytes)
-        store.put(idToCollectionNameEncodedKey, utf8.encode(collection.identifier).require.bytes)
-        Success(collection)
-      }
+  def createCollection(store: KeyValueStore, collection: NamedEntity): Try[Long] = {
+    val id = fetchCollectionId(store, collection)
+    if (id.isEmpty) {
+      val nextId = nextCollectionNameId(store)
+      val collectionNameToIdEncoder = byte ~ utf8
+      val idToCollectionNameEncoder = byte ~ long(64)
+      val collectionNameToIdEncodedKey = collectionNameToIdEncoder.encode((Prefixes.CollectionNameToId, collection.identifier)).require.bytes
+      val idToCollectionNameEncodedKey = idToCollectionNameEncoder.encode((Prefixes.IdToCollectionName, nextId)).require.bytes
+      store.put(collectionNameToIdEncodedKey, long(64).encode(nextId).require.bytes)
+      store.put(idToCollectionNameEncodedKey, utf8.encode(collection.identifier).require.bytes)
+      Success(nextId)
     } else {
-      IO { Success(collection) }
+      Success(long(64).decode(id.get.bits).require.value)
     }
   }
 
-  def deleteCollection(store: KeyValueStore, collection: NamedEntity): IO[Try[NamedEntity]] = {
-    IO {
-      val id = fetchCollectionId(store, collection).orNull
-      if (id != null) {
-        store.delete(byteString.encode(Prefixes.CollectionNameToId, collection.identifier).require.bytes)
-        store.delete(byteBytes.encode(Prefixes.IdToCollectionName, id).require.bytes)
-        Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
-          store.delete(byteBytes.encode(prefix.toByte, id).require.bytes)
-        }
-        Success(collection)
-      } else {
-        Success(collection)
+  def deleteCollection(store: KeyValueStore, collection: NamedEntity): Try[NamedEntity] = {
+    val id = fetchCollectionId(store, collection).orNull
+    if (id != null) {
+      store.delete(byteString.encode(Prefixes.CollectionNameToId, collection.identifier).require.bytes)
+      store.delete(byteBytes.encode(Prefixes.IdToCollectionName, id).require.bytes)
+      Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
+        store.delete(byteBytes.encode(prefix.toByte, id).require.bytes)
       }
+      Success(collection)
+    } else {
+      Success(collection)
     }
   }
 
@@ -117,6 +110,24 @@ object Common {
 
   def handleContext(store: KeyValueStore, collection: ByteVector,  context: Long): AnonymousEntity = {
     ???
+  }
+
+  def addStatement(store: KeyValueStore,
+                   collectionName: NamedEntity,
+                   statement: Statement): Try[PersistedStatement] = {
+    var id = fetchCollectionId(store, collectionName)
+    if (id.isEmpty) {
+      id = createCollection(store, collectionName)
+    }
+
+//    val result = for {
+//      col     <- createCollection(collection)
+//      context <- newEntity(collection)
+//      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
+//      statements <- IO { workingState.get()(collection).statements }
+//      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
+//    } yield Success(persistedStatement)
+//    result
   }
 
   def matchStatementsImpl(store: KeyValueStore,
