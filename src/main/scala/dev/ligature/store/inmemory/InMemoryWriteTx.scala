@@ -42,14 +42,19 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] =
     if (active.get()) {
-      KeyValueOperations.createCollection(workingState, collection)
+      IO {
+        KeyValueOperations.createCollection(workingState, collection)
+        Success(collection)
+      }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
 
   override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
     if (active.get()) {
-      KeyValueOperations.deleteCollection(workingState, collection)
+      IO {
+        KeyValueOperations.deleteCollection(workingState, collection)
+      }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
@@ -58,15 +63,11 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   override def isOpen(): Boolean = active.get()
 
   override def newEntity(collection: NamedEntity): IO[Try[AnonymousEntity]] = {
-    ???
-//    if (active.get()) {
-//      for {
-//        _ <- createCollection(collection)
-//        newId <- IO { workingState.get()(collection).counter.incrementAndGet() }
-//      } yield Success(AnonymousEntity(newId))
-//    } else {
-//      IO { Failure(new RuntimeException("Transaction is closed.")) }
-//    }
+    if (active.get()) {
+      IO { Success(KeyValueOperations.newEntity(store, collection)._2) }
+    } else {
+      IO { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def removeEntity(collection: NamedEntity, entity: Entity): IO[Try[Entity]] = {

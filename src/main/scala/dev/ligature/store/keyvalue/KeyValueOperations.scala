@@ -9,7 +9,7 @@ import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity,
   PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long, utf8}
-import dev.ligature.store.keyvalue.Encoders.{byteBytes, byteString, spoc}
+import dev.ligature.store.keyvalue.Encoders.{byteBytes, byteBytesLong, byteString, spoc, sopc, psoc, posc, ospc, opsc, cspo}
 
 import scala.util.{Success, Try}
 
@@ -22,7 +22,7 @@ object KeyValueOperations {
     }
   }
 
-  def createCollection(store: KeyValueStore, collection: NamedEntity): Try[Long] = {
+  def createCollection(store: KeyValueStore, collection: NamedEntity): Try[(ByteVector)] = {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
       val nextId = nextCollectionNameId(store)
@@ -30,11 +30,12 @@ object KeyValueOperations {
       val idToCollectionNameEncoder = byte ~ long(64)
       val collectionNameToIdEncodedKey = collectionNameToIdEncoder.encode((Prefixes.CollectionNameToId, collection.identifier)).require.bytes
       val idToCollectionNameEncodedKey = idToCollectionNameEncoder.encode((Prefixes.IdToCollectionName, nextId)).require.bytes
-      store.put(collectionNameToIdEncodedKey, long(64).encode(nextId).require.bytes)
+      val idByteVector = long(64).encode(nextId).require.bytes
+      store.put(collectionNameToIdEncodedKey, idByteVector)
       store.put(idToCollectionNameEncodedKey, utf8.encode(collection.identifier).require.bytes)
-      Success(nextId)
+      Success(idByteVector)
     } else {
-      Success(long(64).decode(id.get.bits).require.value)
+      Success(id.get)
     }
   }
 
@@ -72,6 +73,15 @@ object KeyValueOperations {
     val encoder = byte ~ utf8
     val encoded = encoder.encode(Prefixes.CollectionNameToId, collectionName.identifier).require.bytes
     store.get(encoded)
+  }
+
+  def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedEntity): ByteVector = {
+    val id = fetchCollectionId(store, collectionName)
+    if (id.isEmpty) {
+      createCollection(store, collectionName).get
+    } else {
+      id.get
+    }
   }
 
   def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Option[Iterable[PersistedStatement]] = {
@@ -116,10 +126,21 @@ object KeyValueOperations {
 
   /**
    * Creates an new AnonymousEntity for the given collection name.
-   * Returns a tuple of a the id for the new entity as a ByteVector and the actual AnonymousEntity.
+   * Returns a tuple of the id for the new entity as a ByteVector and the actual AnonymousEntity.
    */
   def newEntity(store: KeyValueStore, collectionName: NamedEntity): (ByteVector, AnonymousEntity) = {
-    ???
+    val id = fetchOrCreateCollection(store, collectionName)
+    val key = byteBytes.encode(Prefixes.CollectionCounter, id).require.bytes
+    val collectionCounter = store.get(key)
+    val counterValue = if (collectionCounter.nonEmpty) {
+      long(64).decode(collectionCounter.get.bits).require.value + 1L
+    } else {
+      0
+    }
+    store.put(key, long(64).encode(counterValue).require.bytes)
+    AnonymousEntity(counterValue)
+    store.put(byteBytesLong.encode(Prefixes.AnonymousEntities, id, counterValue).require.bytes, ByteVector.empty)
+    (long(64).encode(counterValue).require.bytes, AnonymousEntity(counterValue))
   }
 
   def addStatement(store: KeyValueStore,
@@ -127,19 +148,24 @@ object KeyValueOperations {
                    statement: Statement): Try[PersistedStatement] = {
     //TODO check if statement already exists
     var id = fetchCollectionId(store, collectionName).orNull
-    if (id.isEmpty) {
-      id = long(64).encode(createCollection(store, collectionName).get).require.bytes
+    if (id == null) {
+      id = createCollection(store, collectionName).get
     }
     val context = newEntity(store, collectionName)
     val subject = fetchOrCreateSubject(store, collectionName, statement.subject)
     val predicate = fetchOrCreatePredicate(store, collectionName, statement.predicate)
     val obj = fetchOrCreateObject(store, collectionName, statement.`object`)
+    store.put(spoc.encode(Prefixes.SPOC).require.bytes, ByteVector.empty)
+    store.put(sopc.encode(???).require.bytes, ByteVector.empty)
+    store.put(psoc.encode(???).require.bytes, ByteVector.empty)
+    store.put(posc.encode(???).require.bytes, ByteVector.empty)
+    store.put(ospc.encode(???).require.bytes, ByteVector.empty)
+    store.put(opsc.encode(???).require.bytes, ByteVector.empty)
+    store.put(cspo.encode(???).require.bytes, ByteVector.empty)
     ???
 //      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
 //      statements <- IO { workingState.get()(collection).statements }
 //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
-//    } yield Success(persistedStatement)
-//    result
   }
 
   def fetchOrCreateSubject(store: KeyValueStore, entity: NamedEntity, entity1: Entity): ByteVector = {

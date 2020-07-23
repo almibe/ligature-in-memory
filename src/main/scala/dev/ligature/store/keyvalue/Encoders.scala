@@ -9,5 +9,12 @@ import scodec.codecs.{byte, utf8, long, bytes}
 object Encoders {
   val byteString = byte ~ utf8
   val byteBytes = byte ~ bytes
+  val byteBytesLong = byte ~~ bytes ~~ long(64)
   val spoc = byte ~~ bytes ~~ byte ~~ long(64) ~~ long(64) ~~ byte ~~ long(64) ~~ long(64)
+  val sopc = byte //TODO finish
+  val psoc = byte //TODO finish
+  val posc = byte //TODO finish
+  val ospc = byte //TODO finish
+  val opsc = byte //TODO finish
+  val cspo = byte //TODO finish
 }
