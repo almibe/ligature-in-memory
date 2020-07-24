@@ -5,8 +5,6 @@
 package dev.ligature.store.keyvalue
 
 import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
-import scodec.bits.ByteVector
-import scodec.codecs.{byte, long, utf8}
 
 import scala.util.{Success, Try}
 
