@@ -4,12 +4,9 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, DoubleLiteral, DoubleLiteralRange, Entity,
-  LangLiteral, LangLiteralRange, LongLiteral, LongLiteralRange, NamedEntity, Object,
-  PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long, utf8}
-import dev.ligature.store.keyvalue.Encoders.{byteBytes, byteBytesLong, byteString, spoc, sopc, psoc, posc, ospc, opsc, cspo}
 
 import scala.util.{Success, Try}
 
@@ -22,7 +19,7 @@ object KeyValueOperations {
     }
   }
 
-  def createCollection(store: KeyValueStore, collection: NamedEntity): Try[(ByteVector)] = {
+  def createCollection(store: KeyValueStore, collection: NamedEntity): Try[Long] = {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
       val nextId = nextCollectionNameId(store)
@@ -69,13 +66,13 @@ object KeyValueOperations {
     }
   }
 
-  def fetchCollectionId(store: KeyValueStore, collectionName: NamedEntity): Option[ByteVector] = {
+  def fetchCollectionId(store: KeyValueStore, collectionName: NamedEntity): Option[Long] = {
     val encoder = byte ~ utf8
     val encoded = encoder.encode(Prefixes.CollectionNameToId, collectionName.identifier).require.bytes
     store.get(encoded)
   }
 
-  def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedEntity): ByteVector = {
+  def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedEntity): Long = {
     val id = fetchCollectionId(store, collectionName)
     if (id.isEmpty) {
       createCollection(store, collectionName).get
@@ -108,19 +105,19 @@ object KeyValueOperations {
     }
   }
 
-  def handleSubjectLookup(store: KeyValueStore, collection: ByteVector, subjectType: Byte, subjectId: Long): Entity = {
+  def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Entity = {
     ???
   }
 
-  def handlePredicateLookup(store: KeyValueStore, collection: ByteVector, predicateId: Long): Predicate = {
+  def handlePredicateLookup(store: KeyValueStore, collectionId: Long, predicateId: Long): Predicate = {
     ???
   }
 
-  def handleObjectLookup(store: KeyValueStore, collection: ByteVector, objectType: Byte, objectValue: Long): Object = {
+  def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectValue: Long): Object = {
     ???
   }
 
-  def handleContextLookup(store: KeyValueStore, collection: ByteVector, context: Long): AnonymousEntity = {
+  def handleContextLookup(store: KeyValueStore, collectionId: Long, context: Long): AnonymousEntity = {
     ???
   }
 
@@ -128,7 +125,7 @@ object KeyValueOperations {
    * Creates an new AnonymousEntity for the given collection name.
    * Returns a tuple of the id for the new entity as a ByteVector and the actual AnonymousEntity.
    */
-  def newEntity(store: KeyValueStore, collectionName: NamedEntity): (ByteVector, AnonymousEntity) = {
+  def newEntity(store: KeyValueStore, collectionName: NamedEntity): AnonymousEntity = {
     val id = fetchOrCreateCollection(store, collectionName)
     val key = byteBytes.encode(Prefixes.CollectionCounter, id).require.bytes
     val collectionCounter = store.get(key)
@@ -155,28 +152,67 @@ object KeyValueOperations {
     val subject = fetchOrCreateSubject(store, collectionName, statement.subject)
     val predicate = fetchOrCreatePredicate(store, collectionName, statement.predicate)
     val obj = fetchOrCreateObject(store, collectionName, statement.`object`)
-    store.put(spoc.encode(Prefixes.SPOC).require.bytes, ByteVector.empty)
-    store.put(sopc.encode(???).require.bytes, ByteVector.empty)
-    store.put(psoc.encode(???).require.bytes, ByteVector.empty)
-    store.put(posc.encode(???).require.bytes, ByteVector.empty)
-    store.put(ospc.encode(???).require.bytes, ByteVector.empty)
-    store.put(opsc.encode(???).require.bytes, ByteVector.empty)
-    store.put(cspo.encode(???).require.bytes, ByteVector.empty)
+    store.put(spoc.encode((Prefixes.SPOC, id)).require.bytes, ByteVector.empty)
+    //TODO store.put(sopc.encode(???).require.bytes, ByteVector.empty)
+    //TODO store.put(psoc.encode(???).require.bytes, ByteVector.empty)
+    //TODO store.put(posc.encode(???).require.bytes, ByteVector.empty)
+    //TODO store.put(ospc.encode(???).require.bytes, ByteVector.empty)
+    //TODO store.put(opsc.encode(???).require.bytes, ByteVector.empty)
+    //TODO store.put(cspo.encode(???).require.bytes, ByteVector.empty)
     ???
 //      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
 //      statements <- IO { workingState.get()(collection).statements }
 //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
   }
 
-  def fetchOrCreateSubject(store: KeyValueStore, entity: NamedEntity, entity1: Entity): ByteVector = {
+  def fetchOrCreateSubject(store: KeyValueStore, collectionName: NamedEntity, subject: Entity): Long = {
+    subject match {
+      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionName, a)
+      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionName, n)
+    }
+  }
+
+  def fetchOrCreatePredicate(store: KeyValueStore, collectionName: NamedEntity, predicate: Predicate): Long = {
     ???
   }
 
-  def fetchOrCreatePredicate(store: KeyValueStore, entity: NamedEntity, predicate: Predicate): ByteVector = {
+  def fetchOrCreateObject(store: KeyValueStore, collectionName: NamedEntity, value: Object): Long = {
+    value match {
+      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionName, a)
+      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionName, n)
+      case l: LangLiteral => fetchOrCreateLangLiteral(store, collectionName, l)
+      case d: DoubleLiteral => fetchOrCreateDoubleLiteral(store, collectionName, d)
+      case l: LongLiteral => fetchOrCreateLongLiteral(store, collectionName, l)
+      case s: StringLiteral => fetchOrCreateStringLiteral(store, collectionName, s)
+      case b: BooleanLiteral => fetchOrCreateBooleanLiteral(store, collectionName, b)
+    }
+  }
+
+  def fetchOrCreateAnonymousEntity(store: KeyValueStore, collectionName: NamedEntity, entity: AnonymousEntity): Long = {
     ???
   }
 
-  def fetchOrCreateObject(store: KeyValueStore, entity: NamedEntity, value: Object): ByteVector = {
+  def fetchOrCreateNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Long = {
+    ???
+  }
+
+  def fetchOrCreateLangLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LangLiteral): Long = {
+    ???
+  }
+
+  def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: DoubleLiteral): Long = {
+    ???
+  }
+
+  def fetchOrCreateLongLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LongLiteral): Long = {
+    ???
+  }
+
+  def fetchOrCreateStringLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: StringLiteral): Long = {
+    ???
+  }
+
+  def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: BooleanLiteral): Long = {
     ???
   }
 
