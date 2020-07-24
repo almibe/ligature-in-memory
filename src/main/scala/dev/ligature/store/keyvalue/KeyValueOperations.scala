@@ -5,13 +5,14 @@
 package dev.ligature.store.keyvalue
 
 import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
+import scodec.Encoder
 
 import scala.util.{Success, Try}
 
 object KeyValueOperations {
   def collections(store: KeyValueStore): Iterable[NamedEntity] = {
-    val collectionNameToId = store.scan(ByteVector.fromByte(Prefixes.CollectionNameToId),
-      ByteVector.fromByte((Prefixes.CollectionNameToId + 1.toByte).toByte))
+    val collectionNameToId = store.scan(Encoder.encode(Prefixes.CollectionNameToId).require.bytes,
+      Encoder.encode((Prefixes.CollectionNameToId + 1.toByte).toByte).require.bytes)
     collectionNameToId.map { encoded =>
       encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
     }
@@ -21,14 +22,13 @@ object KeyValueOperations {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
       val nextId = nextCollectionNameId(store)
-      val collectionNameToIdEncoder = byte ~ utf8
-      val idToCollectionNameEncoder = byte ~ long(64)
-      val collectionNameToIdEncodedKey = collectionNameToIdEncoder.encode((Prefixes.CollectionNameToId, collection.identifier)).require.bytes
-      val idToCollectionNameEncodedKey = idToCollectionNameEncoder.encode((Prefixes.IdToCollectionName, nextId)).require.bytes
-      val idByteVector = long(64).encode(nextId).require.bytes
-      store.put(collectionNameToIdEncodedKey, idByteVector)
-      store.put(idToCollectionNameEncodedKey, utf8.encode(collection.identifier).require.bytes)
-      Success(idByteVector)
+      val collectionNameToIdKey = Encoder.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collection.identifier)).require.bytes
+      val idToCollectionNameKey = Encoder.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, nextId)).require.bytes
+      val collectionNameToIdValue = Encoder.encode(CollectionNameToIdValue(nextId)).require.bytes
+      val idToCollectionNameValue = Encoder.encode(IdToCollectionNameValue(collection.identifier)).require.bytes
+      store.put(collectionNameToIdKey, collectionNameToIdValue)
+      store.put(idToCollectionNameKey, idToCollectionNameValue)
+      Success(nextId)
     } else {
       Success(id.get)
     }
@@ -37,10 +37,12 @@ object KeyValueOperations {
   def deleteCollection(store: KeyValueStore, collection: NamedEntity): Try[NamedEntity] = {
     val id = fetchCollectionId(store, collection).orNull
     if (id != null) {
-      store.delete(byteString.encode(Prefixes.CollectionNameToId, collection.identifier).require.bytes)
-      store.delete(byteBytes.encode(Prefixes.IdToCollectionName, id).require.bytes)
+      val collectionNameToIdKey = Encoder.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collection.identifier)).require.bytes
+      val idToCollectionNameKey = Encoder.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, id)).require.bytes
+      store.delete(collectionNameToIdKey)
+      store.delete(idToCollectionNameKey)
       Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
-        store.delete(byteBytes.encode(prefix.toByte, id).require.bytes)
+        ??? //store.delete((byte ~~ bytes).encode((prefix.toByte, id)).require.bytes)
       }
       Success(collection)
     } else {
