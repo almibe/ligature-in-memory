@@ -7,7 +7,7 @@ package dev.ligature.store.inmemory
 import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
-import dev.ligature.store.keyvalue.{KeyValueOperations, KeyValueStore}
+import dev.ligature.store.keyvalue.{ReadOperations, KeyValueStore}
 import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
 
 private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
@@ -15,8 +15,8 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
 
   override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
-      if (KeyValueOperations.fetchCollectionId(store, collectionName).nonEmpty) {
-        val result = KeyValueOperations.readAllStatements(store, collectionName).get
+      if (ReadOperations.fetchCollectionId(store, collectionName).nonEmpty) {
+        val result = ReadOperations.readAllStatements(store, collectionName).get
         IO { result }
       } else {
         IO { Iterable.empty }
@@ -28,7 +28,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
 
   override def collections(): IO[Iterable[NamedEntity]] =
     if (active.get()) {
-      IO { KeyValueOperations.collections(store) }
+      IO { ReadOperations.collections(store) }
     } else {
       throw new RuntimeException("Transaction is closed.")
     }
@@ -55,7 +55,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
                                `object`: Option[Object] = None): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
       IO {
-        KeyValueOperations.matchStatementsImpl(store, collectionName, subject, predicate, `object`)
+        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, `object`)
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -68,7 +68,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
                                range: Range[_]): IO[Iterable[PersistedStatement]] = {
     if (active.get()) {
       IO {
-        KeyValueOperations.matchStatementsImpl(store, collectionName, subject, predicate, range)
+        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, range)
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -79,7 +79,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
   IO[Option[PersistedStatement]] = {
     if (active.get()) {
       IO {
-        KeyValueOperations.statementByContextImpl(store, collectionName, context)
+        ReadOperations.statementByContextImpl(store, collectionName, context)
       }
     } else {
       throw new RuntimeException("Transaction is closed.")

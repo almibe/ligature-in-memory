@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature._
-import dev.ligature.store.keyvalue.KeyValueOperations
+import dev.ligature.store.keyvalue.ReadOperations
 
 import scala.util.{Failure, Success, Try}
 
@@ -18,7 +18,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {
     if (active.get()) {
-      IO { KeyValueOperations.addStatement(workingState, collection, statement) }
+      IO { ReadOperations.addStatement(workingState, collection, statement) }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
@@ -43,7 +43,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] =
     if (active.get()) {
       IO {
-        KeyValueOperations.createCollection(workingState, collection)
+        ReadOperations.createCollection(workingState, collection)
         Success(collection)
       }
     } else {
@@ -53,7 +53,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
     if (active.get()) {
       IO {
-        KeyValueOperations.deleteCollection(workingState, collection)
+        ReadOperations.deleteCollection(workingState, collection)
       }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
@@ -64,7 +64,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def newEntity(collection: NamedEntity): IO[Try[AnonymousEntity]] = {
     if (active.get()) {
-      IO { Success(KeyValueOperations.newEntity(store, collection)._2) }
+      IO { Success(ReadOperations.newEntity(store, collection)._2) }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }

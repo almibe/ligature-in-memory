@@ -1,24 +1,11 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange,
-  Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity,
-  Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 
 import scala.util.{Success, Try}
 
-object KeyValueOperations {
-  def collections(store: KeyValueStore): Iterable[NamedEntity] = {
-    val collectionNameToId = store.scan(Encoder.encode(Prefixes.CollectionNameToId).require.bytes,
-      Encoder.encode((Prefixes.CollectionNameToId + 1.toByte).toByte).require.bytes)
-    collectionNameToId.map { encoded =>
-      encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
-    }
-  }
-
+class WriteOperations {
   def createCollection(store: KeyValueStore, collection: NamedEntity): Try[Long] = {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
@@ -67,12 +54,6 @@ object KeyValueOperations {
     }
   }
 
-  def fetchCollectionId(store: KeyValueStore, collectionName: NamedEntity): Option[Long] = {
-    val encoder = byte ~ utf8
-    val encoded = encoder.encode(Prefixes.CollectionNameToId, collectionName.identifier).require.bytes
-    store.get(encoded)
-  }
-
   def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedEntity): Long = {
     val id = fetchCollectionId(store, collectionName)
     if (id.isEmpty) {
@@ -80,46 +61,6 @@ object KeyValueOperations {
     } else {
       id.get
     }
-  }
-
-  def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Option[Iterable[PersistedStatement]] = {
-    val collectionId = fetchCollectionId(store, collectionName)
-    if (collectionId.nonEmpty) {
-      val itr = store.scan(byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes,
-        byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes)
-      Some(itr.map { entry: (ByteVector, ByteVector) =>
-        val attempt = spoc.decode(entry._1.bits)
-        if (attempt.isSuccessful) {
-          val (_, _, sType, eSubject, ePredicate, oType, eObj, eContext) = attempt.require.value
-          val subject = handleSubjectLookup(store, collectionId.get, sType, eSubject)
-          val predicate = handlePredicateLookup(store, collectionId.get, ePredicate)
-          val obj = handleObjectLookup(store, collectionId.get, oType, eObj)
-          val context = handleContextLookup(store, collectionId.get, eContext)
-          val statement = Statement(subject, predicate, obj)
-          PersistedStatement(collectionName, statement, context)
-        } else {
-          ???
-        }
-      })
-    } else {
-      None
-    }
-  }
-
-  def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Entity = {
-    ???
-  }
-
-  def handlePredicateLookup(store: KeyValueStore, collectionId: Long, predicateId: Long): Predicate = {
-    ???
-  }
-
-  def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectValue: Long): Object = {
-    ???
-  }
-
-  def handleContextLookup(store: KeyValueStore, collectionId: Long, context: Long): AnonymousEntity = {
-    ???
   }
 
   /**
@@ -161,9 +102,9 @@ object KeyValueOperations {
     //TODO store.put(opsc.encode(???).require.bytes, ByteVector.empty)
     //TODO store.put(cspo.encode(???).require.bytes, ByteVector.empty)
     ???
-//      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
-//      statements <- IO { workingState.get()(collection).statements }
-//      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
+    //      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
+    //      statements <- IO { workingState.get()(collection).statements }
+    //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
   }
 
   def fetchOrCreateSubject(store: KeyValueStore, collectionName: NamedEntity, subject: Entity): Long = {
@@ -216,78 +157,4 @@ object KeyValueOperations {
   def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: BooleanLiteral): Long = {
     ???
   }
-
-  def matchStatementsImpl(store: KeyValueStore,
-                          collectionName: NamedEntity,
-                          subject: Option[Entity] = None,
-                          predicate: Option[Predicate] = None,
-                          `object`: Option[Object] = None): Iterable[PersistedStatement] = {
-    ???
-//    statements.filter { statement =>
-//      statement.statement.subject match {
-//        case _ if subject.isEmpty => true
-//        case _ => statement.statement.subject == subject.get
-//      }
-//    }.filter { statement =>
-//      statement.statement.predicate match {
-//        case _ if predicate.isEmpty => true
-//        case _ => statement.statement.predicate == predicate.get
-//      }
-//    }.filter { statement =>
-//      statement.statement.`object` match {
-//        case _ if `object`.isEmpty => true
-//        case _ => statement.statement.`object` == `object`.get
-//      }
-//    }
-  }
-
-  def matchStatementsImpl(store: KeyValueStore,
-                          collectionName: NamedEntity,
-                          subject: Option[Entity],
-                          predicate: Option[Predicate],
-                          range: Range[_]): Iterable[PersistedStatement] = {
-    ???
-//    statements.filter { statement =>
-//      statement.statement.subject match {
-//        case _ if subject.isEmpty => true
-//        case _ => statement.statement.subject == subject.get
-//      }
-//    }.filter { statement =>
-//      statement.statement.predicate match {
-//        case _ if predicate.isEmpty => true
-//        case _ => statement.statement.predicate == predicate.get
-//      }
-//    }.filter { statement =>
-//      val s = statement.statement
-//      (range, s.`object`) match {
-//        case (r: LangLiteralRange, o: LangLiteral) => matchLangLiteralRange(r, o)
-//        case (r: StringLiteralRange, o: StringLiteral) => matchStringLiteralRange(r, o)
-//        case (r: LongLiteralRange, o: LongLiteral) => matchLongLiteralRange(r, o)
-//        case (r: DoubleLiteralRange, o: DoubleLiteral) => matchDoubleLiteralRange(r, o)
-//        case _ => false
-//      }
-//    }
-  }
-
-  private def matchLangLiteralRange(range: LangLiteralRange, literal: LangLiteral): Boolean = {
-    literal.langTag == range.start.langTag && range.start.langTag == range.end.langTag &&
-      literal.value >= range.start.value && literal.value < range.end.value
-  }
-
-  private def matchStringLiteralRange(range: StringLiteralRange, literal: StringLiteral): Boolean = {
-    literal.value >= range.start && literal.value < range.end
-  }
-
-  private def matchLongLiteralRange(range: LongLiteralRange, literal: LongLiteral): Boolean = {
-    literal.value >= range.start && literal.value < range.end
-  }
-
-  private def matchDoubleLiteralRange(range: DoubleLiteralRange, literal: DoubleLiteral): Boolean = {
-    literal.value >= range.start && literal.value < range.end
-  }
-
-  def statementByContextImpl(store: KeyValueStore,
-                             collectionName: NamedEntity,
-                             context: AnonymousEntity): Option[PersistedStatement] = ???
-    //statements.find(_.context == context)
 }

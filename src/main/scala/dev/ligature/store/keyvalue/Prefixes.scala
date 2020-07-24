@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-object Prefixes {
+private object Prefixes {
   val CollectionNameToId: Byte = 0.toByte
   val IdToCollectionName: Byte = 1.toByte
   val CollectionNameCounter: Byte = 2.toByte
@@ -27,7 +27,7 @@ object Prefixes {
   val IdToString: Byte = 19.toByte
 }
 
-object TypeCodes {
+private object TypeCodes {
   val NamedEntity: Byte = 0.toByte
   val AnonymousEntity: Byte = 1.toByte
   val LangLiteral: Byte = 2.toByte
