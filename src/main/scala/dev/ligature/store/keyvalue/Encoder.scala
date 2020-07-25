@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{Entity, NamedEntity, Object, Statement}
+import dev.ligature.{Entity, NamedEntity, Object, Predicate, Statement}
 import scodec.bits.ByteVector
 import scodec.Codec
 import scodec.codecs.{byte, long, utf8}
@@ -42,11 +42,6 @@ object Encoder {
   case class ObjectEncoding(`type`: Byte, id: Long)
   def encodeObject(obj: Object): ByteVector = ???
 
-  case class NamedEntitiesKey(prefix: Byte, collectionId: Long, namedEntity: String)
-  def encodeNamedEntitiesKey(collectionId: Long, entity: NamedEntity): ByteVector = {
-    Codec.encode(Prefixes.NamedEntitiesToId, collectionId, entity.identifier).require.bytes
-  }
-
   case class NamedEntitiesToIdKey(prefix: Byte, collectionId: Long, namedEntity: String)
   def encodeNamedEntitiesToIdKey(collectionId: Long, entity: NamedEntity): ByteVector = {
     Codec.encode(NamedEntitiesToIdKey(Prefixes.NamedEntitiesToId, collectionId, entity.identifier)).require.bytes
@@ -56,13 +51,31 @@ object Encoder {
     long(64).encode(nextId).require.bytes
   }
 
-  case class IdToNamedEntitiesKey(prefix: Byte, collectionId: Long, anonymousEntity: Long)
-  def encodeIdToNamedEntitiesKey(collectionId: Long, anonymousEntity: Long): ByteVector = {
-    Codec.encode(IdToNamedEntitiesKey(Prefixes.IdToNamedEntities, collectionId, anonymousEntity)).require.bytes
+  case class IdToNamedEntitiesKey(prefix: Byte, collectionId: Long, entity: Long)
+  def encodeIdToNamedEntitiesKey(collectionId: Long, entity: Long): ByteVector = {
+    Codec.encode(IdToNamedEntitiesKey(Prefixes.IdToNamedEntities, collectionId, entity)).require.bytes
   }
 
   def encodeIdToNamedEntitiesValue(entity: NamedEntity): ByteVector = {
     utf8.encode(entity.identifier).require.bytes
+  }
+
+  case class PredicatesToIdKey(prefix: Byte, collectionId: Long, predicate: String)
+  def encodePredicatesToIdKey(collectionId: Long, predicate: Predicate): ByteVector = {
+    Codec.encode(PredicatesToIdKey(Prefixes.PredicatesToId, collectionId, predicate.identifier)).require.bytes
+  }
+
+  def encodePredicatesToIdValue(nextId: Long): ByteVector = {
+    long(64).encode(nextId).require.bytes
+  }
+
+  case class IdToPredicatesKey(prefix: Byte, collectionId: Long, predicate: Long)
+  def encodeIdToPredicatesKey(collectionId: Long, predicate: Long): ByteVector = {
+    Codec.encode(IdToNamedEntitiesKey(Prefixes.IdToPredicates, collectionId, predicate)).require.bytes
+  }
+
+  def encodeIdToPredicatesValue(predicate: Predicate): ByteVector = {
+    utf8.encode(predicate.identifier).require.bytes
   }
 
   def encodeStatement(collectionId: Long, statement: Statement): Seq[ByteVector] = ???

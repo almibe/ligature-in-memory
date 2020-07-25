@@ -128,7 +128,32 @@ object WriteOperations {
   }
 
   private def fetchOrCreatePredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): PersistedPredicate = {
-    ???
+    val res = fetchPredicateId(store, collectionId, predicate)
+    if (res.isEmpty) {
+      createPredicate(store, collectionId, predicate)
+    } else {
+      PersistedPredicate(predicate, res.get)
+    }
+  }
+
+  private def fetchPredicateId(store: KeyValueStore, collectionId: Long, predicate: Predicate): Option[Long] = {
+    val res = store.get(Encoder.encodePredicatesToIdKey(collectionId, predicate))
+    if (res.nonEmpty) {
+      Some(res.get.toLong())
+    } else {
+      None
+    }
+  }
+
+  private def createPredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): PersistedPredicate  = {
+    val nextId = nextCollectionId(store, collectionId)
+    val predicatesToIdKey = Encoder.encodePredicatesToIdKey(collectionId, predicate)
+    val predicatesToIdValue = Encoder.encodePredicatesToIdValue(nextId)
+    val idToPredicatesKey = Encoder.encodeIdToPredicatesKey(collectionId, nextId)
+    val idToPredicatesValue = Encoder.encodeIdToPredicatesValue(predicate)
+    store.put(predicatesToIdKey, predicatesToIdValue)
+    store.put(idToPredicatesKey, idToPredicatesValue)
+    PersistedPredicate(predicate, nextId)
   }
 
   private def fetchOrCreateObject(store: KeyValueStore, collectionId: Long, value: Object): PersistedObject = {
@@ -174,7 +199,7 @@ object WriteOperations {
   }
 
   private def fetchNamedEntityId(store: KeyValueStore, collectionId: Long, entity: NamedEntity): Option[Long] = {
-    val res = store.get(Encoder.encodeNamedEntitiesKey(collectionId, entity))
+    val res = store.get(Encoder.encodeNamedEntitiesToIdKey(collectionId, entity))
     if (res.nonEmpty) {
       Some(res.get.toLong())
     } else {
