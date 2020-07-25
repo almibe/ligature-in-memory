@@ -137,26 +137,104 @@ object WriteOperations {
   }
 
   def fetchOrCreateNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Long = {
+    val res = fetchNamedEntity(store, collectionName, entity)
+    if (res.isEmpty) {
+      createNamedEntity(store, collectionName, entity)
+    } else {
+      res.get
+    }
+  }
+
+  def fetchNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Option[Long] = {
+    ???
+  }
+
+  def createNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Long = {
     ???
   }
 
   def fetchOrCreateLangLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LangLiteral): Long = {
+    val res = fetchLangLiteral(store, collectionName, literal)
+    if (res.isEmpty) {
+      createLangLiteral(store, collectionName, literal)
+    } else {
+      res.get
+    }
+  }
+
+  def fetchLangLiteral(store: KeyValueStore, collectionName: NamedEntity, langLiteral: LangLiteral): Option[Long] = {
+    ???
+  }
+
+  def createLangLiteral(store: KeyValueStore, collectionName: NamedEntity, langLiteral: LangLiteral): Long = {
     ???
   }
 
   def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: DoubleLiteral): Long = {
+    val res = fetchDoubleLiteral(store, collectionName, literal)
+    if (res.isEmpty) {
+      createDoubleLiteral(store, collectionName, literal)
+    } else {
+      res.get
+    }
+  }
+
+  def fetchDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, doubleLiteral: DoubleLiteral): Option[Long] = {
+    ???
+  }
+
+  def createDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, doubleLiteral: DoubleLiteral): Long = {
     ???
   }
 
   def fetchOrCreateLongLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LongLiteral): Long = {
+    val res = fetchLongLiteral(store, collectionName, literal)
+    if (res.isEmpty) {
+      createLongLiteral(store, collectionName, literal)
+    } else {
+      res.get
+    }
+  }
+
+  def fetchLongLiteral(store: KeyValueStore, collectionName: NamedEntity, longLiteral: LongLiteral): Option[Long] = {
+    ???
+  }
+
+  def createLongLiteral(store: KeyValueStore, collectionName: NamedEntity, longLiteral: LongLiteral): Long = {
     ???
   }
 
   def fetchOrCreateStringLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: StringLiteral): Long = {
+    val res = fetchStringLiteral(store, collectionName, literal)
+    if (res.isEmpty) {
+      createStringLiteral(store, collectionName, literal)
+    } else {
+      res.get
+    }
+  }
+
+  def fetchStringLiteral(store: KeyValueStore, collectionName: NamedEntity, stringLiteral: StringLiteral): Option[Long] = {
+    ???
+  }
+
+  def createStringLiteral(store: KeyValueStore, collectionName: NamedEntity, stringLiteral: StringLiteral): Long = {
     ???
   }
 
   def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: BooleanLiteral): Long = {
+    val res = fetchBooleanLiteral(store, collectionName, literal)
+    if (res.isEmpty) {
+      createBooleanLiteral(store, collectionName, literal)
+    } else {
+      res.get
+    }
+  }
+
+  def fetchBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, booleanLiteral: BooleanLiteral): Option[Long] = {
+    ???
+  }
+
+  def createBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, booleanLiteral: BooleanLiteral): Long = {
     ???
   }
 }
