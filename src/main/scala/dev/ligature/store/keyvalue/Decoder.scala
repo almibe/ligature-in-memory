@@ -4,8 +4,19 @@
 
 package dev.ligature.store.keyvalue
 
-import scodec.bits.BitVector
+import dev.ligature.store.keyvalue.Encoder.SPOC
+import scodec.Codec
+import scodec.bits.ByteVector
+
+import scala.util.{Failure, Success, Try}
 
 object Decoder {
-
+  def decodeSPOC(value: ByteVector): Try[SPOC] = {
+    val res = Codec.decode[SPOC](value.bits)
+    if (res.isSuccessful) {
+      Success(res.require.value)
+    } else {
+      Failure(new RuntimeException("Invalid SPOC"))
+    }
+  }
 }

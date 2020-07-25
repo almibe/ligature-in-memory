@@ -7,6 +7,7 @@ package dev.ligature.store.keyvalue
 import dev.ligature.{Entity, NamedEntity, Object, Statement}
 import scodec.bits.ByteVector
 import scodec.Codec
+import scodec.codecs.{byte, long}
 import scodec.codecs.implicits.{implicitStringCodec => _, _}
 
 object Encoder {
@@ -43,7 +44,7 @@ object Encoder {
 
   def encodeStatement(collectionId: Long, statement: Statement): Seq[ByteVector] = ???
 
-  private case class SPOC(prefix: Byte,
+  case class SPOC(prefix: Byte,
                           collectionId: Long,
                           subject: SubjectEncoding,
                           predicateId: Long,
@@ -98,6 +99,14 @@ object Encoder {
                           predicateId: Long,
                           `object`: ObjectEncoding)
   private def encodeCSPO(): ByteVector = ???
+
+  private val byteLong = byte ~~ long(64)
+  def encodeSPOCScanStart(collectionId: Long): ByteVector = {
+    byteLong.encode(Prefixes.SPOC, collectionId).require.bytes
+  }
+  def encodeSPOCScanEnd(collectionId: Long): ByteVector = {
+    byteLong.encode(Prefixes.SPOC, collectionId + 1L).require.bytes
+  }
 
   private case class CollectionCounterKey(prefix: Byte, collectionId: Long)
   def encodeCollectionCounterKey(collectionId: Long): ByteVector = {
