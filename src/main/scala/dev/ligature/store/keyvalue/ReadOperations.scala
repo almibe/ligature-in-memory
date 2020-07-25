@@ -72,21 +72,21 @@ object ReadOperations {
                           `object`: Option[Object] = None): Iterable[PersistedStatement] = {
     if (subject.nonEmpty) {
       if (predicate.nonEmpty) {
-        ??? //TODO search SPO
+        matchStatementsSPO(store, collectionName, subject, predicate, `object`)
       } else {
-        ??? //TODO search SOP
+        matchStatementsSOP(store, collectionName, subject, predicate, `object`)
       }
     } else if (predicate.nonEmpty) {
       if (`object`.nonEmpty) {
-        ??? //TODO search POS
+        matchStatementsPOS(store, collectionName, subject, predicate, `object`)
       } else {
-        ??? //TODO search PSO
+        matchStatementsPSO(store, collectionName, subject, predicate, `object`)
       }
     } else if (`object`.nonEmpty) {
       if (subject.nonEmpty) {
-        ??? //TODO search OSP
+        matchStatementsOSP(store, collectionName, subject, predicate, `object`)
       } else {
-        ??? //TODO search OPS
+        matchStatementsOPS(store, collectionName, subject, predicate, `object`)
       }
     } else {
       val res = readAllStatements(store, collectionName)
@@ -104,16 +104,96 @@ object ReadOperations {
                           predicate: Option[Predicate],
                           literalRange: Range[_]): Iterable[PersistedStatement] = {
     if (subject.nonEmpty) {
-      ??? //TODO search SOP
+      matchStatementsSOP(store, collectionName, subject, predicate, literalRange)
     } else if (predicate.nonEmpty) {
-      ??? //TODO search POS
+      matchStatementsPOS(store, collectionName, subject, predicate, literalRange)
     } else {
       if (subject.nonEmpty) {
-        ??? //TODO search OSP
+        matchStatementsOSP(store, collectionName, subject, predicate, literalRange)
       } else {
-        ??? //TODO search OPS
+        matchStatementsOPS(store, collectionName, subject, predicate, literalRange)
       }
     }
+  }
+
+  def matchStatementsSPO(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsSOP(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsPSO(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsPOS(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsOSP(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsOPS(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsSOP(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         literalRange: Range[_]): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsPOS(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         literalRange: Range[_]): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsOSP(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         literalRange: Range[_]): Iterable[PersistedStatement] = {
+    ???
+  }
+
+  def matchStatementsOPS(store: KeyValueStore,
+                         collectionName: NamedEntity,
+                         subject: Option[Entity],
+                         predicate: Option[Predicate],
+                         literalRange: Range[_]): Iterable[PersistedStatement] = {
+    ???
   }
 
   private def matchLangLiteralRange(range: LangLiteralRange, literal: LangLiteral): Boolean = {
