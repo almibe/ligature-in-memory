@@ -7,7 +7,7 @@ package dev.ligature.store.keyvalue
 import dev.ligature.{Entity, NamedEntity, Object, Statement}
 import scodec.bits.ByteVector
 import scodec.Codec
-import scodec.codecs.{byte, long}
+import scodec.codecs.{byte, long, utf8}
 import scodec.codecs.implicits.{implicitStringCodec => _, _}
 
 object Encoder {
@@ -45,6 +45,24 @@ object Encoder {
   case class NamedEntitiesKey(prefix: Byte, collectionId: Long, namedEntity: String)
   def encodeNamedEntitiesKey(collectionId: Long, entity: NamedEntity): ByteVector = {
     Codec.encode(Prefixes.NamedEntitiesToId, collectionId, entity.identifier).require.bytes
+  }
+
+  case class NamedEntitiesToIdKey(prefix: Byte, collectionId: Long, namedEntity: String)
+  def encodeNamedEntitiesToIdKey(collectionId: Long, entity: NamedEntity): ByteVector = {
+    Codec.encode(NamedEntitiesToIdKey(Prefixes.NamedEntitiesToId, collectionId, entity.identifier)).require.bytes
+  }
+
+  def encodeNamedEntitiesToIdValue(nextId: Long): ByteVector = {
+    long(64).encode(nextId).require.bytes
+  }
+
+  case class IdToNamedEntitiesKey(prefix: Byte, collectionId: Long, anonymousEntity: Long)
+  def encodeIdToNamedEntitiesKey(collectionId: Long, anonymousEntity: Long): ByteVector = {
+    Codec.encode(IdToNamedEntitiesKey(Prefixes.IdToNamedEntities, collectionId, anonymousEntity)).require.bytes
+  }
+
+  def encodeIdToNamedEntitiesValue(entity: NamedEntity): ByteVector = {
+    utf8.encode(entity.identifier).require.bytes
   }
 
   def encodeStatement(collectionId: Long, statement: Statement): Seq[ByteVector] = ???

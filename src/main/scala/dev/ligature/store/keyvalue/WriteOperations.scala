@@ -184,10 +184,10 @@ object WriteOperations {
 
   private def createNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): PersistedObject = {
     val nextId = nextCollectionId(store, collectionId)
-    val namedEntitiesToIdKey = ???
-    val namedEntitiesToIdValue = ???
-    val idToNamedEntitiesKey = ???
-    val idToNamedEntitiesValue = ???
+    val namedEntitiesToIdKey = Encoder.encodeNamedEntitiesToIdKey(collectionId, entity)
+    val namedEntitiesToIdValue = Encoder.encodeNamedEntitiesToIdValue(nextId)
+    val idToNamedEntitiesKey = Encoder.encodeIdToNamedEntitiesKey(collectionId, nextId)
+    val idToNamedEntitiesValue = Encoder.encodeIdToNamedEntitiesValue(entity)
     store.put(namedEntitiesToIdKey, namedEntitiesToIdValue)
     store.put(idToNamedEntitiesKey, idToNamedEntitiesValue)
     PersistedObject(entity, nextId)
