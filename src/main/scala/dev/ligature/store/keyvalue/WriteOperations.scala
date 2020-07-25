@@ -109,18 +109,18 @@ object WriteOperations {
     //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
   }
 
-  def fetchOrCreateSubject(store: KeyValueStore, collectionName: NamedEntity, subject: Entity): Long = {
+  private def fetchOrCreateSubject(store: KeyValueStore, collectionName: NamedEntity, subject: Entity): Long = {
     subject match {
       case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionName, a)
       case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionName, n)
     }
   }
 
-  def fetchOrCreatePredicate(store: KeyValueStore, collectionName: NamedEntity, predicate: Predicate): Long = {
+  private def fetchOrCreatePredicate(store: KeyValueStore, collectionName: NamedEntity, predicate: Predicate): Long = {
     ???
   }
 
-  def fetchOrCreateObject(store: KeyValueStore, collectionName: NamedEntity, value: Object): Long = {
+  private def fetchOrCreateObject(store: KeyValueStore, collectionName: NamedEntity, value: Object): Long = {
     value match {
       case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionName, a)
       case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionName, n)
@@ -132,11 +132,28 @@ object WriteOperations {
     }
   }
 
-  def fetchOrCreateAnonymousEntity(store: KeyValueStore, collectionName: NamedEntity, entity: AnonymousEntity): Long = {
+  private def fetchOrCreateAnonymousEntity(store: KeyValueStore, collectionName: NamedEntity, entity: AnonymousEntity): Long = {
+    val res = fetchAnonymousEntity(store, collectionName, entity)
+    if (res.isEmpty) {
+      createAnonymousEntity(store, collectionName, entity)
+    } else {
+      res.get
+    }
+  }
+
+  private def fetchAnonymousEntity(store: KeyValueStore, collectionName: NamedEntity, entity: AnonymousEntity): Option[Long] = {
+    //TODO look up in AnonymousEntities
+    //TODO return accordingly
     ???
   }
 
-  def fetchOrCreateNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Long = {
+  private def createAnonymousEntity(store: KeyValueStore, entity: NamedEntity, entity1: AnonymousEntity): Long = {
+    //TODO get next id
+    //TODO write to AnonymousEntities
+    ???
+  }
+
+  private def fetchOrCreateNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Long = {
     val res = fetchNamedEntity(store, collectionName, entity)
     if (res.isEmpty) {
       createNamedEntity(store, collectionName, entity)
@@ -145,15 +162,20 @@ object WriteOperations {
     }
   }
 
-  def fetchNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Option[Long] = {
+  private def fetchNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Option[Long] = {
+    //TODO look up in NamedEntitiesToId
+    //TODO return accordingly
     ???
   }
 
-  def createNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Long = {
+  private def createNamedEntity(store: KeyValueStore, collectionName: NamedEntity, entity: NamedEntity): Long = {
+    //TODO get next id
+    //TODO write to NamedEntitiesToId
+    //TODO write to IdToNamedEntities
     ???
   }
 
-  def fetchOrCreateLangLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LangLiteral): Long = {
+  private def fetchOrCreateLangLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LangLiteral): Long = {
     val res = fetchLangLiteral(store, collectionName, literal)
     if (res.isEmpty) {
       createLangLiteral(store, collectionName, literal)
@@ -162,49 +184,30 @@ object WriteOperations {
     }
   }
 
-  def fetchLangLiteral(store: KeyValueStore, collectionName: NamedEntity, langLiteral: LangLiteral): Option[Long] = {
+  private def fetchLangLiteral(store: KeyValueStore, collectionName: NamedEntity, langLiteral: LangLiteral): Option[Long] = {
+    //TODO look up in LangLiteralToId
+    //TODO return accordingly
     ???
   }
 
-  def createLangLiteral(store: KeyValueStore, collectionName: NamedEntity, langLiteral: LangLiteral): Long = {
+  private def createLangLiteral(store: KeyValueStore, collectionName: NamedEntity, langLiteral: LangLiteral): Long = {
+    //TODO get next id
+    //TODO write to LangLiteralToId
+    //TODO write to IdToLangLiteral
     ???
   }
 
-  def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: DoubleLiteral): Long = {
-    val res = fetchDoubleLiteral(store, collectionName, literal)
-    if (res.isEmpty) {
-      createDoubleLiteral(store, collectionName, literal)
-    } else {
-      res.get
-    }
-  }
-
-  def fetchDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, doubleLiteral: DoubleLiteral): Option[Long] = {
+  private def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: DoubleLiteral): Long = {
+    //TODO not sure I need this since I'm storing doubles directly?
     ???
   }
 
-  def createDoubleLiteral(store: KeyValueStore, collectionName: NamedEntity, doubleLiteral: DoubleLiteral): Long = {
+  private def fetchOrCreateLongLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LongLiteral): Long = {
+    //TODO not sure I need this since I'm storing longs directly?
     ???
   }
 
-  def fetchOrCreateLongLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: LongLiteral): Long = {
-    val res = fetchLongLiteral(store, collectionName, literal)
-    if (res.isEmpty) {
-      createLongLiteral(store, collectionName, literal)
-    } else {
-      res.get
-    }
-  }
-
-  def fetchLongLiteral(store: KeyValueStore, collectionName: NamedEntity, longLiteral: LongLiteral): Option[Long] = {
-    ???
-  }
-
-  def createLongLiteral(store: KeyValueStore, collectionName: NamedEntity, longLiteral: LongLiteral): Long = {
-    ???
-  }
-
-  def fetchOrCreateStringLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: StringLiteral): Long = {
+  private def fetchOrCreateStringLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: StringLiteral): Long = {
     val res = fetchStringLiteral(store, collectionName, literal)
     if (res.isEmpty) {
       createStringLiteral(store, collectionName, literal)
@@ -213,28 +216,21 @@ object WriteOperations {
     }
   }
 
-  def fetchStringLiteral(store: KeyValueStore, collectionName: NamedEntity, stringLiteral: StringLiteral): Option[Long] = {
+  private def fetchStringLiteral(store: KeyValueStore, collectionName: NamedEntity, stringLiteral: StringLiteral): Option[Long] = {
+    //TODO look up in StringLiteralToId
+    //TODO return accordingly
     ???
   }
 
-  def createStringLiteral(store: KeyValueStore, collectionName: NamedEntity, stringLiteral: StringLiteral): Long = {
+  private def createStringLiteral(store: KeyValueStore, collectionName: NamedEntity, stringLiteral: StringLiteral): Long = {
+    //TODO get next id
+    //TODO write to StringLiteralToId
+    //TODO write to IdToStringLiteral
     ???
   }
 
-  def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: BooleanLiteral): Long = {
-    val res = fetchBooleanLiteral(store, collectionName, literal)
-    if (res.isEmpty) {
-      createBooleanLiteral(store, collectionName, literal)
-    } else {
-      res.get
-    }
-  }
-
-  def fetchBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, booleanLiteral: BooleanLiteral): Option[Long] = {
-    ???
-  }
-
-  def createBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, booleanLiteral: BooleanLiteral): Long = {
+  private def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionName: NamedEntity, literal: BooleanLiteral): Long = {
+    //TODO not sure I need this since I'm storing booleans directly?
     ???
   }
 }
