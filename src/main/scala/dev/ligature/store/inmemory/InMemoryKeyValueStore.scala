@@ -34,6 +34,10 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
     Success(key)
   }
 
+  override def prefix(prefix: ByteVector): Iterable[(ByteVector, ByteVector)] = {
+    ???
+  }
+
   override def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] =
     data.get().range(start, end)
 

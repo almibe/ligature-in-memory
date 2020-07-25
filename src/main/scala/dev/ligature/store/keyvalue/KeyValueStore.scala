@@ -15,5 +15,6 @@ trait KeyValueStore {
   def get(key: ByteVector): Option[ByteVector]
   def put(key: ByteVector, value: ByteVector): Try[(ByteVector, ByteVector)]
   def delete(key: ByteVector): Try[ByteVector]
+  def prefix(prefix: ByteVector): Iterable[(ByteVector, ByteVector)]
   def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)]
 }
