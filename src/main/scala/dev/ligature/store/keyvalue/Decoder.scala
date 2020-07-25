@@ -7,10 +7,12 @@ package dev.ligature.store.keyvalue
 import dev.ligature.store.keyvalue.Encoder.SPOC
 import scodec.Codec
 import scodec.bits.ByteVector
+import scodec.codecs.implicits.{implicitStringCodec => _, _}
 
 import scala.util.{Failure, Success, Try}
 
 object Decoder {
+  private implicit val utf: Codec[String] = scodec.codecs.utf8
   def decodeSPOC(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[SPOC](value.bits)
     if (res.isSuccessful) {

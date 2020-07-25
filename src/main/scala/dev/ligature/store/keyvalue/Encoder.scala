@@ -37,9 +37,9 @@ object Encoder {
   def encodeCollectionNameCounterValue(counter: Long): ByteVector =
     Codec.encode(CollectionNameCounterValue(counter)).require.bytes
 
-  private case class SubjectEncoding(`type`: Byte, id: Long)
+  case class SubjectEncoding(`type`: Byte, id: Long)
   def encodeSubject(entity: Entity): ByteVector = ???
-  private case class ObjectEncoding(`type`: Byte, id: Long)
+  case class ObjectEncoding(`type`: Byte, id: Long)
   def encodeObject(obj: Object): ByteVector = ???
 
   def encodeStatement(collectionId: Long, statement: Statement): Seq[ByteVector] = ???
