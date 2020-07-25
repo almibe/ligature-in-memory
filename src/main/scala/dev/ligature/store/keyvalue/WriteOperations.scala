@@ -96,28 +96,34 @@ object WriteOperations {
   def addStatement(store: KeyValueStore,
                    collectionName: NamedEntity,
                    statement: Statement): Try[PersistedStatement] = {
-    //TODO check if statement already exists
-    val optionId = fetchCollectionId(store, collectionName)
-    val collectionId = if (optionId.isEmpty) {
-      createCollection(store, collectionName).get
+    val statementResult = ReadOperations.matchStatementsImpl(store, collectionName, Some(statement.subject),
+      Some(statement.predicate), Some(statement.`object`))
+    if (statementResult.isEmpty) {
+      val optionId = fetchCollectionId(store, collectionName)
+      val collectionId = if (optionId.isEmpty) {
+        createCollection(store, collectionName).get
+      } else {
+        optionId.get
+      }
+      val context = newEntity(store, collectionId)
+      val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
+      val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
+      val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
+      //TODO store.put(spoc.encode((Prefixes.SPOC, id)).require.bytes, ByteVector.empty)
+      //TODO store.put(sopc.encode(???).require.bytes, ByteVector.empty)
+      //TODO store.put(psoc.encode(???).require.bytes, ByteVector.empty)
+      //TODO store.put(posc.encode(???).require.bytes, ByteVector.empty)
+      //TODO store.put(ospc.encode(???).require.bytes, ByteVector.empty)
+      //TODO store.put(opsc.encode(???).require.bytes, ByteVector.empty)
+      //TODO store.put(cspo.encode(???).require.bytes, ByteVector.empty)
+      ???
+      //      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
+      //      statements <- IO { workingState.get()(collection).statements }
+      //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
     } else {
-      optionId.get
+      //TODO maybe make sure only a single statement is returned
+      Success(statementResult.head)
     }
-    val context = newEntity(store, collectionId)
-    val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
-    val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
-    val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
-    //TODO store.put(spoc.encode((Prefixes.SPOC, id)).require.bytes, ByteVector.empty)
-    //TODO store.put(sopc.encode(???).require.bytes, ByteVector.empty)
-    //TODO store.put(psoc.encode(???).require.bytes, ByteVector.empty)
-    //TODO store.put(posc.encode(???).require.bytes, ByteVector.empty)
-    //TODO store.put(ospc.encode(???).require.bytes, ByteVector.empty)
-    //TODO store.put(opsc.encode(???).require.bytes, ByteVector.empty)
-    //TODO store.put(cspo.encode(???).require.bytes, ByteVector.empty)
-    ???
-    //      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
-    //      statements <- IO { workingState.get()(collection).statements }
-    //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
   }
 
   private def fetchOrCreateSubject(store: KeyValueStore, collectionId: Long, subject: Entity): PersistedObject = {

@@ -70,51 +70,50 @@ object ReadOperations {
                           subject: Option[Entity] = None,
                           predicate: Option[Predicate] = None,
                           `object`: Option[Object] = None): Iterable[PersistedStatement] = {
-    ???
-//    statements.filter { statement =>
-//      statement.statement.subject match {
-//        case _ if subject.isEmpty => true
-//        case _ => statement.statement.subject == subject.get
-//      }
-//    }.filter { statement =>
-//      statement.statement.predicate match {
-//        case _ if predicate.isEmpty => true
-//        case _ => statement.statement.predicate == predicate.get
-//      }
-//    }.filter { statement =>
-//      statement.statement.`object` match {
-//        case _ if `object`.isEmpty => true
-//        case _ => statement.statement.`object` == `object`.get
-//      }
-//    }
+    if (subject.nonEmpty) {
+      if (predicate.nonEmpty) {
+        ??? //TODO search SPO
+      } else {
+        ??? //TODO search SOP
+      }
+    } else if (predicate.nonEmpty) {
+      if (`object`.nonEmpty) {
+        ??? //TODO search POS
+      } else {
+        ??? //TODO search PSO
+      }
+    } else if (`object`.nonEmpty) {
+      if (subject.nonEmpty) {
+        ??? //TODO search OSP
+      } else {
+        ??? //TODO search OPS
+      }
+    } else {
+      val res = readAllStatements(store, collectionName)
+      if (res.nonEmpty) {
+        res.get
+      } else {
+        Iterable.empty
+      }
+    }
   }
 
   def matchStatementsImpl(store: KeyValueStore,
                           collectionName: NamedEntity,
                           subject: Option[Entity],
                           predicate: Option[Predicate],
-                          range: Range[_]): Iterable[PersistedStatement] = {
-    ???
-//    statements.filter { statement =>
-//      statement.statement.subject match {
-//        case _ if subject.isEmpty => true
-//        case _ => statement.statement.subject == subject.get
-//      }
-//    }.filter { statement =>
-//      statement.statement.predicate match {
-//        case _ if predicate.isEmpty => true
-//        case _ => statement.statement.predicate == predicate.get
-//      }
-//    }.filter { statement =>
-//      val s = statement.statement
-//      (range, s.`object`) match {
-//        case (r: LangLiteralRange, o: LangLiteral) => matchLangLiteralRange(r, o)
-//        case (r: StringLiteralRange, o: StringLiteral) => matchStringLiteralRange(r, o)
-//        case (r: LongLiteralRange, o: LongLiteral) => matchLongLiteralRange(r, o)
-//        case (r: DoubleLiteralRange, o: DoubleLiteral) => matchDoubleLiteralRange(r, o)
-//        case _ => false
-//      }
-//    }
+                          literalRange: Range[_]): Iterable[PersistedStatement] = {
+    if (subject.nonEmpty) {
+      ??? //TODO search SOP
+    } else if (predicate.nonEmpty) {
+      ??? //TODO search POS
+    } else {
+      if (subject.nonEmpty) {
+        ??? //TODO search OSP
+      } else {
+        ??? //TODO search OPS
+      }
+    }
   }
 
   private def matchLangLiteralRange(range: LangLiteralRange, literal: LangLiteral): Boolean = {
