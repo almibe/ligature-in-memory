@@ -12,6 +12,7 @@ import scodec.codecs.implicits._
 object Encoder {
   val collectionNamesPrefixStart = Codec.encode(Prefixes.CollectionNameToId).require.bytes
   val collectionNamesPrefixEnd = Codec.encode((Prefixes.CollectionNameToId + 1).toByte).require.bytes
+  val empty = ByteVector.empty
 
   private case class CollectionNameToIdKey(prefix: Byte, collectionName: String)
   def encodeCollectionNameToIdKey(collectionName: NamedEntity): ByteVector =
@@ -97,7 +98,17 @@ object Encoder {
                           `object`: ObjectEncoding)
   private def encodeCSPO(): ByteVector = ???
 
-  def encodeCollectionCounter(collectionId: Long): ByteVector = {
-    ???
+  private case class CollectionCounterKey(prefix: Byte, collectionId: Long)
+  def encodeCollectionCounterKey(collectionId: Long): ByteVector = {
+    Codec.encode(CollectionCounterKey(Prefixes.CollectionCounter, collectionId)).require.bytes
+  }
+
+  def encodeCollectionCounterValue(value: Long): ByteVector = {
+    Codec.encode(value).require.bytes
+  }
+
+  private case class AnonymousEntityKey(prefix: Byte, collectionId: Long, anonymousId: Long)
+  def encodeAnonymousEntityKey(collectionId: Long, anonymousId: Long): ByteVector = {
+    Codec.encode(AnonymousEntityKey(Prefixes.AnonymousEntities, collectionId, anonymousId)).require.bytes
   }
 }

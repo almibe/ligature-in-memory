@@ -4,8 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral,
-  NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 
 import scala.util.{Success, Try}
@@ -28,10 +27,10 @@ object WriteOperations {
   }
 
   def deleteCollection(store: KeyValueStore, collection: NamedEntity): Try[NamedEntity] = {
-    val id = fetchCollectionId(store, collection).orNull
-    if (id != null) {
+    val id = fetchCollectionId(store, collection)
+    if (id.nonEmpty) {
       val collectionNameToIdKey = Encoder.encodeCollectionNameToIdKey(collection)
-      val idToCollectionNameKey = Encoder.encodeIdToCollectionNameKey(id)
+      val idToCollectionNameKey = Encoder.encodeIdToCollectionNameKey(id.get)
       store.delete(collectionNameToIdKey)
       store.delete(idToCollectionNameKey)
       Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
@@ -64,36 +63,38 @@ object WriteOperations {
 
   /**
    * Creates an new AnonymousEntity for the given collection name.
-   * Returns a tuple of the id for the new entity as a ByteVector and the actual AnonymousEntity.
+   * Returns the new AnonymousEntity.
    */
   def newEntity(store: KeyValueStore, collectionName: NamedEntity): AnonymousEntity = {
     val id = fetchOrCreateCollection(store, collectionName)
     val key = Encoder.encodeCollectionCounterKey(id)
     val collectionCounter = store.get(key)
     val counterValue = if (collectionCounter.nonEmpty) {
-      long(64).decode(collectionCounter.get.bits).require.value + 1L
+      collectionCounter.get.toLong() + 1L
     } else {
       0
     }
-    store.put(key, long(64).encode(counterValue).require.bytes)
+    store.put(key, Encoder.encodeCollectionCounterValue(counterValue))
     AnonymousEntity(counterValue)
-    store.put(byteBytesLong.encode(Prefixes.AnonymousEntities, id, counterValue).require.bytes, ByteVector.empty)
-    (long(64).encode(counterValue).require.bytes, AnonymousEntity(counterValue))
+    store.put(Encoder.encodeAnonymousEntityKey(id, counterValue), Encoder.empty)
+    AnonymousEntity(counterValue)
   }
 
   def addStatement(store: KeyValueStore,
                    collectionName: NamedEntity,
                    statement: Statement): Try[PersistedStatement] = {
     //TODO check if statement already exists
-    var id = fetchCollectionId(store, collectionName).orNull
-    if (id == null) {
-      id = createCollection(store, collectionName).get
+    val optionId = fetchCollectionId(store, collectionName)
+    val id = if (optionId.isEmpty) {
+      createCollection(store, collectionName).get
+    } else {
+      optionId.get
     }
     val context = newEntity(store, collectionName)
     val subject = fetchOrCreateSubject(store, collectionName, statement.subject)
     val predicate = fetchOrCreatePredicate(store, collectionName, statement.predicate)
     val obj = fetchOrCreateObject(store, collectionName, statement.`object`)
-    store.put(spoc.encode((Prefixes.SPOC, id)).require.bytes, ByteVector.empty)
+    //TODO store.put(spoc.encode((Prefixes.SPOC, id)).require.bytes, ByteVector.empty)
     //TODO store.put(sopc.encode(???).require.bytes, ByteVector.empty)
     //TODO store.put(psoc.encode(???).require.bytes, ByteVector.empty)
     //TODO store.put(posc.encode(???).require.bytes, ByteVector.empty)
