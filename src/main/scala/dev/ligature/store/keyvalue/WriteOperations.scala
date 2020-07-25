@@ -69,7 +69,11 @@ object WriteOperations {
    */
   def newEntity(store: KeyValueStore, collectionName: NamedEntity): AnonymousEntity = {
     val id = fetchOrCreateCollection(store, collectionName)
-    val key = Encoder.encodeCollectionCounterKey(id)
+    newEntity(store, id)
+  }
+
+  private def newEntity(store: KeyValueStore, collectionId: Long): AnonymousEntity = {
+    val key = Encoder.encodeCollectionCounterKey(collectionId)
     val collectionCounter = store.get(key)
     val counterValue = if (collectionCounter.nonEmpty) {
       collectionCounter.get.toLong() + 1L
@@ -78,7 +82,7 @@ object WriteOperations {
     }
     store.put(key, Encoder.encodeCollectionCounterValue(counterValue))
     AnonymousEntity(counterValue)
-    store.put(Encoder.encodeAnonymousEntityKey(id, counterValue), Encoder.empty)
+    store.put(Encoder.encodeAnonymousEntityKey(collectionId, counterValue), Encoder.empty)
     AnonymousEntity(counterValue)
   }
 
@@ -87,15 +91,15 @@ object WriteOperations {
                    statement: Statement): Try[PersistedStatement] = {
     //TODO check if statement already exists
     val optionId = fetchCollectionId(store, collectionName)
-    val id = if (optionId.isEmpty) {
+    val collectionId = if (optionId.isEmpty) {
       createCollection(store, collectionName).get
     } else {
       optionId.get
     }
-    val context = newEntity(store, collectionName)
-    val subject = fetchOrCreateSubject(store, collectionName, statement.subject)
-    val predicate = fetchOrCreatePredicate(store, collectionName, statement.predicate)
-    val obj = fetchOrCreateObject(store, collectionName, statement.`object`)
+    val context = newEntity(store, collectionId)
+    val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
+    val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
+    val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
     //TODO store.put(spoc.encode((Prefixes.SPOC, id)).require.bytes, ByteVector.empty)
     //TODO store.put(sopc.encode(???).require.bytes, ByteVector.empty)
     //TODO store.put(psoc.encode(???).require.bytes, ByteVector.empty)
@@ -109,26 +113,26 @@ object WriteOperations {
     //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
   }
 
-  private def fetchOrCreateSubject(store: KeyValueStore, collectionName: NamedEntity, subject: Entity): Long = {
+  private def fetchOrCreateSubject(store: KeyValueStore, collectionId: Long, subject: Entity): Long = {
     subject match {
-      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionName, a)
-      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionName, n)
+      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionId, a)
+      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
     }
   }
 
-  private def fetchOrCreatePredicate(store: KeyValueStore, collectionName: NamedEntity, predicate: Predicate): Long = {
+  private def fetchOrCreatePredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): Long = {
     ???
   }
 
   private def fetchOrCreateObject(store: KeyValueStore, collectionId: Long, value: Object): Long = {
     value match {
-      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionName, a)
-      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionName, n)
-      case l: LangLiteral => fetchOrCreateLangLiteral(store, collectionName, l)
-      case d: DoubleLiteral => fetchOrCreateDoubleLiteral(store, collectionName, d)
-      case l: LongLiteral => fetchOrCreateLongLiteral(store, collectionName, l)
-      case s: StringLiteral => fetchOrCreateStringLiteral(store, collectionName, s)
-      case b: BooleanLiteral => fetchOrCreateBooleanLiteral(store, collectionName, b)
+      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionId, a)
+      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
+      case l: LangLiteral => fetchOrCreateLangLiteral(store, collectionId, l)
+      case d: DoubleLiteral => fetchOrCreateDoubleLiteral(store, collectionId, d)
+      case l: LongLiteral => fetchOrCreateLongLiteral(store, collectionId, l)
+      case s: StringLiteral => fetchOrCreateStringLiteral(store, collectionId, s)
+      case b: BooleanLiteral => fetchOrCreateBooleanLiteral(store, collectionId, b)
     }
   }
 
