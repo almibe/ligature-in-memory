@@ -42,6 +42,11 @@ object Encoder {
   case class ObjectEncoding(`type`: Byte, id: Long)
   def encodeObject(obj: Object): ByteVector = ???
 
+  case class NamedEntitiesKey(prefix: Byte, collectionId: Long, namedEntity: String)
+  def encodeNamedEntitiesKey(collectionId: Long, entity: NamedEntity): ByteVector = {
+    Codec.encode(Prefixes.NamedEntitiesToId, collectionId, entity.identifier).require.bytes
+  }
+
   def encodeStatement(collectionId: Long, statement: Statement): Seq[ByteVector] = ???
 
   case class SPOC(prefix: Byte,
