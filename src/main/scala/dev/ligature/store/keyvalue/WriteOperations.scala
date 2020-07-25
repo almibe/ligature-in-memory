@@ -7,6 +7,8 @@ package dev.ligature.store.keyvalue
 import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 
+import scodec.codecs.{byte, long}
+
 import scala.util.{Success, Try}
 
 object WriteOperations {
@@ -34,7 +36,7 @@ object WriteOperations {
       store.delete(collectionNameToIdKey)
       store.delete(idToCollectionNameKey)
       Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
-        ??? //store.delete((byte ~~ bytes).encode((prefix.toByte, id)).require.bytes)
+        store.delete((byte ~~ long(64)).encode((prefix.toByte, id.get)).require.bytes)
       }
       Success(collection)
     } else {

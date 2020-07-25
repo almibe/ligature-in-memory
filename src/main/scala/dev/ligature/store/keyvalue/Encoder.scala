@@ -10,10 +10,10 @@ import scodec.Codec
 import scodec.codecs.implicits.{implicitStringCodec => _, _}
 
 object Encoder {
-  implicit val utf = scodec.codecs.utf8
-  val collectionNamesPrefixStart = Codec.encode(Prefixes.CollectionNameToId).require.bytes
-  val collectionNamesPrefixEnd = Codec.encode((Prefixes.CollectionNameToId + 1).toByte).require.bytes
-  val empty = ByteVector.empty
+  private implicit val utf: Codec[String] = scodec.codecs.utf8
+  val collectionNamesPrefixStart: ByteVector = Codec.encode(Prefixes.CollectionNameToId).require.bytes
+  val collectionNamesPrefixEnd: ByteVector = Codec.encode((Prefixes.CollectionNameToId + 1).toByte).require.bytes
+  val empty: ByteVector = ByteVector.empty
 
   private case class CollectionNameToIdKey(prefix: Byte, collectionName: String)
   def encodeCollectionNameToIdKey(collectionName: NamedEntity): ByteVector =
