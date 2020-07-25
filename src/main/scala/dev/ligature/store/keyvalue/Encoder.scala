@@ -6,29 +6,33 @@ package dev.ligature.store.keyvalue
 
 import dev.ligature.{Entity, NamedEntity, Object, Statement}
 import scodec.bits.ByteVector
-import scodec.{Encoder => E}
+import scodec.Codec
+import scodec.codecs.implicits._
 
 object Encoder {
+  val collectionNamesPrefixStart = Codec.encode(Prefixes.CollectionNameToId).require.bytes
+  val collectionNamesPrefixEnd = Codec.encode((Prefixes.CollectionNameToId + 1).toByte).require.bytes
+
   private case class CollectionNameToIdKey(prefix: Byte, collectionName: String)
   def encodeCollectionNameToIdKey(collectionName: NamedEntity): ByteVector =
-    E.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collectionName.identifier)).require.bytes
+    Codec.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collectionName.identifier)).require.bytes
   private case class CollectionNameToIdValue(collectionId: Long)
   def encodeCollectionNameToIdValue(id: Long): ByteVector =
-    E.encode(CollectionNameToIdValue(id)).require.bytes
+    Codec.encode(CollectionNameToIdValue(id)).require.bytes
 
   private case class IdToCollectionNameKey(prefix: Byte, collectionId: Long)
   def encodeIdToCollectionNameKey(id: Long): ByteVector =
-    E.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, id)).require.bytes
+    Codec.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, id)).require.bytes
   private case class IdToCollectionNameValue(collectionName: String)
   def encodeIdToCollectionNameValue(name: NamedEntity): ByteVector =
-    E.encode(IdToCollectionNameValue(name.identifier)).require.bytes
+    Codec.encode(IdToCollectionNameValue(name.identifier)).require.bytes
 
   private case class CollectionNameCounterKey(prefix: Byte)
   def encodeCollectionNameCounterKey(): ByteVector =
-    E.encode(CollectionNameCounterKey(Prefixes.CollectionNameCounter)).require.bytes
+    Codec.encode(CollectionNameCounterKey(Prefixes.CollectionNameCounter)).require.bytes
   private case class CollectionNameCounterValue(counter: Long)
   def encodeCollectionNameCounterValue(counter: Long): ByteVector =
-    E.encode(CollectionNameCounterValue(counter)).require.bytes
+    Codec.encode(CollectionNameCounterValue(counter)).require.bytes
 
   private case class SubjectEncoding(`type`: Byte, id: Long)
   def encodeSubject(entity: Entity): ByteVector = ???
@@ -92,4 +96,8 @@ object Encoder {
                           predicateId: Long,
                           `object`: ObjectEncoding)
   private def encodeCSPO(): ByteVector = ???
+
+  def encodeCollectionCounter(collectionId: Long): ByteVector = {
+    ???
+  }
 }

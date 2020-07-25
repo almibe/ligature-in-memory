@@ -4,51 +4,49 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange,
-  Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity,
-  Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 
+import scala.None
 import scala.util.{Success, Try}
 
 object ReadOperations {
   def collections(store: KeyValueStore): Iterable[NamedEntity] = {
-    val collectionNameToId = store.scan(Encoder.encode(Prefixes.CollectionNameToId).require.bytes,
-      Encoder.encode((Prefixes.CollectionNameToId + 1.toByte).toByte).require.bytes)
+    val collectionNameToId = store.scan(Encoder.collectionNamesPrefixStart,
+      Encoder.collectionNamesPrefixStart)
     collectionNameToId.map { encoded =>
       encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
     }
   }
 
-
   def fetchCollectionId(store: KeyValueStore, collectionName: NamedEntity): Option[Long] = {
-    val encoder = byte ~ utf8
-    val encoded = encoder.encode(Prefixes.CollectionNameToId, collectionName.identifier).require.bytes
-    store.get(encoded)
+    val encoded = Encoder.encodeCollectionNameToIdKey(collectionName)
+    val res = store.get(encoded)
+    res.map(_.toLong())
   }
 
-
   def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Option[Iterable[PersistedStatement]] = {
-    val collectionId = fetchCollectionId(store, collectionName)
-    if (collectionId.nonEmpty) {
-      val itr = store.scan(byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes,
-        byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes)
-      Some(itr.map { entry: (ByteVector, ByteVector) =>
-        val attempt = spoc.decode(entry._1.bits)
-        if (attempt.isSuccessful) {
-          val (_, _, sType, eSubject, ePredicate, oType, eObj, eContext) = attempt.require.value
-          val subject = handleSubjectLookup(store, collectionId.get, sType, eSubject)
-          val predicate = handlePredicateLookup(store, collectionId.get, ePredicate)
-          val obj = handleObjectLookup(store, collectionId.get, oType, eObj)
-          val context = handleContextLookup(store, collectionId.get, eContext)
-          val statement = Statement(subject, predicate, obj)
-          PersistedStatement(collectionName, statement, context)
-        } else {
-          ???
-        }
-      })
-    } else {
-      None
-    }
+    ???
+//    val collectionId = fetchCollectionId(store, collectionName)
+//    if (collectionId.nonEmpty) {
+//      val itr = store.scan(byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes,
+//        byteBytes.encode(Prefixes.SPOC, collectionId.get).require.bytes)
+//      Some(itr.map { entry: (ByteVector, ByteVector) =>
+//        val attempt = spoc.decode(entry._1.bits)
+//        if (attempt.isSuccessful) {
+//          val (_, _, sType, eSubject, ePredicate, oType, eObj, eContext) = attempt.require.value
+//          val subject = handleSubjectLookup(store, collectionId.get, sType, eSubject)
+//          val predicate = handlePredicateLookup(store, collectionId.get, ePredicate)
+//          val obj = handleObjectLookup(store, collectionId.get, oType, eObj)
+//          val context = handleContextLookup(store, collectionId.get, eContext)
+//          val statement = Statement(subject, predicate, obj)
+//          PersistedStatement(collectionName, statement, context)
+//        } else {
+//          ???
+//        }
+//      })
+//    } else {
+//      None
+//    }
   }
 
   def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Entity = {

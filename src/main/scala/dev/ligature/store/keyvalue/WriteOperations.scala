@@ -1,19 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral,
+  NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 
 import scala.util.{Success, Try}
 
-class WriteOperations {
+object WriteOperations {
   def createCollection(store: KeyValueStore, collection: NamedEntity): Try[Long] = {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
       val nextId = nextCollectionNameId(store)
-      val collectionNameToIdKey = Encoder.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collection.identifier)).require.bytes
-      val idToCollectionNameKey = Encoder.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, nextId)).require.bytes
-      val collectionNameToIdValue = Encoder.encode(CollectionNameToIdValue(nextId)).require.bytes
-      val idToCollectionNameValue = Encoder.encode(IdToCollectionNameValue(collection.identifier)).require.bytes
+      val collectionNameToIdKey = Encoder.encodeCollectionNameToIdKey(collection)
+      val idToCollectionNameKey = Encoder.encodeIdToCollectionNameKey(nextId)
+      val collectionNameToIdValue = Encoder.encodeCollectionNameToIdValue(nextId)
+      val idToCollectionNameValue = Encoder.encodeIdToCollectionNameValue(collection)
       store.put(collectionNameToIdKey, collectionNameToIdValue)
       store.put(idToCollectionNameKey, idToCollectionNameValue)
       Success(nextId)
@@ -25,8 +30,8 @@ class WriteOperations {
   def deleteCollection(store: KeyValueStore, collection: NamedEntity): Try[NamedEntity] = {
     val id = fetchCollectionId(store, collection).orNull
     if (id != null) {
-      val collectionNameToIdKey = Encoder.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collection.identifier)).require.bytes
-      val idToCollectionNameKey = Encoder.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, id)).require.bytes
+      val collectionNameToIdKey = Encoder.encodeCollectionNameToIdKey(collection)
+      val idToCollectionNameKey = Encoder.encodeIdToCollectionNameKey(id)
       store.delete(collectionNameToIdKey)
       store.delete(idToCollectionNameKey)
       Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
@@ -39,19 +44,13 @@ class WriteOperations {
   }
 
   def nextCollectionNameId(store: KeyValueStore): Long = {
-    val currentId = store.get(byte.encode(Prefixes.CollectionNameCounter).require.bytes)
-    currentId match {
-      case Some(bv) => {
-        val nextId = bv.toLong() + 1
-        store.put(byte.encode(Prefixes.CollectionNameCounter).require.bytes, long(64).encode(nextId).require.bytes)
-        nextId
-      }
-      case None => {
-        val nextId = 0
-        store.put(byte.encode(Prefixes.CollectionNameCounter).require.bytes, long(64).encode(nextId).require.bytes)
-        nextId
-      }
+    val currentId = store.get(Encoder.encodeCollectionNameCounterKey())
+    val nextId = currentId match {
+      case Some(bv) => bv.toLong() + 1
+      case None => 0
     }
+    store.put(Encoder.encodeCollectionNameCounterKey(), Encoder.encodeCollectionNameCounterValue(nextId))
+    nextId
   }
 
   def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedEntity): Long = {
@@ -69,7 +68,7 @@ class WriteOperations {
    */
   def newEntity(store: KeyValueStore, collectionName: NamedEntity): AnonymousEntity = {
     val id = fetchOrCreateCollection(store, collectionName)
-    val key = byteBytes.encode(Prefixes.CollectionCounter, id).require.bytes
+    val key = Encoder.encodeCollectionCounterKey(id)
     val collectionCounter = store.get(key)
     val counterValue = if (collectionCounter.nonEmpty) {
       long(64).decode(collectionCounter.get.bits).require.value + 1L
