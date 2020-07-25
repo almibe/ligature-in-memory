@@ -14,7 +14,7 @@ import scala.util.{Success, Try}
 object ReadOperations {
   def collections(store: KeyValueStore): Iterable[NamedEntity] = {
     val collectionNameToId = store.scan(Encoder.collectionNamesPrefixStart,
-      Encoder.collectionNamesPrefixStart)
+      Encoder.collectionNamesPrefixEnd)
     collectionNameToId.map { encoded =>
       encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
     }

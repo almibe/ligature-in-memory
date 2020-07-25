@@ -7,9 +7,10 @@ package dev.ligature.store.keyvalue
 import dev.ligature.{Entity, NamedEntity, Object, Statement}
 import scodec.bits.ByteVector
 import scodec.Codec
-import scodec.codecs.implicits._
+import scodec.codecs.implicits.{implicitStringCodec => _, _}
 
 object Encoder {
+  implicit val utf = scodec.codecs.utf8
   val collectionNamesPrefixStart = Codec.encode(Prefixes.CollectionNameToId).require.bytes
   val collectionNamesPrefixEnd = Codec.encode((Prefixes.CollectionNameToId + 1).toByte).require.bytes
   val empty = ByteVector.empty
