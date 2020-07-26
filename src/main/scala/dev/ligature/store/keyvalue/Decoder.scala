@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.store.keyvalue.Encoder.SPOC
+import dev.ligature.store.keyvalue.Encoder.{CSPO, OPSC, OSPC, POSC, PSOC, SOPC, SPOC}
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs.implicits.{implicitStringCodec => _, _}
@@ -20,6 +20,60 @@ object Decoder {
       Success(res.require.value)
     } else {
       Failure(new RuntimeException("Invalid SPOC"))
+    }
+  }
+
+  def decodeSOPC(value: ByteVector): Try[SOPC] = {
+    val res = Codec.decode[SOPC](value.bits)
+    if (res.isSuccessful) {
+      Success(res.require.value)
+    } else {
+      Failure(new RuntimeException("Invalid SOPC"))
+    }
+  }
+
+  def decodePSOC(value: ByteVector): Try[PSOC] = {
+    val res = Codec.decode[PSOC](value.bits)
+    if (res.isSuccessful) {
+      Success(res.require.value)
+    } else {
+      Failure(new RuntimeException("Invalid PSOC"))
+    }
+  }
+
+  def decodePOSC(value: ByteVector): Try[POSC] = {
+    val res = Codec.decode[POSC](value.bits)
+    if (res.isSuccessful) {
+      Success(res.require.value)
+    } else {
+      Failure(new RuntimeException("Invalid POSC"))
+    }
+  }
+
+  def decodeOSPC(value: ByteVector): Try[OSPC] = {
+    val res = Codec.decode[OSPC](value.bits)
+    if (res.isSuccessful) {
+      Success(res.require.value)
+    } else {
+      Failure(new RuntimeException("Invalid OSPC"))
+    }
+  }
+
+  def decodeOPSC(value: ByteVector): Try[OPSC] = {
+    val res = Codec.decode[OPSC](value.bits)
+    if (res.isSuccessful) {
+      Success(res.require.value)
+    } else {
+      Failure(new RuntimeException("Invalid OPSC"))
+    }
+  }
+
+  def decodeCSPO(value: ByteVector): Try[CSPO] = {
+    val res = Codec.decode[CSPO](value.bits)
+    if (res.isSuccessful) {
+      Success(res.require.value)
+    } else {
+      Failure(new RuntimeException("Invalid CSPO"))
     }
   }
 }
