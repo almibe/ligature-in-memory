@@ -27,7 +27,7 @@ object Decoder {
     val res = Codec.decode[SOPC](value.bits)
     if (res.isSuccessful) {
       val value = res.require.value
-      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`, value.context))
     } else {
       Failure(new RuntimeException("Invalid SOPC"))
     }
@@ -37,7 +37,7 @@ object Decoder {
     val res = Codec.decode[PSOC](value.bits)
     if (res.isSuccessful) {
       val value = res.require.value
-      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`, value.context))
     } else {
       Failure(new RuntimeException("Invalid PSOC"))
     }
@@ -47,7 +47,7 @@ object Decoder {
     val res = Codec.decode[POSC](value.bits)
     if (res.isSuccessful) {
       val value = res.require.value
-      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`, value.context))
     } else {
       Failure(new RuntimeException("Invalid POSC"))
     }
@@ -57,7 +57,7 @@ object Decoder {
     val res = Codec.decode[OSPC](value.bits)
     if (res.isSuccessful) {
       val value = res.require.value
-      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`, value.context))
     } else {
       Failure(new RuntimeException("Invalid OSPC"))
     }
@@ -67,7 +67,7 @@ object Decoder {
     val res = Codec.decode[OPSC](value.bits)
     if (res.isSuccessful) {
       val value = res.require.value
-      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`, value.context))
     } else {
       Failure(new RuntimeException("Invalid OPSC"))
     }
@@ -77,7 +77,7 @@ object Decoder {
     val res = Codec.decode[CSPO](value.bits)
     if (res.isSuccessful) {
       val value = res.require.value
-      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`, value.context))
     } else {
       Failure(new RuntimeException("Invalid CSPO"))
     }
