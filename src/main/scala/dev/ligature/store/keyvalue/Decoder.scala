@@ -23,55 +23,61 @@ object Decoder {
     }
   }
 
-  def decodeSOPC(value: ByteVector): Try[SOPC] = {
+  def decodeSOPC(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[SOPC](value.bits)
     if (res.isSuccessful) {
-      Success(res.require.value)
+      val value = res.require.value
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
     } else {
       Failure(new RuntimeException("Invalid SOPC"))
     }
   }
 
-  def decodePSOC(value: ByteVector): Try[PSOC] = {
+  def decodePSOC(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[PSOC](value.bits)
     if (res.isSuccessful) {
-      Success(res.require.value)
+      val value = res.require.value
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
     } else {
       Failure(new RuntimeException("Invalid PSOC"))
     }
   }
 
-  def decodePOSC(value: ByteVector): Try[POSC] = {
+  def decodePOSC(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[POSC](value.bits)
     if (res.isSuccessful) {
-      Success(res.require.value)
+      val value = res.require.value
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
     } else {
       Failure(new RuntimeException("Invalid POSC"))
     }
   }
 
-  def decodeOSPC(value: ByteVector): Try[OSPC] = {
+  def decodeOSPC(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[OSPC](value.bits)
     if (res.isSuccessful) {
-      Success(res.require.value)
+      val value = res.require.value
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
     } else {
       Failure(new RuntimeException("Invalid OSPC"))
     }
   }
 
-  def decodeOPSC(value: ByteVector): Try[OPSC] = {
+  def decodeOPSC(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[OPSC](value.bits)
     if (res.isSuccessful) {
-      Success(res.require.value)
+      val value = res.require.value
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
     } else {
       Failure(new RuntimeException("Invalid OPSC"))
     }
   }
 
-  def decodeCSPO(value: ByteVector): Try[CSPO] = {
+  def decodeCSPO(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[CSPO](value.bits)
     if (res.isSuccessful) {
-      Success(res.require.value)
+      val value = res.require.value
+      Success(SPOC(value.prefix, value.collectionId, value.subject, value.predicateId, value.`object`))
     } else {
       Failure(new RuntimeException("Invalid CSPO"))
     }
