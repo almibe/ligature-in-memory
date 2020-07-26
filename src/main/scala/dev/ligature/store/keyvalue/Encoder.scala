@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{Entity, NamedEntity, Object, Predicate, Statement}
+import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, Predicate, Statement}
 import scodec.bits.ByteVector
 import scodec.Codec
 import scodec.codecs.{byte, long, utf8}
@@ -145,7 +145,10 @@ object Encoder {
                   predicateId: Long,
                   `object`: ObjectEncoding,
                   context: Long)
-  def encodeSPOC(/*collectionId: Long, subject: PersistedSubject, predicate, obj, context*/): ByteVector = ???
+  def encodeSPOC(collectionId: Long, subject: (Entity, Long), predicate: (Predicate, Long),
+                 obj: (Object, Long), context: AnonymousEntity): ByteVector = {
+    ???
+  }
 
   case class SOPC(prefix: Byte,
                   collectionId: Long,
@@ -153,7 +156,10 @@ object Encoder {
                   `object`: ObjectEncoding,
                   predicateId: Long,
                   context: Long)
-  def encodeSOPC(): ByteVector = ???
+  def encodeSOPC(collectionId: Long, subject: (Entity, Long), predicate: (Predicate, Long),
+                 obj: (Object, Long), context: AnonymousEntity): ByteVector = {
+    ???
+  }
 
   case class PSOC(prefix: Byte,
                   collectionId: Long,
@@ -161,7 +167,10 @@ object Encoder {
                   subject: SubjectEncoding,
                   `object`: ObjectEncoding,
                   context: Long)
-  def encodePSOC(): ByteVector = ???
+  def encodePSOC(collectionId: Long, subject: (Entity, Long), predicate: (Predicate, Long),
+                 obj: (Object, Long), context: AnonymousEntity): ByteVector = {
+    ???
+  }
 
   case class POSC(prefix: Byte,
                   collectionId: Long,
@@ -169,7 +178,10 @@ object Encoder {
                   `object`: ObjectEncoding,
                   subject: SubjectEncoding,
                   context: Long)
-  def encodePOSC(): ByteVector = ???
+  def encodePOSC(collectionId: Long, subject: (Entity, Long), predicate: (Predicate, Long),
+                 obj: (Object, Long), context: AnonymousEntity): ByteVector = {
+    ???
+  }
 
   case class OSPC(prefix: Byte,
                   collectionId: Long,
@@ -177,7 +189,10 @@ object Encoder {
                   subject: SubjectEncoding,
                   predicateId: Long,
                   context: Long)
-  def encodeOSPC(): ByteVector = ???
+  def encodeOSPC(collectionId: Long, subject: (Entity, Long), predicate: (Predicate, Long),
+                 obj: (Object, Long), context: AnonymousEntity): ByteVector = {
+    ???
+  }
 
   case class OPSC(prefix: Byte,
                   collectionId: Long,
@@ -185,7 +200,10 @@ object Encoder {
                   predicateId: Long,
                   subject: SubjectEncoding,
                   context: Long)
-  def encodeOPSC(): ByteVector = ???
+  def encodeOPSC(collectionId: Long, subject: (Entity, Long), predicate: (Predicate, Long),
+                 obj: (Object, Long), context: AnonymousEntity): ByteVector = {
+    ???
+  }
 
   case class CSPO(prefix: Byte,
                   collectionId: Long,
@@ -193,7 +211,10 @@ object Encoder {
                   subject: SubjectEncoding,
                   predicateId: Long,
                   `object`: ObjectEncoding)
-  def encodeCSPO(): ByteVector = ???
+  def encodeCSPO(collectionId: Long, subject: (Entity, Long), predicate: (Predicate, Long),
+                 obj: (Object, Long), context: AnonymousEntity): ByteVector = {
+    ???
+  }
 
   private val byteLong = byte ~~ long(64)
   def encodeSPOCScanStart(collectionId: Long): ByteVector = {

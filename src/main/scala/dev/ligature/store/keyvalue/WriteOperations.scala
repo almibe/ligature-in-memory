@@ -106,13 +106,13 @@ object WriteOperations {
       val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
       val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
       val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
-//      store.put(Encoder.encodeSPOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-//      store.put(Encoder.encodeSOPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-//      store.put(Encoder.encodePSOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-//      store.put(Encoder.encodePOSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-//      store.put(Encoder.encodeOSPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-//      store.put(Encoder.encodeOPSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-//      store.put(Encoder.encodeCSPO(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      store.put(Encoder.encodeSPOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      store.put(Encoder.encodeSOPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      store.put(Encoder.encodePSOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      store.put(Encoder.encodePOSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      store.put(Encoder.encodeOSPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      store.put(Encoder.encodeOPSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      store.put(Encoder.encodeCSPO(collectionId, subject, predicate, obj, context), ByteVector.empty)
       ???
     } else {
       //TODO maybe make sure only a single statement is returned
