@@ -90,13 +90,22 @@ object WriteOperations {
     AnonymousEntity(nextId)
   }
 
-  def subjectType(entity: Entity): Byte = {
-    ???
-  }
+  def subjectType(entity: Entity): Byte =
+    entity match {
+      case _: NamedEntity => TypeCodes.NamedEntity
+      case _: AnonymousEntity => TypeCodes.AnonymousEntity
+    }
 
-  def objectType(`object`: Object): Byte = {
-    ???
-  }
+  def objectType(`object`: Object): Byte =
+    `object` match {
+      case _: NamedEntity => TypeCodes.NamedEntity
+      case _: AnonymousEntity => TypeCodes.AnonymousEntity
+      case _: LangLiteral => TypeCodes.LangLiteral
+      case _: StringLiteral => TypeCodes.String
+      case _: BooleanLiteral => TypeCodes.Boolean
+      case _: LongLiteral => TypeCodes.Long
+      case _: DoubleLiteral => TypeCodes.Double
+    }
 
   def addStatement(store: KeyValueStore,
                    collectionName: NamedEntity,
