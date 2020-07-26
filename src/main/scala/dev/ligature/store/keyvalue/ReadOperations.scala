@@ -12,8 +12,7 @@ import scala.util.{Success, Try}
 
 object ReadOperations {
   def collections(store: KeyValueStore): Iterable[NamedEntity] = {
-    val collectionNameToId = store.scan(Encoder.collectionNamesPrefixStart,
-      Encoder.collectionNamesPrefixEnd)
+    val collectionNameToId = store.prefix(Encoder.collectionNamesPrefixStart)
     collectionNameToId.map { encoded =>
       encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
     }
@@ -224,7 +223,7 @@ object ReadOperations {
   }
 
   def statementByContextImpl(store: KeyValueStore,
-                             collectionId: Long,
+                             collectionName: NamedEntity,
                              context: AnonymousEntity): Option[PersistedStatement] = {
     ???
   }

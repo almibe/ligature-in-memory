@@ -35,10 +35,10 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
   }
 
   override def prefix(prefix: ByteVector): Iterable[(ByteVector, ByteVector)] = {
-    ???
+    data.get().rangeFrom(prefix).takeWhile { bv => bv._1.startsWith(prefix) }
   }
 
-  override def scan(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] =
+  override def range(start: ByteVector, end: ByteVector): Iterable[(ByteVector, ByteVector)] =
     data.get().range(start, end)
 
   def copy(): InMemoryKeyValueStore = {
