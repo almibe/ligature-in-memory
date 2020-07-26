@@ -6,7 +6,7 @@ package dev.ligature.store.keyvalue
 
 import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
-
+import scodec.bits.ByteVector
 import scodec.codecs.{byte, long}
 
 import scala.util.{Success, Try}
@@ -90,9 +90,6 @@ object WriteOperations {
     AnonymousEntity(nextId)
   }
 
-  private case class PersistedObject(`object`: Object, id: Long)
-  private case class PersistedPredicate(predicate: Predicate, id: Long)
-
   def addStatement(store: KeyValueStore,
                    collectionName: NamedEntity,
                    statement: Statement): Try[PersistedStatement] = {
@@ -109,36 +106,33 @@ object WriteOperations {
       val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
       val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
       val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
-      //TODO store.put(spoc.encode((Prefixes.SPOC, id)).require.bytes, ByteVector.empty)
-      //TODO store.put(sopc.encode(???).require.bytes, ByteVector.empty)
-      //TODO store.put(psoc.encode(???).require.bytes, ByteVector.empty)
-      //TODO store.put(posc.encode(???).require.bytes, ByteVector.empty)
-      //TODO store.put(ospc.encode(???).require.bytes, ByteVector.empty)
-      //TODO store.put(opsc.encode(???).require.bytes, ByteVector.empty)
-      //TODO store.put(cspo.encode(???).require.bytes, ByteVector.empty)
+//      store.put(Encoder.encodeSPOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+//      store.put(Encoder.encodeSOPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+//      store.put(Encoder.encodePSOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+//      store.put(Encoder.encodePOSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+//      store.put(Encoder.encodeOSPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+//      store.put(Encoder.encodeOPSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
+//      store.put(Encoder.encodeCSPO(collectionId, subject, predicate, obj, context), ByteVector.empty)
       ???
-      //      persistedStatement <- IO { PersistedStatement(collection, statement, context.get) }
-      //      statements <- IO { workingState.get()(collection).statements }
-      //      _ <- IO { statements.set(statements.get().incl(persistedStatement)) }
     } else {
       //TODO maybe make sure only a single statement is returned
       Success(statementResult.head)
     }
   }
 
-  private def fetchOrCreateSubject(store: KeyValueStore, collectionId: Long, subject: Entity): PersistedObject = {
+  private def fetchOrCreateSubject(store: KeyValueStore, collectionId: Long, subject: Entity): (Entity, Long) = {
     subject match {
       case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionId, a)
       case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
     }
   }
 
-  private def fetchOrCreatePredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): PersistedPredicate = {
+  private def fetchOrCreatePredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): (Predicate, Long) = {
     val res = fetchPredicateId(store, collectionId, predicate)
     if (res.isEmpty) {
       createPredicate(store, collectionId, predicate)
     } else {
-      PersistedPredicate(predicate, res.get)
+      (predicate, res.get)
     }
   }
 
@@ -151,7 +145,7 @@ object WriteOperations {
     }
   }
 
-  private def createPredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): PersistedPredicate  = {
+  private def createPredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): (Predicate, Long)  = {
     val nextId = nextCollectionId(store, collectionId)
     val predicatesToIdKey = Encoder.encodePredicatesToIdKey(collectionId, predicate)
     val predicatesToIdValue = Encoder.encodePredicatesToIdValue(nextId)
@@ -159,10 +153,10 @@ object WriteOperations {
     val idToPredicatesValue = Encoder.encodeIdToPredicatesValue(predicate)
     store.put(predicatesToIdKey, predicatesToIdValue)
     store.put(idToPredicatesKey, idToPredicatesValue)
-    PersistedPredicate(predicate, nextId)
+    (predicate, nextId)
   }
 
-  private def fetchOrCreateObject(store: KeyValueStore, collectionId: Long, value: Object): PersistedObject = {
+  private def fetchOrCreateObject(store: KeyValueStore, collectionId: Long, value: Object): (Object, Long) = {
     value match {
       case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionId, a)
       case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
@@ -174,12 +168,12 @@ object WriteOperations {
     }
   }
 
-  private def fetchOrCreateAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): PersistedObject = {
+  private def fetchOrCreateAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): (AnonymousEntity, Long) = {
     val res = fetchAnonymousEntityId(store, collectionId, entity)
     if (res.isEmpty) {
       createAnonymousEntity(store, collectionId, entity)
     } else {
-      PersistedObject(entity, res.get)
+      (entity, res.get)
     }
   }
 
@@ -189,18 +183,18 @@ object WriteOperations {
     ???
   }
 
-  private def createAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): PersistedObject = {
+  private def createAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): (AnonymousEntity, Long) = {
     //TODO get next id
     //TODO write to AnonymousEntities
     ???
   }
 
-  private def fetchOrCreateNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): PersistedObject = {
+  private def fetchOrCreateNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): (NamedEntity, Long) = {
     val res = fetchNamedEntityId(store, collectionId, entity)
     if (res.isEmpty) {
       createNamedEntity(store, collectionId, entity)
     } else {
-      PersistedObject(entity, res.get)
+      (entity, res.get)
     }
   }
 
@@ -213,7 +207,7 @@ object WriteOperations {
     }
   }
 
-  private def createNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): PersistedObject = {
+  private def createNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): (NamedEntity, Long) = {
     val nextId = nextCollectionId(store, collectionId)
     val namedEntitiesToIdKey = Encoder.encodeNamedEntitiesToIdKey(collectionId, entity)
     val namedEntitiesToIdValue = Encoder.encodeNamedEntitiesToIdValue(nextId)
@@ -221,15 +215,15 @@ object WriteOperations {
     val idToNamedEntitiesValue = Encoder.encodeIdToNamedEntitiesValue(entity)
     store.put(namedEntitiesToIdKey, namedEntitiesToIdValue)
     store.put(idToNamedEntitiesKey, idToNamedEntitiesValue)
-    PersistedObject(entity, nextId)
+    (entity, nextId)
   }
 
-  private def fetchOrCreateLangLiteral(store: KeyValueStore, collectionId: Long, literal: LangLiteral): PersistedObject = {
+  private def fetchOrCreateLangLiteral(store: KeyValueStore, collectionId: Long, literal: LangLiteral): (Object, Long) = {
     val res = fetchLangLiteralId(store, collectionId, literal)
     if (res.isEmpty) {
       createLangLiteral(store, collectionId, literal)
     } else {
-      PersistedObject(literal, res.get)
+      (literal, res.get)
     }
   }
 
@@ -239,29 +233,29 @@ object WriteOperations {
     ???
   }
 
-  private def createLangLiteral(store: KeyValueStore, collectionId: Long, langLiteral: LangLiteral): PersistedObject = {
+  private def createLangLiteral(store: KeyValueStore, collectionId: Long, langLiteral: LangLiteral): (Object, Long) = {
     //TODO get next id
     //TODO write to LangLiteralToId
     //TODO write to IdToLangLiteral
     ???
   }
 
-  private def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionId: Long, literal: DoubleLiteral): PersistedObject = {
+  private def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionId: Long, literal: DoubleLiteral): (Object, Long) = {
     //TODO not sure I need this since I'm storing doubles directly?
     ???
   }
 
-  private def fetchOrCreateLongLiteral(store: KeyValueStore, collectionId: Long, literal: LongLiteral): PersistedObject = {
+  private def fetchOrCreateLongLiteral(store: KeyValueStore, collectionId: Long, literal: LongLiteral): (Object, Long) = {
     //TODO not sure I need this since I'm storing longs directly?
     ???
   }
 
-  private def fetchOrCreateStringLiteral(store: KeyValueStore, collectionId: Long, literal: StringLiteral): PersistedObject = {
+  private def fetchOrCreateStringLiteral(store: KeyValueStore, collectionId: Long, literal: StringLiteral): (Object, Long) = {
     val res = fetchStringLiteralId(store, collectionId, literal)
     if (res.isEmpty) {
       createStringLiteral(store, collectionId, literal)
     } else {
-      PersistedObject(literal, res.get)
+      (literal, res.get)
     }
   }
 
@@ -271,14 +265,14 @@ object WriteOperations {
     ???
   }
 
-  private def createStringLiteral(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): PersistedObject = {
+  private def createStringLiteral(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): (Object, Long) = {
     //TODO get next id
     //TODO write to StringLiteralToId
     //TODO write to IdToStringLiteral
     ???
   }
 
-  private def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionId: Long, literal: BooleanLiteral): PersistedObject = {
+  private def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionId: Long, literal: BooleanLiteral): (Object, Long) = {
     //TODO not sure I need this since I'm storing booleans directly?
     ???
   }

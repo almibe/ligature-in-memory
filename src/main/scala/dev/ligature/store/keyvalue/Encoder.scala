@@ -139,14 +139,61 @@ object Encoder {
                       predicate: Option[Predicate],
                       `object`: Option[Object]): ByteVector = ???
 
-  //TODO not sure if the code below is needed
-  private case class CSPO(prefix: Byte,
-                          collectionId: Long,
-                          context: Long,
-                          subject: SubjectEncoding,
-                          predicateId: Long,
-                          `object`: ObjectEncoding)
-  private def encodeCSPO(): ByteVector = ???
+  case class SPOC(prefix: Byte,
+                  collectionId: Long,
+                  subject: SubjectEncoding,
+                  predicateId: Long,
+                  `object`: ObjectEncoding,
+                  context: Long)
+  def encodeSPOC(/*collectionId: Long, subject: PersistedSubject, predicate, obj, context*/): ByteVector = ???
+
+  case class SOPC(prefix: Byte,
+                  collectionId: Long,
+                  subject: SubjectEncoding,
+                  `object`: ObjectEncoding,
+                  predicateId: Long,
+                  context: Long)
+  def encodeSOPC(): ByteVector = ???
+
+  case class PSOC(prefix: Byte,
+                  collectionId: Long,
+                  predicateId: Long,
+                  subject: SubjectEncoding,
+                  `object`: ObjectEncoding,
+                  context: Long)
+  def encodePSOC(): ByteVector = ???
+
+  case class POSC(prefix: Byte,
+                  collectionId: Long,
+                  predicateId: Long,
+                  `object`: ObjectEncoding,
+                  subject: SubjectEncoding,
+                  context: Long)
+  def encodePOSC(): ByteVector = ???
+
+  case class OSPC(prefix: Byte,
+                  collectionId: Long,
+                  `object`: ObjectEncoding,
+                  subject: SubjectEncoding,
+                  predicateId: Long,
+                  context: Long)
+  def encodeOSPC(): ByteVector = ???
+
+  case class OPSC(prefix: Byte,
+                  collectionId: Long,
+                  `object`: ObjectEncoding,
+                  predicateId: Long,
+                  subject: SubjectEncoding,
+                  context: Long)
+  def encodeOPSC(): ByteVector = ???
+
+  case class CSPO(prefix: Byte,
+                  collectionId: Long,
+                  context: Long,
+                  subject: SubjectEncoding,
+                  predicateId: Long,
+                  `object`: ObjectEncoding)
+  def encodeCSPO(): ByteVector = ???
 
   private val byteLong = byte ~~ long(64)
   def encodeSPOCScanStart(collectionId: Long): ByteVector = {
