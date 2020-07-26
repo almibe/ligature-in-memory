@@ -125,14 +125,14 @@ object WriteOperations {
       val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
       val subjectEncoding = Encoder.ObjectEncoding(subjectType(subject._1), subject._2)
       val objectEncoding = Encoder.ObjectEncoding(objectType(obj._1), obj._2)
-      store.put(Encoder.encodeSPOC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
-      store.put(Encoder.encodeSOPC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
-      store.put(Encoder.encodePSOC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
-      store.put(Encoder.encodePOSC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
-      store.put(Encoder.encodeOSPC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
-      store.put(Encoder.encodeOPSC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
-      store.put(Encoder.encodeCSPO(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
-      ???
+      store.put(Encoder.encodeSPOC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeSOPC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodePSOC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodePOSC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeOSPC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeOPSC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeCSPO(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      Success(PersistedStatement(collectionName, Statement(subject._1, predicate._1, obj._1), context))
     } else {
       //TODO maybe make sure only a single statement is returned
       Success(statementResult.head)
