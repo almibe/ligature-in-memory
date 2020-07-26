@@ -84,9 +84,11 @@ object Encoder {
                  predicateId: Long,
                  `object`: ObjectEncoding)
   def encodeSPOPrefix(collectionId: Long,
-                      subject: Option[Entity],
-                      predicate: Option[Predicate],
-                      `object`: Option[Object]): ByteVector = ???
+                      subject: Option[ObjectEncoding],
+                      predicate: Option[Long],
+                      `object`: Option[ObjectEncoding]): ByteVector = {
+    ???
+  }
 
   case class SOP(prefix: Byte,
                  collectionId: Long,
@@ -94,9 +96,11 @@ object Encoder {
                  `object`: ObjectEncoding,
                  predicateId: Long)
   def encodeSOPPrefix(collectionId: Long,
-                              subject: Option[Entity],
-                              predicate: Option[Predicate],
-                              `object`: Option[Object]): ByteVector = ???
+                              subject: Option[ObjectEncoding],
+                              predicate: Option[Long],
+                              `object`: Option[ObjectEncoding]): ByteVector = {
+    ???
+  }
 
   case class PSO(prefix: Byte,
                  collectionId: Long,
@@ -104,9 +108,11 @@ object Encoder {
                  subject: ObjectEncoding,
                  `object`: ObjectEncoding)
   def encodePSOPrefix(collectionId: Long,
-                      subject: Option[Entity],
-                      predicate: Option[Predicate],
-                      `object`: Option[Object]): ByteVector = ???
+                      subject: Option[ObjectEncoding],
+                      predicate: Option[Long],
+                      `object`: Option[ObjectEncoding]): ByteVector = {
+    ???
+  }
 
   case class POS(prefix: Byte,
                  collectionId: Long,
@@ -114,9 +120,11 @@ object Encoder {
                  `object`: ObjectEncoding,
                  subject: ObjectEncoding)
   def encodePOSPrefix(collectionId: Long,
-                      subject: Option[Entity],
-                      predicate: Option[Predicate],
-                      `object`: Option[Object]): ByteVector = ???
+                      subject: Option[ObjectEncoding],
+                      predicate: Option[Long],
+                      `object`: Option[ObjectEncoding]): ByteVector = {
+    ???
+  }
 
   case class OSP(prefix: Byte,
                  collectionId: Long,
@@ -124,9 +132,11 @@ object Encoder {
                  subject: ObjectEncoding,
                  predicateId: Long)
   def encodeOSPPrefix(collectionId: Long,
-                      subject: Option[Entity],
-                      predicate: Option[Predicate],
-                      `object`: Option[Object]): ByteVector = ???
+                      subject: Option[ObjectEncoding],
+                      predicate: Option[Long],
+                      `object`: Option[ObjectEncoding]): ByteVector = {
+    ???
+  }
 
   case class OPS(prefix: Byte,
                  collectionId: Long,
@@ -134,9 +144,11 @@ object Encoder {
                  predicateId: Long,
                  subject: ObjectEncoding)
   def encodeOPSPrefix(collectionId: Long,
-                      subject: Option[Entity],
-                      predicate: Option[Predicate],
-                      `object`: Option[Object]): ByteVector = ???
+                      subject: Option[ObjectEncoding],
+                      predicate: Option[Long],
+                      `object`: Option[ObjectEncoding]): ByteVector = {
+    ???
+  }
 
   case class SPOC(prefix: Byte,
                   collectionId: Long,

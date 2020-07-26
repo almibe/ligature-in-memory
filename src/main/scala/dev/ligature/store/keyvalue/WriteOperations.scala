@@ -147,20 +147,11 @@ object WriteOperations {
   }
 
   private def fetchOrCreatePredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): (Predicate, Long) = {
-    val res = fetchPredicateId(store, collectionId, predicate)
+    val res = ReadOperations.fetchPredicateId(store, collectionId, predicate)
     if (res.isEmpty) {
       createPredicate(store, collectionId, predicate)
     } else {
       (predicate, res.get)
-    }
-  }
-
-  private def fetchPredicateId(store: KeyValueStore, collectionId: Long, predicate: Predicate): Option[Long] = {
-    val res = store.get(Encoder.encodePredicatesToIdKey(collectionId, predicate))
-    if (res.nonEmpty) {
-      Some(res.get.toLong())
-    } else {
-      None
     }
   }
 
@@ -188,18 +179,12 @@ object WriteOperations {
   }
 
   private def fetchOrCreateAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): (AnonymousEntity, Long) = {
-    val res = fetchAnonymousEntityId(store, collectionId, entity)
+    val res = ReadOperations.fetchAnonymousEntityId(store, collectionId, entity)
     if (res.isEmpty) {
       createAnonymousEntity(store, collectionId, entity)
     } else {
       (entity, res.get)
     }
-  }
-
-  private def fetchAnonymousEntityId(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): Option[Long] = {
-    //TODO look up in AnonymousEntities
-    //TODO return accordingly
-    ???
   }
 
   private def createAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): (AnonymousEntity, Long) = {
@@ -209,20 +194,11 @@ object WriteOperations {
   }
 
   private def fetchOrCreateNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): (NamedEntity, Long) = {
-    val res = fetchNamedEntityId(store, collectionId, entity)
+    val res = ReadOperations.fetchNamedEntityId(store, collectionId, entity)
     if (res.isEmpty) {
       createNamedEntity(store, collectionId, entity)
     } else {
       (entity, res.get)
-    }
-  }
-
-  private def fetchNamedEntityId(store: KeyValueStore, collectionId: Long, entity: NamedEntity): Option[Long] = {
-    val res = store.get(Encoder.encodeNamedEntitiesToIdKey(collectionId, entity))
-    if (res.nonEmpty) {
-      Some(res.get.toLong())
-    } else {
-      None
     }
   }
 
@@ -238,18 +214,12 @@ object WriteOperations {
   }
 
   private def fetchOrCreateLangLiteral(store: KeyValueStore, collectionId: Long, literal: LangLiteral): (Object, Long) = {
-    val res = fetchLangLiteralId(store, collectionId, literal)
+    val res = ReadOperations.fetchLangLiteralId(store, collectionId, literal)
     if (res.isEmpty) {
       createLangLiteral(store, collectionId, literal)
     } else {
       (literal, res.get)
     }
-  }
-
-  private def fetchLangLiteralId(store: KeyValueStore, collectionId: Long, langLiteral: LangLiteral): Option[Long] = {
-    //TODO look up in LangLiteralToId
-    //TODO return accordingly
-    ???
   }
 
   private def createLangLiteral(store: KeyValueStore, collectionId: Long, langLiteral: LangLiteral): (Object, Long) = {
@@ -270,18 +240,12 @@ object WriteOperations {
   }
 
   private def fetchOrCreateStringLiteral(store: KeyValueStore, collectionId: Long, literal: StringLiteral): (Object, Long) = {
-    val res = fetchStringLiteralId(store, collectionId, literal)
+    val res = ReadOperations.fetchStringLiteralId(store, collectionId, literal)
     if (res.isEmpty) {
       createStringLiteral(store, collectionId, literal)
     } else {
       (literal, res.get)
     }
-  }
-
-  private def fetchStringLiteralId(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): Option[Long] = {
-    //TODO look up in StringLiteralToId
-    //TODO return accordingly
-    ???
   }
 
   private def createStringLiteral(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): (Object, Long) = {

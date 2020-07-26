@@ -4,6 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
+import dev.ligature.store.keyvalue.Encoder.ObjectEncoding
 import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 
@@ -63,6 +64,79 @@ object ReadOperations {
     ???
   }
 
+  def fetchNamedEntityId(store: KeyValueStore, collectionId: Long, entity: NamedEntity): Option[Long] = {
+    val res = store.get(Encoder.encodeNamedEntitiesToIdKey(collectionId, entity))
+    if (res.nonEmpty) {
+      Some(res.get.toLong())
+    } else {
+      None
+    }
+  }
+
+  def fetchAnonymousEntityId(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): Option[Long] = {
+    //TODO look up in AnonymousEntities
+    //TODO return accordingly
+    ???
+  }
+
+  def fetchPredicateId(store: KeyValueStore, collectionId: Long, predicate: Predicate): Option[Long] = {
+    val res = store.get(Encoder.encodePredicatesToIdKey(collectionId, predicate))
+    if (res.nonEmpty) {
+      Some(res.get.toLong())
+    } else {
+      None
+    }
+  }
+
+  def fetchLangLiteralId(store: KeyValueStore, collectionId: Long, langLiteral: LangLiteral): Option[Long] = {
+    //TODO look up in LangLiteralToId
+    //TODO return accordingly
+    ???
+  }
+
+  def fetchStringLiteralId(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): Option[Long] = {
+    //TODO look up in StringLiteralToId
+    //TODO return accordingly
+    ???
+  }
+
+  def lookupSubject(store: KeyValueStore, collectionId: Long, subject: Option[Entity]): Option[ObjectEncoding] = {
+    subject flatMap {
+      case n: NamedEntity => {
+        fetchNamedEntityId(store, collectionId, n) flatMap { i =>
+          Some(ObjectEncoding(TypeCodes.NamedEntity, i))
+        }
+      }
+      case a: AnonymousEntity => {
+        fetchAnonymousEntityId(store, collectionId, a) flatMap { id: Long =>
+          Some(ObjectEncoding(TypeCodes.AnonymousEntity, id))
+        }
+      }
+    }
+  }
+
+  def lookupPredicate(store: KeyValueStore, collectionId: Long, predicate: Option[Predicate]): Option[Long] = {
+    predicate flatMap {
+      fetchPredicateId(store, collectionId, _) flatMap { Some(_) }
+    }
+  }
+
+  def lookupObject(store: KeyValueStore, collectionId: Long, `object`: Option[Object]): Option[ObjectEncoding] = {
+    `object` flatMap {
+      case n: NamedEntity => fetchNamedEntityId(store, collectionId, n) flatMap { id =>
+        Some(ObjectEncoding(TypeCodes.NamedEntity, id))
+      }
+      case a: AnonymousEntity => fetchAnonymousEntityId(store, collectionId, a) flatMap { id =>
+        Some(ObjectEncoding(TypeCodes.AnonymousEntity, id))
+      }
+      case l: LangLiteral => ???
+      case s: StringLiteral => ???
+      case d: DoubleLiteral => ???
+      case b: BooleanLiteral => ???
+      case l: LongLiteral => ???
+    }
+  }
+
   def matchStatementsImpl(store: KeyValueStore,
                           collectionName: NamedEntity,
                           subject: Option[Entity] = None,
@@ -70,23 +144,27 @@ object ReadOperations {
                           `object`: Option[Object] = None): Iterable[PersistedStatement] = {
     val collectionId = fetchCollectionId(store, collectionName)
     if (collectionId.nonEmpty) {
-      if (subject.nonEmpty) {
-        if (predicate.nonEmpty) {
-          matchStatementsSPO(store, collectionId.get, subject, predicate, `object`)
+      val luSubject = lookupSubject(store, collectionId.get, subject)
+      val luPredicate = lookupPredicate(store, collectionId.get, predicate)
+      val luObject = lookupObject(store, collectionId.get, `object`)
+
+      if (luSubject.nonEmpty) {
+        if (luPredicate.nonEmpty) {
+          matchStatementsSPO(store, collectionId.get, luSubject, luPredicate, luObject)
         } else {
-          matchStatementsSOP(store, collectionId.get, subject, predicate, `object`)
+          matchStatementsSOP(store, collectionId.get, luSubject, luPredicate, luObject)
         }
-      } else if (predicate.nonEmpty) {
-        if (`object`.nonEmpty) {
-          matchStatementsPOS(store, collectionId.get, subject, predicate, `object`)
+      } else if (luPredicate.nonEmpty) {
+        if (luObject.nonEmpty) {
+          matchStatementsPOS(store, collectionId.get, luSubject, luPredicate, luObject)
         } else {
-          matchStatementsPSO(store, collectionId.get, subject, predicate, `object`)
+          matchStatementsPSO(store, collectionId.get, luSubject, luPredicate, luObject)
         }
-      } else if (`object`.nonEmpty) {
-        if (subject.nonEmpty) {
-          matchStatementsOSP(store, collectionId.get, subject, predicate, `object`)
+      } else if (luObject.nonEmpty) {
+        if (luSubject.nonEmpty) {
+          matchStatementsOSP(store, collectionId.get, luSubject, luPredicate, luObject)
         } else {
-          matchStatementsOPS(store, collectionId.get, subject, predicate, `object`)
+          matchStatementsOPS(store, collectionId.get, luSubject, luPredicate, luObject)
         }
       } else {
         val res = readAllStatements(store, collectionName) //TODO this causes the collection id to be looked up twice
@@ -126,9 +204,9 @@ object ReadOperations {
 
   def matchStatementsSPO(store: KeyValueStore,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
-                         `object`: Option[Object]): Iterable[PersistedStatement] = {
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeSPOPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map {
       ???
@@ -137,9 +215,9 @@ object ReadOperations {
 
   def matchStatementsSOP(store: KeyValueStore,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
-                         `object`: Option[Object]): Iterable[PersistedStatement] = {
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeSOPPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map {
       ???
@@ -148,9 +226,9 @@ object ReadOperations {
 
   def matchStatementsPSO(store: KeyValueStore,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
-                         `object`: Option[Object]): Iterable[PersistedStatement] = {
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodePSOPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map {
       ???
@@ -159,9 +237,9 @@ object ReadOperations {
 
   def matchStatementsPOS(store: KeyValueStore,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
-                         `object`: Option[Object]): Iterable[PersistedStatement] = {
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodePOSPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map {
       ???
@@ -170,9 +248,9 @@ object ReadOperations {
 
   def matchStatementsOSP(store: KeyValueStore,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
-                         `object`: Option[Object]): Iterable[PersistedStatement] = {
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeOSPPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map {
       ???
@@ -181,9 +259,9 @@ object ReadOperations {
 
   def matchStatementsOPS(store: KeyValueStore,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
-                         `object`: Option[Object]): Iterable[PersistedStatement] = {
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeOPSPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map {
       ???
