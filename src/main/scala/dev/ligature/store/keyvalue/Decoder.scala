@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.store.keyvalue.Encoder.{ObjectEncoding, SubjectEncoding}
+import dev.ligature.store.keyvalue.Encoder.ObjectEncoding
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs.implicits.{implicitStringCodec => _, _}
@@ -16,7 +16,7 @@ object Decoder {
 
   case class SPOC(prefix: Byte,
                  collectionId: Long,
-                 subject: SubjectEncoding,
+                 subject: ObjectEncoding,
                  predicateId: Long,
                  `object`: ObjectEncoding,
                  context: Long)

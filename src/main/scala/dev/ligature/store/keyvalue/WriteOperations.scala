@@ -90,6 +90,14 @@ object WriteOperations {
     AnonymousEntity(nextId)
   }
 
+  def subjectType(entity: Entity): Byte = {
+    ???
+  }
+
+  def objectType(`object`: Object): Byte = {
+    ???
+  }
+
   def addStatement(store: KeyValueStore,
                    collectionName: NamedEntity,
                    statement: Statement): Try[PersistedStatement] = {
@@ -106,13 +114,15 @@ object WriteOperations {
       val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
       val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
       val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
-      store.put(Encoder.encodeSPOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-      store.put(Encoder.encodeSOPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-      store.put(Encoder.encodePSOC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-      store.put(Encoder.encodePOSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-      store.put(Encoder.encodeOSPC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-      store.put(Encoder.encodeOPSC(collectionId, subject, predicate, obj, context), ByteVector.empty)
-      store.put(Encoder.encodeCSPO(collectionId, subject, predicate, obj, context), ByteVector.empty)
+      val subjectEncoding = Encoder.ObjectEncoding(subjectType(subject._1), subject._2)
+      val objectEncoding = Encoder.ObjectEncoding(objectType(obj._1), obj._2)
+      store.put(Encoder.encodeSPOC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeSOPC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodePSOC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodePOSC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeOSPC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeOPSC(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeCSPO(collectionId, subjectEncoding, predicate, objectEncoding, context), ByteVector.empty)
       ???
     } else {
       //TODO maybe make sure only a single statement is returned
