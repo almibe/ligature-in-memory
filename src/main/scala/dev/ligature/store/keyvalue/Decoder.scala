@@ -73,7 +73,7 @@ object Decoder {
     }
   }
 
-  def decodeCSPO(value: ByteVector): Try[SPOC] = {
+  def decodeCSPO(value: ByteVector): Try[SPOC] = { //TODO I might not ever use this?
     val res = Codec.decode[CSPO](value.bits)
     if (res.isSuccessful) {
       val value = res.require.value
