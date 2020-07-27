@@ -47,24 +47,69 @@ object ReadOperations {
     val subject = handleSubjectLookup(store, collectionId, spoc.subject.`type`, spoc.subject.id)
     val predicate = handlePredicateLookup(store, collectionId, spoc.predicateId)
     val obj = handleObjectLookup(store, collectionId, spoc.`object`.`type`, spoc.`object`.id)
-    val context = handleContextLookup(store, collectionId, spoc.context)
+    val context = handleAnonymousEntityLookup(store, collectionId, spoc.context)
     val statement = Statement(subject, predicate, obj)
     PersistedStatement(collectionName, statement, context)
   }
 
   def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Entity = {
+    subjectType match {
+      case TypeCodes.NamedEntity => handleNamedEntityLookup(store, collectionId, subjectId)
+      case TypeCodes.AnonymousEntity => handleAnonymousEntityLookup(store, collectionId, subjectId)
+      case _ => throw new RuntimeException(s"Illegal subject type $subjectType")
+    }
+  }
+
+  def handleNamedEntityLookup(store: KeyValueStore, collectionId: Long, entityId: Long): NamedEntity = {
     ???
+    //TODO lookup in IdToNamedEntities
+  }
+
+  def handleAnonymousEntityLookup(store: KeyValueStore, collectionId: Long, entityId: Long): AnonymousEntity = {
+    ???
+    //TODO lookup in IdToAnonymousEntities
   }
 
   def handlePredicateLookup(store: KeyValueStore, collectionId: Long, predicateId: Long): Predicate = {
+    //TODO look up in PredicatesToId
     ???
   }
 
-  def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectValue: Long): Object = {
+  def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectId: Long): Object = {
+    objectType match {
+      case TypeCodes.NamedEntity => handleNamedEntityLookup(store, collectionId, objectId)
+      case TypeCodes.AnonymousEntity => handleAnonymousEntityLookup(store, collectionId, objectId)
+      case TypeCodes.Double => handleDoubleLiteralLookup(store, collectionId, objectId)
+      case TypeCodes.Long => handleLongLiteralLookup(store, collectionId, objectId)
+      case TypeCodes.Boolean => handleBooleanLiteralLookup(store, collectionId, objectId)
+      case TypeCodes.String => handleStringLiteralLookup(store, collectionId, objectId)
+      case TypeCodes.LangLiteral => handleLangLiteralLookup(store, collectionId, objectId)
+      case _ => throw new RuntimeException(s"Illegal object type $objectType")
+    }
+  }
+
+  def handleDoubleLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): DoubleLiteral = {
+    //TODO create double (don't actually look anything up)
     ???
   }
 
-  def handleContextLookup(store: KeyValueStore, collectionId: Long, context: Long): AnonymousEntity = {
+  def handleLongLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): LongLiteral = {
+    //TODO create long (don't actually look anything up)
+    ???
+  }
+
+  def handleBooleanLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): BooleanLiteral = {
+    //TODO create boolean (don't actually look anything up)
+    ???
+  }
+
+  def handleStringLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): StringLiteral = {
+    //TODO lookup in IdToString
+    ???
+  }
+
+  def handleLangLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): LangLiteral = {
+    //TODO lookup in IdToLangLiteral
     ???
   }
 
