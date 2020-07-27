@@ -69,8 +69,12 @@ object ReadOperations {
   }
 
   def handlePredicateLookup(store: KeyValueStore, collectionId: Long, predicateId: Long): Predicate = {
-    //TODO look up in PredicatesToId
-    ???
+    val res = store.get(Encoder.encodeIdToPredicatesKey(collectionId, predicateId))
+    if (res.nonEmpty) {
+      Predicate(Decoder.decodeStringLiteral(res.get))
+    } else {
+      throw new RuntimeException(s"Not valid Predicate - $collectionId $predicateId")
+    }
   }
 
   def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectId: Long): Object = {
