@@ -4,15 +4,17 @@
 
 package dev.ligature.store.keyvalue
 
+import dev.ligature.{BooleanLiteral, DoubleLiteral}
 import dev.ligature.store.keyvalue.Encoder.{CSPO, OPSC, OSPC, POSC, PSOC, SOPC, SPOC}
 import scodec.Codec
+import scodec.codecs.utf8
 import scodec.bits.ByteVector
 import scodec.codecs.implicits.{implicitStringCodec => _, _}
 
 import scala.util.{Failure, Success, Try}
 
 object Decoder {
-  private implicit val utf: Codec[String] = scodec.codecs.utf8
+  private implicit val utf: Codec[String] = utf8
 
   def decodeSPOC(value: ByteVector): Try[SPOC] = {
     val res = Codec.decode[SPOC](value.bits)
@@ -81,5 +83,17 @@ object Decoder {
     } else {
       Failure(new RuntimeException("Invalid CSPO"))
     }
+  }
+
+  def decodeDoubleLiteral(literal: Long): DoubleLiteral = {
+    ???
+  }
+
+  def decodeBooleanLiteral(literalId: Long): BooleanLiteral = {
+    ???
+  }
+
+  def decodeStringLiteral(byteVector: ByteVector): String = {
+    utf8.decode(byteVector.bits).require.value
   }
 }

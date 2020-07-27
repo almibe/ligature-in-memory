@@ -5,11 +5,10 @@
 package dev.ligature.store.keyvalue
 
 import dev.ligature.store.keyvalue.Encoder.ObjectEncoding
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral,
+  LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate,
+  Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
-
-import scala.None
-import scala.util.{Success, Try}
 
 object ReadOperations {
   def collections(store: KeyValueStore): Iterable[NamedEntity] = {
@@ -47,7 +46,7 @@ object ReadOperations {
     val subject = handleSubjectLookup(store, collectionId, spoc.subject.`type`, spoc.subject.id)
     val predicate = handlePredicateLookup(store, collectionId, spoc.predicateId)
     val obj = handleObjectLookup(store, collectionId, spoc.`object`.`type`, spoc.`object`.id)
-    val context = handleAnonymousEntityLookup(store, collectionId, spoc.context)
+    val context = AnonymousEntity(spoc.context)
     val statement = Statement(subject, predicate, obj)
     PersistedStatement(collectionName, statement, context)
   }
@@ -55,19 +54,18 @@ object ReadOperations {
   def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Entity = {
     subjectType match {
       case TypeCodes.NamedEntity => handleNamedEntityLookup(store, collectionId, subjectId)
-      case TypeCodes.AnonymousEntity => handleAnonymousEntityLookup(store, collectionId, subjectId)
+      case TypeCodes.AnonymousEntity => AnonymousEntity(subjectId)
       case _ => throw new RuntimeException(s"Illegal subject type $subjectType")
     }
   }
 
   def handleNamedEntityLookup(store: KeyValueStore, collectionId: Long, entityId: Long): NamedEntity = {
-    ???
-    //TODO lookup in IdToNamedEntities
-  }
-
-  def handleAnonymousEntityLookup(store: KeyValueStore, collectionId: Long, entityId: Long): AnonymousEntity = {
-    ???
-    //TODO lookup in IdToAnonymousEntities
+    val res = store.get(Encoder.encodeIdToNamedEntitiesKey(collectionId, entityId))
+    if (res.nonEmpty) {
+      NamedEntity(Decoder.decodeStringLiteral(res.get))
+    } else {
+      throw new RuntimeException(s"Not valid NamedEntity - $collectionId $entityId")
+    }
   }
 
   def handlePredicateLookup(store: KeyValueStore, collectionId: Long, predicateId: Long): Predicate = {
@@ -78,29 +76,22 @@ object ReadOperations {
   def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectId: Long): Object = {
     objectType match {
       case TypeCodes.NamedEntity => handleNamedEntityLookup(store, collectionId, objectId)
-      case TypeCodes.AnonymousEntity => handleAnonymousEntityLookup(store, collectionId, objectId)
-      case TypeCodes.Double => handleDoubleLiteralLookup(store, collectionId, objectId)
-      case TypeCodes.Long => handleLongLiteralLookup(store, collectionId, objectId)
-      case TypeCodes.Boolean => handleBooleanLiteralLookup(store, collectionId, objectId)
+      case TypeCodes.AnonymousEntity => AnonymousEntity(objectId)
+      case TypeCodes.Double => decodeDoubleLiteral(objectId)
+      case TypeCodes.Long => LongLiteral(objectId)
+      case TypeCodes.Boolean => decodeBooleanLiteral(objectId)
       case TypeCodes.String => handleStringLiteralLookup(store, collectionId, objectId)
       case TypeCodes.LangLiteral => handleLangLiteralLookup(store, collectionId, objectId)
       case _ => throw new RuntimeException(s"Illegal object type $objectType")
     }
   }
 
-  def handleDoubleLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): DoubleLiteral = {
-    //TODO create double (don't actually look anything up)
-    ???
+  def decodeDoubleLiteral(literalId: Long): DoubleLiteral = {
+    Decoder.decodeDoubleLiteral(literalId)
   }
 
-  def handleLongLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): LongLiteral = {
-    //TODO create long (don't actually look anything up)
-    ???
-  }
-
-  def handleBooleanLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): BooleanLiteral = {
-    //TODO create boolean (don't actually look anything up)
-    ???
+  def decodeBooleanLiteral(literalId: Long): BooleanLiteral = {
+    Decoder.decodeBooleanLiteral(literalId)
   }
 
   def handleStringLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): StringLiteral = {
