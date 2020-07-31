@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import cats.effect.{IO, Resource}
 import dev.ligature._
+import scodec.bits.ByteVector
 
 final class LigatureInMemory extends Ligature {
   private val data = InMemoryKeyValueStore.newStore()
@@ -48,4 +49,8 @@ final class LigatureInMemory extends Ligature {
   }
 
   override def isOpen(): Boolean = open.get()
+
+  def debugDump(): Iterable[(ByteVector, ByteVector)] = { //TODO probably remove eventually
+    data.debugDump()
+  }
 }

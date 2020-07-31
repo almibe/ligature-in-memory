@@ -51,6 +51,10 @@ private final class InMemoryKeyValueStore(private val data: AtomicReference[Tree
   def commit(newValue: InMemoryKeyValueStore): Unit = {
     this.data.set(newValue.data.get())
   }
+
+  def debugDump(): Iterable[(ByteVector, ByteVector)] = {
+    data.get()
+  }
 }
 
 private object InMemoryKeyValueStore {

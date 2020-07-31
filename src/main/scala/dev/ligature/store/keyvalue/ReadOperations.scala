@@ -192,20 +192,26 @@ object ReadOperations {
       val luPredicate = lookupPredicate(store, collectionId.get, predicate)
       val luObject = lookupObject(store, collectionId.get, `object`)
 
-      if (luSubject.nonEmpty) {
-        if (luPredicate.nonEmpty) {
+      if ((subject.nonEmpty && luSubject.isEmpty) ||
+          (predicate.nonEmpty && luPredicate.isEmpty) ||
+          (`object`.nonEmpty && luObject.isEmpty)) {
+        return Iterable.empty
+      }
+
+      if (subject.nonEmpty) {
+        if (predicate.nonEmpty) {
           matchStatementsSPO(store, collectionName, collectionId.get, luSubject, luPredicate, luObject)
         } else {
           matchStatementsSOP(store, collectionName, collectionId.get, luSubject, luPredicate, luObject)
         }
-      } else if (luPredicate.nonEmpty) {
-        if (luObject.nonEmpty) {
+      } else if (predicate.nonEmpty) {
+        if (`object`.nonEmpty) {
           matchStatementsPOS(store, collectionName, collectionId.get, luSubject, luPredicate, luObject)
         } else {
           matchStatementsPSO(store, collectionName, collectionId.get, luSubject, luPredicate, luObject)
         }
-      } else if (luObject.nonEmpty) {
-        if (luSubject.nonEmpty) {
+      } else if (`object`.nonEmpty) {
+        if (subject.nonEmpty) {
           matchStatementsOSP(store, collectionName, collectionId.get, luSubject, luPredicate, luObject)
         } else {
           matchStatementsOPS(store, collectionName, collectionId.get, luSubject, luPredicate, luObject)

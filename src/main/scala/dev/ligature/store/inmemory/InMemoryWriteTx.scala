@@ -64,7 +64,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def newEntity(collection: NamedEntity): IO[Try[AnonymousEntity]] = {
     if (active.get()) {
-      IO { Success(WriteOperations.newEntity(store, collection)) }
+      IO { Success(WriteOperations.newEntity(workingState, collection)) }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
