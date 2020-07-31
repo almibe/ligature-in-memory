@@ -71,47 +71,11 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   }
 
   override def removeEntity(collection: NamedEntity, entity: Entity): IO[Try[Entity]] = {
-    ???
-//    if (active.get()) {
-//      if (workingState.get().contains(collection)) {
-//        val subjectMatches = Common.matchStatementsImpl(workingState.get()(collection).statements.get(),
-//          Some(entity))
-//        val objectMatches = Common.matchStatementsImpl(workingState.get()(collection).statements.get(),
-//          None, None, Some(entity))
-//        val contextMatch = entity match {
-//          case e: AnonymousEntity => Common.statementByContextImpl(workingState.get()(collection).statements.get(), e)
-//          case _ => None
-//        }
-//        IO {
-//          subjectMatches.foreach { p =>
-//            workingState
-//              .get()(collection)
-//              .statements.set(workingState
-//              .get()(collection).statements
-//              .get().excl(p))
-//          }
-//          objectMatches.foreach { p =>
-//            workingState
-//              .get()(collection)
-//              .statements.set(workingState
-//              .get()(collection).statements
-//              .get().excl(p))
-//          }
-//          if (contextMatch.nonEmpty) {
-//            workingState
-//              .get()(collection)
-//              .statements.set(workingState
-//              .get()(collection).statements
-//              .get().excl(contextMatch.get))
-//          }
-//          Success(entity)
-//        }
-//      } else {
-//        IO { Success(entity) }
-//      }
-//    } else {
-//      IO { Failure(new RuntimeException("Transaction is closed.")) }
-//    }
+    if (active.get()) {
+      IO { WriteOperations.removeEntity(workingState, collection, entity) }
+    } else {
+      IO { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def removePredicate(collection: NamedEntity, predicate: Predicate): IO[Try[Predicate]] = {

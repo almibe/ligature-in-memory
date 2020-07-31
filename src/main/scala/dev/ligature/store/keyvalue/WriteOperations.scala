@@ -4,7 +4,8 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity,
+  Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long}
@@ -137,6 +138,30 @@ object WriteOperations {
       //TODO maybe make sure only a single statement is returned
       Success(statementResult.head)
     }
+  }
+
+  def removeEntity(store: KeyValueStore, collectionName: NamedEntity, entity: Entity): Try[Entity] = {
+    //TODO check collection exists to short circuit
+    val subjectMatches = ReadOperations.matchStatementsImpl(store, collectionName, Some(entity))
+    subjectMatches.foreach { s =>
+      removePersistedStatement(store, s)
+    }
+    val objectMatches = ReadOperations.matchStatementsImpl(store, collectionName, None, None, Some(entity))
+    objectMatches.foreach { s =>
+      removePersistedStatement(store, s)
+    }
+    val contextMatch = entity match {
+      case a: AnonymousEntity => ReadOperations.statementByContextImpl (store, collectionName, a)
+      case _ => None
+    }
+    contextMatch.foreach { s =>
+      removePersistedStatement(store, s)
+    }
+    Success(entity)
+  }
+
+  private def removePersistedStatement(store: KeyValueStore, statement: PersistedStatement): Try[PersistedStatement] = {
+    ???
   }
 
   private def fetchOrCreateSubject(store: KeyValueStore, collectionId: Long, subject: Entity): (Entity, Long) = {
