@@ -79,53 +79,18 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   }
 
   override def removePredicate(collection: NamedEntity, predicate: Predicate): IO[Try[Predicate]] = {
-    ???
-//    if (active.get()) {
-//      if (workingState.get().contains(collection)) {
-//        val persistedStatement = Common.matchStatementsImpl(workingState.get()(collection).statements.get(),
-//          None,
-//          Some(predicate))
-//        IO {
-//          persistedStatement.foreach { p =>
-//            workingState
-//              .get()(collection)
-//              .statements.set(workingState
-//              .get()(collection).statements
-//              .get().excl(p))
-//          }
-//          Success(predicate)
-//        }
-//      } else {
-//        IO { Success(predicate) }
-//      }
-//    } else {
-//      IO { Failure(new RuntimeException("Transaction is closed.")) }
-//    }
+    if (active.get()) {
+      IO { WriteOperations.removePredicate(workingState, collection, predicate) }
+    } else {
+      IO { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 
   override def removeStatement(collection: NamedEntity, statement: Statement): IO[Try[Statement]] = {
-    ???
-//    if (active.get()) {
-//      if (workingState.get().contains(collection)) {
-//        val persistedStatement = Common.matchStatementsImpl(workingState.get()(collection).statements.get(),
-//          Some(statement.subject),
-//          Some(statement.predicate),
-//          Some(statement.`object`))
-//        IO {
-//          persistedStatement.foreach { p =>
-//            workingState
-//              .get()(collection)
-//              .statements.set(workingState
-//              .get()(collection).statements
-//              .get().excl(p))
-//          }
-//          Success(statement)
-//        }
-//      } else {
-//        IO { Success(statement) }
-//      }
-//    } else {
-//      IO { Failure(new RuntimeException("Transaction is closed.")) }
-//    }
+    if (active.get()) {
+      IO { WriteOperations.removeStatement(workingState, collection, statement) }
+    } else {
+      IO { Failure(new RuntimeException("Transaction is closed.")) }
+    }
   }
 }

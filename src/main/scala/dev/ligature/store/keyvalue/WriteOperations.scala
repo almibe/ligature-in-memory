@@ -160,6 +160,22 @@ object WriteOperations {
     Success(entity)
   }
 
+  def removePredicate(store: KeyValueStore, collectionName: NamedEntity, predicate: Predicate): Try[Predicate] = {
+    ???
+  }
+
+  def removeStatement(store: KeyValueStore, collectionName: NamedEntity, statement: Statement): Try[Statement] = {
+    val statementMatches = ReadOperations.matchStatementsImpl(store,
+      collectionName,
+      Some(statement.subject),
+      Some(statement.predicate),
+      Some(statement.`object`))
+    statementMatches.foreach { s =>
+      removePersistedStatement(store, s)
+    }
+    Success(statement)
+  }
+
   private def removePersistedStatement(store: KeyValueStore, statement: PersistedStatement): Try[PersistedStatement] = {
     ???
   }
