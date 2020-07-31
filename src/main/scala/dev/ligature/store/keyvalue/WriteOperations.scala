@@ -161,10 +161,16 @@ object WriteOperations {
   }
 
   def removePredicate(store: KeyValueStore, collectionName: NamedEntity, predicate: Predicate): Try[Predicate] = {
-    ???
+    //TODO check collection exists to short circuit
+    val predicateMatches = ReadOperations.matchStatementsImpl(store, collectionName, None, Some(predicate))
+    predicateMatches.foreach { s =>
+      removePersistedStatement(store, s)
+    }
+    Success(predicate)
   }
 
   def removeStatement(store: KeyValueStore, collectionName: NamedEntity, statement: Statement): Try[Statement] = {
+    //TODO check collection exists to short circuit
     val statementMatches = ReadOperations.matchStatementsImpl(store,
       collectionName,
       Some(statement.subject),
@@ -177,6 +183,15 @@ object WriteOperations {
   }
 
   private def removePersistedStatement(store: KeyValueStore, statement: PersistedStatement): Try[PersistedStatement] = {
+    //TODO lookup subject
+    //TODO lookup predicate
+    //TODO lookup object
+    //TODO check if subject exists in only one statement - if remove from lookups
+    //TODO check if predicate exists in only one statement - if remove from lookups
+    //TODO check if object exists in only one statement - if remove from lookups
+    //TODO fetch context from statementMatches and call remove entity -- not sure what best time to do this is
+    //TODO remove all statement entries from SPOC-CSPO
+    //TODO that's it?
     ???
   }
 
