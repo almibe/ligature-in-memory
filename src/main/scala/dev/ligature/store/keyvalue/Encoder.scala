@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, Predicate, Statement, StringLiteral, Range}
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 import scodec.codecs.{byte, long, utf8}
@@ -189,6 +189,34 @@ object Encoder {
                       predicate: Option[Long],
                       `object`: Option[ObjectEncoding]): ByteVector = {
     Codec.encode(OPS(Prefixes.OPSC, collectionId, `object`, predicate, subject)).require.bytes
+  }
+
+  def encodeSOPStartStop(collectionId: Long,
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+    ???
+  }
+
+  def encodePOSStartStop(collectionId: Long,
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+    ???
+  }
+
+  def encodeOSPStartStop(collectionId: Long,
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+    ???
+  }
+
+  def encodeOPSStartStop(collectionId: Long,
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
+                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+    ???
   }
 
   case class SPOC(prefix: Byte,

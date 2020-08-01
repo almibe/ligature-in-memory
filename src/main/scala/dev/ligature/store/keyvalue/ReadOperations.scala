@@ -344,7 +344,11 @@ object ReadOperations {
                          subject: Option[Entity],
                          predicate: Option[Predicate],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
-    ???
+    val startStopPattern = Encoder.encodeSOPStartStop(collectionId, subject, predicate, literalRange)
+    store.range(startStopPattern._1, startStopPattern._2).map { bv =>
+      val res = Decoder.decodeSOPC(bv._1).get
+      spocToPersistedStatement(store, collectionName, collectionId, res)
+    }
   }
 
   def matchStatementsPOS(store: KeyValueStore,
@@ -353,7 +357,11 @@ object ReadOperations {
                          subject: Option[Entity],
                          predicate: Option[Predicate],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
-    ???
+    val startStopPattern = Encoder.encodePOSStartStop(collectionId, subject, predicate, literalRange)
+    store.range(startStopPattern._1, startStopPattern._2).map { bv =>
+      val res = Decoder.decodePOSC(bv._1).get
+      spocToPersistedStatement(store, collectionName, collectionId, res)
+    }
   }
 
   def matchStatementsOSP(store: KeyValueStore,
@@ -362,7 +370,11 @@ object ReadOperations {
                          subject: Option[Entity],
                          predicate: Option[Predicate],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
-    ???
+    val startStopPattern = Encoder.encodeOSPStartStop(collectionId, subject, predicate, literalRange)
+    store.range(startStopPattern._1, startStopPattern._2).map { bv =>
+      val res = Decoder.decodeOSPC(bv._1).get
+      spocToPersistedStatement(store, collectionName, collectionId, res)
+    }
   }
 
   def matchStatementsOPS(store: KeyValueStore,
@@ -371,7 +383,11 @@ object ReadOperations {
                          subject: Option[Entity],
                          predicate: Option[Predicate],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
-    ???
+    val startStopPattern = Encoder.encodeOPSStartStop(collectionId, subject, predicate, literalRange)
+    store.range(startStopPattern._1, startStopPattern._2).map { bv =>
+      val res = Decoder.decodeOPSC(bv._1).get
+      spocToPersistedStatement(store, collectionName, collectionId, res)
+    }
   }
 
   def statementByContextImpl(store: KeyValueStore,
