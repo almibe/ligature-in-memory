@@ -244,15 +244,24 @@ object ReadOperations {
                           literalRange: Range[_]): Iterable[PersistedStatement] = {
     val collectionId = fetchCollectionId(store, collectionName)
     if (collectionId.nonEmpty) {
+      val luSubject = lookupSubject(store, collectionId.get, subject)
+      val luPredicate = lookupPredicate(store, collectionId.get, predicate)
+      //TODO look up object and probably convert Range[_] to (ByteVector, ByteVector)
+
+      if ((subject.nonEmpty && luSubject.isEmpty) ||
+        (predicate.nonEmpty && luPredicate.isEmpty)) {
+        return Iterable.empty
+      }
+
       if (subject.nonEmpty) {
-        matchStatementsSOP(store, collectionName, collectionId.get, subject, predicate, literalRange)
+        matchStatementsSOP(store, collectionName, collectionId.get, luSubject, luPredicate, literalRange)
       } else if (predicate.nonEmpty) {
-        matchStatementsPOS(store, collectionName, collectionId.get, subject, predicate, literalRange)
+        matchStatementsPOS(store, collectionName, collectionId.get, luSubject, luPredicate, literalRange)
       } else {
         if (subject.nonEmpty) {
-          matchStatementsOSP(store, collectionName, collectionId.get, subject, predicate, literalRange)
+          matchStatementsOSP(store, collectionName, collectionId.get, luSubject, luPredicate, literalRange)
         } else {
-          matchStatementsOPS(store, collectionName, collectionId.get, subject, predicate, literalRange)
+          matchStatementsOPS(store, collectionName, collectionId.get, luSubject, luPredicate, literalRange)
         }
       }
     } else {
@@ -341,8 +350,8 @@ object ReadOperations {
   def matchStatementsSOP(store: KeyValueStore,
                          collectionName: NamedEntity,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
     val startStopPattern = Encoder.encodeSOPStartStop(collectionId, subject, predicate, literalRange)
     store.range(startStopPattern._1, startStopPattern._2).map { bv =>
@@ -354,8 +363,8 @@ object ReadOperations {
   def matchStatementsPOS(store: KeyValueStore,
                          collectionName: NamedEntity,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
     val startStopPattern = Encoder.encodePOSStartStop(collectionId, subject, predicate, literalRange)
     store.range(startStopPattern._1, startStopPattern._2).map { bv =>
@@ -367,8 +376,8 @@ object ReadOperations {
   def matchStatementsOSP(store: KeyValueStore,
                          collectionName: NamedEntity,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
     val startStopPattern = Encoder.encodeOSPStartStop(collectionId, subject, predicate, literalRange)
     store.range(startStopPattern._1, startStopPattern._2).map { bv =>
@@ -380,8 +389,8 @@ object ReadOperations {
   def matchStatementsOPS(store: KeyValueStore,
                          collectionName: NamedEntity,
                          collectionId: Long,
-                         subject: Option[Entity],
-                         predicate: Option[Predicate],
+                         subject: Option[ObjectEncoding],
+                         predicate: Option[Long],
                          literalRange: Range[_]): Iterable[PersistedStatement] = {
     val startStopPattern = Encoder.encodeOPSStartStop(collectionId, subject, predicate, literalRange)
     store.range(startStopPattern._1, startStopPattern._2).map { bv =>
