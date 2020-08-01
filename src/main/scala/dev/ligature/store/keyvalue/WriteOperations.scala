@@ -228,7 +228,7 @@ object WriteOperations {
       case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
       case l: LangLiteral => fetchOrCreateLangLiteral(store, collectionId, l)
       case d: DoubleLiteral => fetchOrCreateDoubleLiteral(store, collectionId, d)
-      case l: LongLiteral => fetchOrCreateLongLiteral(store, collectionId, l)
+      case l: LongLiteral => (l, l.value)
       case s: StringLiteral => fetchOrCreateStringLiteral(store, collectionId, s)
       case b: BooleanLiteral => fetchOrCreateBooleanLiteral(store, collectionId, b)
     }
@@ -287,11 +287,6 @@ object WriteOperations {
 
   private def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionId: Long, literal: DoubleLiteral): (Object, Long) = {
     //TODO not sure I need this since I'm storing doubles directly?
-    ???
-  }
-
-  private def fetchOrCreateLongLiteral(store: KeyValueStore, collectionId: Long, literal: LongLiteral): (Object, Long) = {
-    //TODO not sure I need this since I'm storing longs directly?
     ???
   }
 

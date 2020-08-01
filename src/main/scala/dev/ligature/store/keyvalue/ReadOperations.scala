@@ -4,10 +4,8 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.store.keyvalue.Encoder.ObjectEncoding
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral,
-  LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate,
-  Range, Statement, StringLiteral, StringLiteralRange}
+import dev.ligature.store.keyvalue.Encoder.{IdToStringKey, ObjectEncoding}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, DoubleLiteralRange, Entity, LangLiteral, LangLiteralRange, Literal, LongLiteral, LongLiteralRange, NamedEntity, Object, PersistedStatement, Predicate, Range, Statement, StringLiteral, StringLiteralRange}
 import scodec.bits.ByteVector
 
 object ReadOperations {
@@ -99,8 +97,8 @@ object ReadOperations {
   }
 
   def handleStringLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): StringLiteral = {
-    //TODO lookup in IdToString
-    ???
+    val res = store.get(Encoder.encodeIdToStringKey(collectionId, literalId))
+    StringLiteral(Decoder.decodeStringLiteral(res.get))
   }
 
   def handleLangLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): LangLiteral = {
@@ -179,11 +177,15 @@ object ReadOperations {
       case a: AnonymousEntity => fetchAnonymousEntityId(store, collectionId, a) flatMap { id =>
         Some(ObjectEncoding(TypeCodes.AnonymousEntity, id))
       }
-      case l: LangLiteral => ???
-      case s: StringLiteral => ???
+      case l: LangLiteral => fetchLangLiteralId(store, collectionId, l) flatMap { id =>
+        Some(ObjectEncoding(TypeCodes.LangLiteral, id))
+      }
+      case s: StringLiteral => fetchStringLiteralId(store, collectionId, s) flatMap { id =>
+        Some(ObjectEncoding(TypeCodes.String, id))
+      }
       case d: DoubleLiteral => ???
       case b: BooleanLiteral => ???
-      case l: LongLiteral => ???
+      case l: LongLiteral => Some(ObjectEncoding(TypeCodes.Long, l.value))
     }
   }
 
