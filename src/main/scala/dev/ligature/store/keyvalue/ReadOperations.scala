@@ -118,9 +118,12 @@ object ReadOperations {
   }
 
   def fetchAnonymousEntityId(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): Option[Long] = {
-    //TODO look up in AnonymousEntities
-    //TODO return accordingly
-    ???
+    val res = store.get(Encoder.encodeAnonymousEntityKey(collectionId, entity.identifier))
+    if (res.nonEmpty) {
+      Some(entity.identifier)
+    } else {
+      None
+    }
   }
 
   def fetchPredicateId(store: KeyValueStore, collectionId: Long, predicate: Predicate): Option[Long] = {

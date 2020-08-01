@@ -183,8 +183,6 @@ object WriteOperations {
   }
 
   private def removePersistedStatement(store: KeyValueStore, statement: PersistedStatement): Try[PersistedStatement] = {
-    val collectionId = ReadOperations.fetchCollectionId(store, statement.collection)
-    val luSubject = ReadOperations.handleSubjectLookup(store, statement.collection, statement.statement.subject)
     //TODO lookup subject
     //TODO lookup predicate
     //TODO lookup object
