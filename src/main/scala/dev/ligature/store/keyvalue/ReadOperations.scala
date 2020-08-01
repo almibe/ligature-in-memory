@@ -142,9 +142,12 @@ object ReadOperations {
   }
 
   def fetchStringLiteralId(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): Option[Long] = {
-    //TODO look up in StringLiteralToId
-    //TODO return accordingly
-    ???
+    val res = store.get(Encoder.encodeStringToIdKey(collectionId, stringLiteral))
+    if (res.nonEmpty) {
+      Some(res.get.toLong())
+    } else {
+      None
+    }
   }
 
   def lookupSubject(store: KeyValueStore, collectionId: Long, subject: Option[Entity]): Option[ObjectEncoding] = {

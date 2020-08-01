@@ -4,11 +4,11 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, Predicate, Statement}
+import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, Predicate, Statement, StringLiteral}
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 import scodec.codecs.{byte, long, utf8}
-import scodec.codecs.implicits.{implicitStringCodec => _, implicitOptionCodec => _, _}
+import scodec.codecs.implicits.{implicitOptionCodec => _, implicitStringCodec => _, _}
 
 object Encoder {
   private implicit val utf: Codec[String] = scodec.codecs.utf8
@@ -92,11 +92,29 @@ object Encoder {
 
   case class IdToPredicatesKey(prefix: Byte, collectionId: Long, predicateId: Long)
   def encodeIdToPredicatesKey(collectionId: Long, predicateId: Long): ByteVector = {
-    Codec.encode(IdToNamedEntitiesKey(Prefixes.IdToPredicates, collectionId, predicateId)).require.bytes
+    Codec.encode(IdToPredicatesKey(Prefixes.IdToPredicates, collectionId, predicateId)).require.bytes
   }
 
   def encodeIdToPredicatesValue(predicate: Predicate): ByteVector = {
     utf8.encode(predicate.identifier).require.bytes
+  }
+
+  case class StringToIdKey(prefix: Byte, collectionId: Long, stringLiteral: String)
+  def encodeStringToIdKey(collectionId: Long, stringLiteral: StringLiteral): ByteVector = {
+    Codec.encode(StringToIdKey(Prefixes.StringToId, collectionId, stringLiteral.value)).require.bytes
+  }
+
+  def encodeStringToIdValue(nextId: Long): ByteVector = {
+    long(64).encode(nextId).require.bytes
+  }
+
+  case class IdToStringKey(prefix: Byte, collectionId: Long, stringLiteralId: Long)
+  def encodeIdToStringKey(collectionId: Long, stringLiteralId: Long): ByteVector = {
+    Codec.encode(IdToStringKey(Prefixes.IdToPredicates, collectionId, stringLiteralId)).require.bytes
+  }
+
+  def encodeIdToStringValue(stringLiteral: StringLiteral): ByteVector = {
+    utf8.encode(stringLiteral.value).require.bytes
   }
 
   def encodeStatement(collectionId: Long, statement: Statement): Seq[ByteVector] = ???

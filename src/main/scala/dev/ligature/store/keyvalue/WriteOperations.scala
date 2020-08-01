@@ -305,10 +305,14 @@ object WriteOperations {
   }
 
   private def createStringLiteral(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): (Object, Long) = {
-    //TODO get next id
-    //TODO write to StringLiteralToId
-    //TODO write to IdToStringLiteral
-    ???
+    val nextId = nextCollectionId(store, collectionId)
+    val stringToIdKey = Encoder.encodeStringToIdKey(collectionId, stringLiteral)
+    val stringToIdValue = Encoder.encodeStringToIdValue(nextId)
+    val idToStringKey = Encoder.encodeIdToStringKey(collectionId, nextId)
+    val idToStringValue = Encoder.encodeIdToStringValue(stringLiteral)
+    store.put(stringToIdKey, stringToIdValue)
+    store.put(idToStringKey, idToStringValue)
+    (stringLiteral, nextId)
   }
 
   private def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionId: Long, literal: BooleanLiteral): (Object, Long) = {
