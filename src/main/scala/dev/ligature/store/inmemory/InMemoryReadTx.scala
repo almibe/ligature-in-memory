@@ -62,18 +62,18 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
     }
   }
 
-  override def matchStatements(collectionName: NamedEntity,
-                               subject: Option[Entity],
-                               predicate: Option[Predicate],
-                               range: Range[_]): IO[Iterable[PersistedStatement]] = {
-    if (active.get()) {
-      IO {
-        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, range)
-      }
-    } else {
-      throw new RuntimeException("Transaction is closed.")
-    }
-  }
+//  override def matchStatements(collectionName: NamedEntity,
+//                               subject: Option[Entity],
+//                               predicate: Option[Predicate],
+//                               range: Range[_]): IO[Iterable[PersistedStatement]] = {
+//    if (active.get()) {
+//      IO {
+//        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, range)
+//      }
+//    } else {
+//      throw new RuntimeException("Transaction is closed.")
+//    }
+//  }
 
   override def statementByContext(collectionName: NamedEntity, context: AnonymousEntity):
   IO[Option[PersistedStatement]] = {

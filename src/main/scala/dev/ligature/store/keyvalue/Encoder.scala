@@ -191,33 +191,33 @@ object Encoder {
     Codec.encode(OPS(Prefixes.OPSC, collectionId, `object`, predicate, subject)).require.bytes
   }
 
-  def encodeSOPStartStop(collectionId: Long,
-                         subject: Option[ObjectEncoding],
-                         predicate: Option[Long],
-                         literalRange: Range[_]): (ByteVector, ByteVector) = {
-    ???
-  }
-
-  def encodePOSStartStop(collectionId: Long,
-                         subject: Option[ObjectEncoding],
-                         predicate: Option[Long],
-                         literalRange: Range[_]): (ByteVector, ByteVector) = {
-    ???
-  }
-
-  def encodeOSPStartStop(collectionId: Long,
-                         subject: Option[ObjectEncoding],
-                         predicate: Option[Long],
-                         literalRange: Range[_]): (ByteVector, ByteVector) = {
-    ???
-  }
-
-  def encodeOPSStartStop(collectionId: Long,
-                         subject: Option[ObjectEncoding],
-                         predicate: Option[Long],
-                         literalRange: Range[_]): (ByteVector, ByteVector) = {
-    ???
-  }
+//  def encodeSOPStartStop(collectionId: Long,
+//                         subject: Option[ObjectEncoding],
+//                         predicate: Option[Long],
+//                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+//    ???
+//  }
+//
+//  def encodePOSStartStop(collectionId: Long,
+//                         subject: Option[ObjectEncoding],
+//                         predicate: Option[Long],
+//                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+//    ???
+//  }
+//
+//  def encodeOSPStartStop(collectionId: Long,
+//                         subject: Option[ObjectEncoding],
+//                         predicate: Option[Long],
+//                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+//    ???
+//  }
+//
+//  def encodeOPSStartStop(collectionId: Long,
+//                         subject: Option[ObjectEncoding],
+//                         predicate: Option[Long],
+//                         literalRange: Range[_]): (ByteVector, ByteVector) = {
+//    ???
+//  }
 
   case class SPOC(prefix: Byte,
                   collectionId: Long,
