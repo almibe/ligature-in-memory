@@ -70,27 +70,27 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-  override def removeEntity(collection: NamedEntity, entity: Entity): IO[Try[Entity]] = {
-    if (active.get()) {
-      IO { WriteOperations.removeEntity(workingState, collection, entity) }
-    } else {
-      IO { Failure(new RuntimeException("Transaction is closed.")) }
-    }
-  }
-
-  override def removePredicate(collection: NamedEntity, predicate: Predicate): IO[Try[Predicate]] = {
-    if (active.get()) {
-      IO { WriteOperations.removePredicate(workingState, collection, predicate) }
-    } else {
-      IO { Failure(new RuntimeException("Transaction is closed.")) }
-    }
-  }
-
-  override def removeStatement(collection: NamedEntity, statement: Statement): IO[Try[Statement]] = {
-    if (active.get()) {
-      IO { WriteOperations.removeStatement(workingState, collection, statement) }
-    } else {
-      IO { Failure(new RuntimeException("Transaction is closed.")) }
-    }
-  }
+//  override def removeEntity(collection: NamedEntity, entity: Entity): IO[Try[Entity]] = {
+//    if (active.get()) {
+//      IO { WriteOperations.removeEntity(workingState, collection, entity) }
+//    } else {
+//      IO { Failure(new RuntimeException("Transaction is closed.")) }
+//    }
+//  }
+//
+//  override def removePredicate(collection: NamedEntity, predicate: Predicate): IO[Try[Predicate]] = {
+//    if (active.get()) {
+//      IO { WriteOperations.removePredicate(workingState, collection, predicate) }
+//    } else {
+//      IO { Failure(new RuntimeException("Transaction is closed.")) }
+//    }
+//  }
+//
+//  override def removeStatement(collection: NamedEntity, statement: Statement): IO[Try[Statement]] = {
+//    if (active.get()) {
+//      IO { WriteOperations.removeStatement(workingState, collection, statement) }
+//    } else {
+//      IO { Failure(new RuntimeException("Transaction is closed.")) }
+//    }
+//  }
 }
