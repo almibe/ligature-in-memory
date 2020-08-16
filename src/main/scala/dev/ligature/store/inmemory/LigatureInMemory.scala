@@ -7,48 +7,60 @@ package dev.ligature.store.inmemory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-import cats.effect.{IO, Resource}
 import dev.ligature._
 import scodec.bits.ByteVector
+import zio.{IO, Managed, UIO}
 
 final class LigatureInMemory extends Ligature {
+  override def start(): Managed[Throwable, LigatureSession] = Managed.make(
+    IO {
+      new LigatureInMemorySession()
+    }
+  )( session =>
+    UIO {
+      session.close()
+    }
+  )
+}
+
+final class LigatureInMemorySession extends LigatureSession {
   private val data = InMemoryKeyValueStore.newStore()
   private val lock = new ReentrantReadWriteLock()
   private val open = new AtomicBoolean(true)
 
-  override def close(): Unit = {
+  def close(): Unit = {
     open.set(false)
     data.clear()
   }
 
-  override def compute: Resource[IO, ReadTx] = {
-    Resource.make(
+  override def compute: Managed[Throwable, ReadTx] = {
+    Managed.make(
       IO {
         lock.readLock().lock()
         new InMemoryReadTx(data)
       }
     )( _ =>
-      IO {
+      UIO {
         lock.readLock().unlock()
       }
     )
   }
 
-  override def write: Resource[IO, WriteTx] = {
-    Resource.make(
+  override def write: Managed[Throwable, WriteTx] = {
+    Managed.make(
       IO {
         lock.writeLock().lock()
         new InMemoryWriteTx(data)
       }
     )( tx =>
-      IO {
+      UIO {
         tx.commit()
         lock.writeLock().unlock()
       }
     )
   }
 
-  override def isOpen(): Boolean = open.get()
+  def isOpen: Boolean = open.get()
 
   def debugDump(): Iterable[(ByteVector, ByteVector)] = { //TODO probably remove eventually
     data.debugDump()

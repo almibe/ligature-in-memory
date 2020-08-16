@@ -6,9 +6,9 @@ package dev.ligature.store.inmemory
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import cats.effect.IO
 import dev.ligature._
 import dev.ligature.store.keyvalue.{ReadOperations, WriteOperations}
+import zio.IO
 
 import scala.util.{Failure, Success, Try}
 

@@ -4,9 +4,12 @@
 
 package dev.ligature.store.inmemory
 
-import dev.ligature.Ligature
+import dev.ligature.LigatureSession
 import dev.ligature.test.LigatureSuite
 
 class InMemorySpec extends LigatureSuite {
-  override def createStore(): Ligature = new LigatureInMemory()
+  override def createSession(): LigatureSession = {
+    val lim = new LigatureInMemory()
+    lim.start()
+  }
 }
