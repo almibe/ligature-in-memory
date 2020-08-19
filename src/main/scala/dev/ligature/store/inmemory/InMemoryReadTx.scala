@@ -13,34 +13,34 @@ import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStat
 private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
   private val active = new AtomicBoolean(true)
 
-  override def allStatements(collectionName: NamedEntity): IO[Iterable[PersistedStatement]] = {
+  override def allStatements(collectionName: NamedEntity): IO[Iterator[PersistedStatement]] = {
     if (active.get()) {
       if (ReadOperations.fetchCollectionId(store, collectionName).nonEmpty) {
         val result = ReadOperations.readAllStatements(store, collectionName).get
-        IO { result }
+        IO { result.iterator }
       } else {
-        IO { Iterable.empty }
+        IO { Iterator.empty }
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
     }
   }
 
-  override def collections(): IO[Iterable[NamedEntity]] =
+  override def collections(): IO[Iterator[NamedEntity]] =
     if (active.get()) {
-      IO { ReadOperations.collections(store) }
+      IO { ReadOperations.collections(store).iterator }
     } else {
       throw new RuntimeException("Transaction is closed.")
     }
 
-  override def collections(prefix: NamedEntity): IO[Iterable[NamedEntity]] =
+  override def collections(prefix: NamedEntity): IO[Iterator[NamedEntity]] =
     IO {
 //      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
 //        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle prefix
       ???
     }
 
-  override def collections(from: NamedEntity, to: NamedEntity): IO[Iterable[NamedEntity]] =
+  override def collections(from: NamedEntity, to: NamedEntity): IO[Iterator[NamedEntity]] =
     IO {
 //      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
 //        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle range
@@ -52,10 +52,10 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
   override def matchStatements(collectionName: NamedEntity,
                                subject: Option[Entity] = None,
                                predicate: Option[Predicate] = None,
-                               `object`: Option[Object] = None): IO[Iterable[PersistedStatement]] = {
+                               `object`: Option[Object] = None): IO[Iterator[PersistedStatement]] = {
     if (active.get()) {
       IO {
-        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, `object`)
+        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, `object`).iterator
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -65,7 +65,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
 //  override def matchStatements(collectionName: NamedEntity,
 //                               subject: Option[Entity],
 //                               predicate: Option[Predicate],
-//                               range: Range[_]): IO[Iterable[PersistedStatement]] = {
+//                               range: Range[_]): IO[Iterator[PersistedStatement]] = {
 //    if (active.get()) {
 //      IO {
 //        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, range)

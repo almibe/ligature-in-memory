@@ -7,9 +7,9 @@ package dev.ligature.store.inmemory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
+import cats.effect.IO
 import dev.ligature._
 import scodec.bits.ByteVector
-import zio.{IO, Managed, UIO}
 
 final class LigatureInMemory extends Ligature {
   override def start(): Managed[Throwable, LigatureSession] = Managed.make(
@@ -17,7 +17,7 @@ final class LigatureInMemory extends Ligature {
       new LigatureInMemorySession()
     }
   )( session =>
-    UIO {
+    IO {
       session.close()
     }
   )
@@ -40,7 +40,7 @@ final class LigatureInMemorySession extends LigatureSession {
         new InMemoryReadTx(data)
       }
     )( _ =>
-      UIO {
+      IO {
         lock.readLock().unlock()
       }
     )
@@ -53,7 +53,7 @@ final class LigatureInMemorySession extends LigatureSession {
         new InMemoryWriteTx(data)
       }
     )( tx =>
-      UIO {
+      IO {
         tx.commit()
         lock.writeLock().unlock()
       }

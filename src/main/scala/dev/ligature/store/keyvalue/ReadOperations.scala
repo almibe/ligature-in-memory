@@ -5,8 +5,7 @@
 package dev.ligature.store.keyvalue
 
 import dev.ligature.store.keyvalue.Encoder.ObjectEncoding
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral,
-  NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, Context, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import scodec.bits.ByteVector
 
 object ReadOperations {
@@ -45,7 +44,7 @@ object ReadOperations {
     val subject = handleSubjectLookup(store, collectionId, spoc.subject.`type`, spoc.subject.id)
     val predicate = handlePredicateLookup(store, collectionId, spoc.predicateId)
     val obj = handleObjectLookup(store, collectionId, spoc.`object`.`type`, spoc.`object`.id)
-    val context = AnonymousEntity(spoc.context)
+    val context = Context(spoc.context)
     val statement = Statement(subject, predicate, obj)
     PersistedStatement(collectionName, statement, context)
   }

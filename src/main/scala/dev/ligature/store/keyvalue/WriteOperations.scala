@@ -4,8 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, BooleanLiteral, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity,
-  Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousEntity, BooleanLiteral, Context, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long}
@@ -91,6 +90,10 @@ object WriteOperations {
     AnonymousEntity(nextId)
   }
 
+  def newContext(store: KeyValueStore, l: Long): Context = {
+    ???
+  }
+
   def subjectType(entity: Entity): Byte =
     entity match {
       case _: NamedEntity => TypeCodes.NamedEntity
@@ -120,7 +123,7 @@ object WriteOperations {
       } else {
         optionId.get
       }
-      val context = newEntity(store, collectionId)
+      val context = newContext(store, collectionId)
       val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
       val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
       val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
