@@ -4,11 +4,12 @@
 
 package dev.ligature.store.inmemory
 
+import cats.effect.{IO, Resource}
 import dev.ligature.LigatureSession
 import dev.ligature.test.LigatureSuite
 
 class InMemorySpec extends LigatureSuite {
-  override def createSession(): LigatureSession = {
+  override def createSession(): Resource[IO, LigatureSession] = {
     val lim = new LigatureInMemory()
     lim.start()
   }
