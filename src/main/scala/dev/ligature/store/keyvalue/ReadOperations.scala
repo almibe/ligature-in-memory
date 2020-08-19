@@ -4,25 +4,25 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.store.keyvalue.Encoder.ObjectEncoding
-import dev.ligature.{AnonymousEntity, BooleanLiteral, Context, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.store.keyvalue.Encoder.ElementEncoding
+import dev.ligature.{AnonymousElement, BooleanLiteral, DoubleLiteral, LangLiteral, LongLiteral, NamedElement, Element, PersistedStatement, Predicate, Statement, StringLiteral}
 import scodec.bits.ByteVector
 
 object ReadOperations {
-  def collections(store: KeyValueStore): Iterable[NamedEntity] = {
+  def collections(store: KeyValueStore): Iterable[NamedElement] = {
     val collectionNameToId = store.prefix(Encoder.collectionNamesPrefixStart)
     collectionNameToId.map { encoded =>
-      encoded._1.drop(1).decodeUtf8.map(NamedEntity).getOrElse(throw new RuntimeException("Invalid Name"))
+      encoded._1.drop(1).decodeUtf8.map(NamedElement).getOrElse(throw new RuntimeException("Invalid Name"))
     }
   }
 
-  def fetchCollectionId(store: KeyValueStore, collectionName: NamedEntity): Option[Long] = {
+  def fetchCollectionId(store: KeyValueStore, collectionName: NamedElement): Option[Long] = {
     val encoded = Encoder.encodeCollectionNameToIdKey(collectionName)
     val res = store.get(encoded)
     res.map(_.toLong())
   }
 
-  def readAllStatements(store: KeyValueStore, collectionName: NamedEntity): Option[Iterable[PersistedStatement]] = {
+  def readAllStatements(store: KeyValueStore, collectionName: NamedElement): Option[Iterable[PersistedStatement]] = {
     val collectionId = fetchCollectionId(store, collectionName)
     if (collectionId.nonEmpty) {
       val itr = store.prefix(Encoder.encodeSPOCScanStart(collectionId.get))
@@ -40,29 +40,29 @@ object ReadOperations {
     }
   }
 
-  def spocToPersistedStatement(store: KeyValueStore, collectionName: NamedEntity, collectionId: Long, spoc: Encoder.SPOC): PersistedStatement = {
+  def spocToPersistedStatement(store: KeyValueStore, collectionName: NamedElement, collectionId: Long, spoc: Encoder.SPOC): PersistedStatement = {
     val subject = handleSubjectLookup(store, collectionId, spoc.subject.`type`, spoc.subject.id)
     val predicate = handlePredicateLookup(store, collectionId, spoc.predicateId)
     val obj = handleObjectLookup(store, collectionId, spoc.`object`.`type`, spoc.`object`.id)
-    val context = Context(spoc.context)
+    val context = AnonymousElement(spoc.context)
     val statement = Statement(subject, predicate, obj)
     PersistedStatement(collectionName, statement, context)
   }
 
-  def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Entity = {
+  def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Subject = {
     subjectType match {
-      case TypeCodes.NamedEntity => handleNamedEntityLookup(store, collectionId, subjectId)
-      case TypeCodes.AnonymousEntity => AnonymousEntity(subjectId)
+      case TypeCodes.NamedElement => handleNamedElementLookup(store, collectionId, subjectId)
+      case TypeCodes.AnonymousElement => AnonymousElement(subjectId)
       case _ => throw new RuntimeException(s"Illegal subject type $subjectType")
     }
   }
 
-  def handleNamedEntityLookup(store: KeyValueStore, collectionId: Long, entityId: Long): NamedEntity = {
+  def handleNamedElementLookup(store: KeyValueStore, collectionId: Long, entityId: Long): NamedElement = {
     val res = store.get(Encoder.encodeIdToNamedEntitiesKey(collectionId, entityId))
     if (res.nonEmpty) {
-      NamedEntity(Decoder.decodeStringLiteral(res.get))
+      NamedElement(Decoder.decodeStringLiteral(res.get))
     } else {
-      throw new RuntimeException(s"Not valid NamedEntity - $collectionId $entityId")
+      throw new RuntimeException(s"Not valid NamedElement - $collectionId $entityId")
     }
   }
 
@@ -75,10 +75,10 @@ object ReadOperations {
     }
   }
 
-  def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectId: Long): Object = {
+  def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectId: Long): Element = {
     objectType match {
-      case TypeCodes.NamedEntity => handleNamedEntityLookup(store, collectionId, objectId)
-      case TypeCodes.AnonymousEntity => AnonymousEntity(objectId)
+      case TypeCodes.NamedElement => handleNamedElementLookup(store, collectionId, objectId)
+      case TypeCodes.AnonymousElement => AnonymousElement(objectId)
       case TypeCodes.Double => decodeDoubleLiteral(objectId)
       case TypeCodes.Long => LongLiteral(objectId)
       case TypeCodes.Boolean => decodeBooleanLiteral(objectId)
@@ -106,7 +106,7 @@ object ReadOperations {
     ???
   }
 
-  def fetchNamedEntityId(store: KeyValueStore, collectionId: Long, entity: NamedEntity): Option[Long] = {
+  def fetchNamedElementId(store: KeyValueStore, collectionId: Long, entity: NamedElement): Option[Long] = {
     val res = store.get(Encoder.encodeNamedEntitiesToIdKey(collectionId, entity))
     if (res.nonEmpty) {
       Some(res.get.toLong())
@@ -115,28 +115,10 @@ object ReadOperations {
     }
   }
 
-  def fetchAnonymousEntityId(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): Option[Long] = {
-    val res = store.get(Encoder.encodeAnonymousEntityKey(collectionId, entity.identifier))
+  def fetchAnonymousElementId(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): Option[Long] = {
+    val res = store.get(Encoder.encodeAnonymousElementKey(collectionId, entity.identifier))
     if (res.nonEmpty) {
       Some(entity.identifier)
-    } else {
-      None
-    }
-  }
-
-  def fetchContextId(store: KeyValueStore, collectionId: Long, entity: Context): Option[Long] = {
-    val res = store.get(Encoder.encodeContextKey(collectionId, entity.identifier))
-    if (res.nonEmpty) {
-      Some(entity.identifier)
-    } else {
-      None
-    }
-  }
-
-  def fetchPredicateId(store: KeyValueStore, collectionId: Long, predicate: Predicate): Option[Long] = {
-    val res = store.get(Encoder.encodePredicatesToIdKey(collectionId, predicate))
-    if (res.nonEmpty) {
-      Some(res.get.toLong())
     } else {
       None
     }
@@ -157,21 +139,16 @@ object ReadOperations {
     }
   }
 
-  def lookupSubject(store: KeyValueStore, collectionId: Long, subject: Option[Entity]): Option[ObjectEncoding] = {
+  def lookupSubject(store: KeyValueStore, collectionId: Long, subject: Option[Subject]): Option[ElementEncoding] = {
     subject flatMap {
-      case n: NamedEntity => {
-        fetchNamedEntityId(store, collectionId, n) flatMap { i =>
-          Some(ObjectEncoding(TypeCodes.NamedEntity, i))
+      case n: NamedElement => {
+        fetchNamedElementId(store, collectionId, n) flatMap { i =>
+          Some(ElementEncoding(TypeCodes.NamedElement, i))
         }
       }
-      case a: AnonymousEntity => {
-        fetchAnonymousEntityId(store, collectionId, a) flatMap { id: Long =>
-          Some(ObjectEncoding(TypeCodes.AnonymousEntity, id))
-        }
-      }
-      case c: Context => {
-        fetchContextId(store, collectionId, c) flatMap { id: Long =>
-          Some(ObjectEncoding(TypeCodes.Context, id))
+      case a: AnonymousElement => {
+        fetchAnonymousElementId(store, collectionId, a) flatMap { id: Long =>
+          Some(ElementEncoding(TypeCodes.AnonymousElement, id))
         }
       }
     }
@@ -183,34 +160,31 @@ object ReadOperations {
     }
   }
 
-  def lookupObject(store: KeyValueStore, collectionId: Long, `object`: Option[Object]): Option[ObjectEncoding] = {
+  def lookupObject(store: KeyValueStore, collectionId: Long, `object`: Option[Element]): Option[ElementEncoding] = {
     `object` flatMap {
-      case n: NamedEntity => fetchNamedEntityId(store, collectionId, n) flatMap { id =>
-        Some(ObjectEncoding(TypeCodes.NamedEntity, id))
+      case n: NamedElement => fetchNamedElementId(store, collectionId, n) flatMap { id =>
+        Some(ElementEncoding(TypeCodes.NamedElement, id))
       }
-      case a: AnonymousEntity => fetchAnonymousEntityId(store, collectionId, a) flatMap { id =>
-        Some(ObjectEncoding(TypeCodes.AnonymousEntity, id))
-      }
-      case c: Context => fetchContextId(store, collectionId, c) flatMap { id =>
-        Some(ObjectEncoding(TypeCodes.Context, id))
+      case a: AnonymousElement => fetchAnonymousElementId(store, collectionId, a) flatMap { id =>
+        Some(ElementEncoding(TypeCodes.AnonymousElement, id))
       }
       case l: LangLiteral => fetchLangLiteralId(store, collectionId, l) flatMap { id =>
-        Some(ObjectEncoding(TypeCodes.LangLiteral, id))
+        Some(ElementEncoding(TypeCodes.LangLiteral, id))
       }
       case s: StringLiteral => fetchStringLiteralId(store, collectionId, s) flatMap { id =>
-        Some(ObjectEncoding(TypeCodes.String, id))
+        Some(ElementEncoding(TypeCodes.String, id))
       }
       case d: DoubleLiteral => ???
       case b: BooleanLiteral => ???
-      case l: LongLiteral => Some(ObjectEncoding(TypeCodes.Long, l.value))
+      case l: LongLiteral => Some(ElementEncoding(TypeCodes.Long, l.value))
     }
   }
 
   def matchStatementsImpl(store: KeyValueStore,
-                          collectionName: NamedEntity,
-                          subject: Option[Entity] = None,
+                          collectionName: NamedElement,
+                          subject: Option[Subject] = None,
                           predicate: Option[Predicate] = None,
-                          `object`: Option[Object] = None): Iterable[PersistedStatement] = {
+                          `object`: Option[Element] = None): Iterable[PersistedStatement] = {
     val collectionId = fetchCollectionId(store, collectionName)
     if (collectionId.nonEmpty) {
       val luSubject = lookupSubject(store, collectionId.get, subject)
@@ -255,8 +229,8 @@ object ReadOperations {
   }
 
 //  def matchStatementsImpl(store: KeyValueStore,
-//                          collectionName: NamedEntity,
-//                          subject: Option[Entity],
+//                          collectionName: NamedElement,
+//                          subject: Option[Subject],
 //                          predicate: Option[Predicate],
 //                          literalRange: Range[_, _]): Iterable[PersistedStatement] = {
 //    val collectionId = fetchCollectionId(store, collectionName)
@@ -289,11 +263,11 @@ object ReadOperations {
 //  }
 
   def matchStatementsSPO(store: KeyValueStore,
-                         collectionName: NamedEntity,
+                         collectionName: NamedElement,
                          collectionId: Long,
-                         subject: Option[ObjectEncoding],
+                         subject: Option[ElementEncoding],
                          predicate: Option[Long],
-                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
+                         `object`: Option[ElementEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeSPOPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map { bv =>
       val res = Decoder.decodeSPOC(bv._1).get
@@ -302,11 +276,11 @@ object ReadOperations {
   }
 
   def matchStatementsSOP(store: KeyValueStore,
-                         collectionName: NamedEntity,
+                         collectionName: NamedElement,
                          collectionId: Long,
-                         subject: Option[ObjectEncoding],
+                         subject: Option[ElementEncoding],
                          predicate: Option[Long],
-                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
+                         `object`: Option[ElementEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeSOPPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map { bv =>
       val res = Decoder.decodeSOPC(bv._1).get
@@ -315,11 +289,11 @@ object ReadOperations {
   }
 
   def matchStatementsPSO(store: KeyValueStore,
-                         collectionName: NamedEntity,
+                         collectionName: NamedElement,
                          collectionId: Long,
-                         subject: Option[ObjectEncoding],
+                         subject: Option[ElementEncoding],
                          predicate: Option[Long],
-                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
+                         `object`: Option[ElementEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodePSOPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map { bv =>
       val res = Decoder.decodePSOC(bv._1).get
@@ -328,11 +302,11 @@ object ReadOperations {
   }
 
   def matchStatementsPOS(store: KeyValueStore,
-                         collectionName: NamedEntity,
+                         collectionName: NamedElement,
                          collectionId: Long,
-                         subject: Option[ObjectEncoding],
+                         subject: Option[ElementEncoding],
                          predicate: Option[Long],
-                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
+                         `object`: Option[ElementEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodePOSPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map { bv =>
       val res = Decoder.decodePOSC(bv._1).get
@@ -341,11 +315,11 @@ object ReadOperations {
   }
 
   def matchStatementsOSP(store: KeyValueStore,
-                         collectionName: NamedEntity,
+                         collectionName: NamedElement,
                          collectionId: Long,
-                         subject: Option[ObjectEncoding],
+                         subject: Option[ElementEncoding],
                          predicate: Option[Long],
-                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
+                         `object`: Option[ElementEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeOSPPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map { bv =>
       val res = Decoder.decodeOSPC(bv._1).get
@@ -354,11 +328,11 @@ object ReadOperations {
   }
 
   def matchStatementsOPS(store: KeyValueStore,
-                         collectionName: NamedEntity,
+                         collectionName: NamedElement,
                          collectionId: Long,
-                         subject: Option[ObjectEncoding],
+                         subject: Option[ElementEncoding],
                          predicate: Option[Long],
-                         `object`: Option[ObjectEncoding]): Iterable[PersistedStatement] = {
+                         `object`: Option[ElementEncoding]): Iterable[PersistedStatement] = {
     val prefixPattern = Encoder.encodeOPSPrefix(collectionId, subject, predicate, `object`)
     store.prefix(prefixPattern).map { bv =>
       val res = Decoder.decodeOPSC(bv._1).get
@@ -367,9 +341,9 @@ object ReadOperations {
   }
 
 //  def matchStatementsSOP(store: KeyValueStore,
-//                         collectionName: NamedEntity,
+//                         collectionName: NamedElement,
 //                         collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_, _]): Iterable[PersistedStatement] = {
 //    val startStopPattern = Encoder.encodeSOPStartStop(collectionId, subject, predicate, literalRange)
@@ -380,9 +354,9 @@ object ReadOperations {
 //  }
 //
 //  def matchStatementsPOS(store: KeyValueStore,
-//                         collectionName: NamedEntity,
+//                         collectionName: NamedElement,
 //                         collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_, _]): Iterable[PersistedStatement] = {
 //    val startStopPattern = Encoder.encodePOSStartStop(collectionId, subject, predicate, literalRange)
@@ -393,9 +367,9 @@ object ReadOperations {
 //  }
 //
 //  def matchStatementsOSP(store: KeyValueStore,
-//                         collectionName: NamedEntity,
+//                         collectionName: NamedElement,
 //                         collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_, _]): Iterable[PersistedStatement] = {
 //    val startStopPattern = Encoder.encodeOSPStartStop(collectionId, subject, predicate, literalRange)
@@ -406,9 +380,9 @@ object ReadOperations {
 //  }
 //
 //  def matchStatementsOPS(store: KeyValueStore,
-//                         collectionName: NamedEntity,
+//                         collectionName: NamedElement,
 //                         collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_, _]): Iterable[PersistedStatement] = {
 //    val startStopPattern = Encoder.encodeOPSStartStop(collectionId, subject, predicate, literalRange)
@@ -419,8 +393,8 @@ object ReadOperations {
 //  }
 
   def statementByContextImpl(store: KeyValueStore,
-                             collectionName: NamedEntity,
-                             context: Context): Option[PersistedStatement] = {
+                             collectionName: NamedElement,
+                             context: AnonymousElement): Option[PersistedStatement] = {
     ???
   }
 }

@@ -5,7 +5,7 @@
 package dev.ligature.store.inmemory
 
 import dev.ligature.store.keyvalue.Encoder
-import dev.ligature.store.keyvalue.Encoder.ObjectEncoding
+import dev.ligature.store.keyvalue.Encoder.ElementEncoding
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import scodec.codecs.{byte, long}
@@ -16,7 +16,7 @@ class EncodingSpec extends AnyFlatSpec with Matchers {
     val e1 = Encoder.encodeSPOPrefix(1L, None, None, None)
     e1 shouldBe (byte ~~ long(64)).encode((3.toByte, 1)).require.bytes
 
-    val e2 = Encoder.encodeOPSPrefix(1L, None, Some(2L), Some(ObjectEncoding(1.toByte, 1L)))
+    val e2 = Encoder.encodeOPSPrefix(1L, None, Some(2L), Some(ElementEncoding(1.toByte, 1L)))
     e2 shouldBe (byte ~~ long(64) ~~ byte ~~ long(64) ~~ long(64))
       .encode((8.toByte, 1L, 1.toByte, 1L, 2L)).require.bytes
   }

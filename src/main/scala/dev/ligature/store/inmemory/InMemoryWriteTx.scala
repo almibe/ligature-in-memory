@@ -16,7 +16,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   private val active = new AtomicBoolean(true)
   private val workingState = store.copy()
 
-  override def addStatement(collection: NamedEntity, statement: Statement): IO[Try[PersistedStatement]] = {
+  override def addStatement(collection: NamedElement, statement: Statement): IO[Try[PersistedStatement]] = {
     if (active.get()) {
       IO { WriteOperations.addStatement(workingState, collection, statement) }
     } else {
@@ -40,7 +40,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-  override def createCollection(collection: NamedEntity): IO[Try[NamedEntity]] =
+  override def createCollection(collection: NamedElement): IO[Try[NamedElement]] =
     if (active.get()) {
       IO {
         WriteOperations.createCollection(workingState, collection)
@@ -50,7 +50,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
 
-  override def deleteCollection(collection: NamedEntity): IO[Try[NamedEntity]] = {
+  override def deleteCollection(collection: NamedElement): IO[Try[NamedElement]] = {
     if (active.get()) {
       IO {
         WriteOperations.deleteCollection(workingState, collection)
@@ -62,7 +62,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def isOpen: Boolean = active.get()
 
-  override def newEntity(collection: NamedEntity): IO[Try[AnonymousEntity]] = {
+  override def newEntity(collection: NamedElement): IO[Try[AnonymousElement]] = {
     if (active.get()) {
       IO { Success(WriteOperations.newEntity(workingState, collection)) }
     } else {
@@ -70,7 +70,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-//  override def removeEntity(collection: NamedEntity, entity: Entity): IO[Try[Entity]] = {
+//  override def removeEntity(collection: NamedElement, entity: Entity): IO[Try[Entity]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removeEntity(workingState, collection, entity) }
 //    } else {
@@ -78,7 +78,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 //    }
 //  }
 //
-//  override def removePredicate(collection: NamedEntity, predicate: Predicate): IO[Try[Predicate]] = {
+//  override def removePredicate(collection: NamedElement, predicate: Predicate): IO[Try[Predicate]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removePredicate(workingState, collection, predicate) }
 //    } else {
@@ -86,7 +86,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 //    }
 //  }
 //
-//  override def removeStatement(collection: NamedEntity, statement: Statement): IO[Try[Statement]] = {
+//  override def removeStatement(collection: NamedElement, statement: Statement): IO[Try[Statement]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removeStatement(workingState, collection, statement) }
 //    } else {

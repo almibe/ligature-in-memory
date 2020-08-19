@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, Context, Entity, NamedEntity, Object, Predicate, Range, Statement, StringLiteral}
+import dev.ligature.{AnonymousElement, AnonymousElement, Entity, NamedEntity, Object, Predicate, Range, Statement, StringLiteral}
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 import scodec.codecs.{byte, long, utf8}
@@ -24,9 +24,9 @@ object Encoder {
     override def sizeBound: SizeBound = SizeBound.unknown
   }
 
-  private implicit val y: Codec[Option[ObjectEncoding]] = new Codec[Option[ObjectEncoding]] {
-    override def decode(bits: BitVector): Attempt[DecodeResult[Option[ObjectEncoding]]] = ???
-    override def encode(value: Option[ObjectEncoding]): Attempt[BitVector] = {
+  private implicit val y: Codec[Option[ElementEncoding]] = new Codec[Option[ElementEncoding]] {
+    override def decode(bits: BitVector): Attempt[DecodeResult[Option[ElementEncoding]]] = ???
+    override def encode(value: Option[ElementEncoding]): Attempt[BitVector] = {
       value match {
         case Some(a) => Codec.encode(a)
         case None => Attempt.Successful(BitVector.empty)
@@ -60,7 +60,7 @@ object Encoder {
     Codec.encode(CollectionNameCounterValue(counter)).require.bytes
 
   def encodeSubject(entity: Entity): ByteVector = ???
-  case class ObjectEncoding(`type`: Byte, id: Long)
+  case class ElementEncoding(`type`: Byte, id: Long)
   def encodeObject(obj: Object): ByteVector = ???
 
   case class NamedEntitiesToIdKey(prefix: Byte, collectionId: Long, namedEntity: String)
@@ -121,73 +121,73 @@ object Encoder {
 
   case class SPO(prefix: Byte,
                  collectionId: Long,
-                 subject: Option[ObjectEncoding],
+                 subject: Option[ElementEncoding],
                  predicateId: Option[Long],
-                 `object`: Option[ObjectEncoding])
+                 `object`: Option[ElementEncoding])
   def encodeSPOPrefix(collectionId: Long,
-                      subject: Option[ObjectEncoding],
+                      subject: Option[ElementEncoding],
                       predicate: Option[Long],
-                      `object`: Option[ObjectEncoding]): ByteVector = {
+                      `object`: Option[ElementEncoding]): ByteVector = {
     Codec.encode(SPO(Prefixes.SPOC, collectionId, subject, predicate, `object`)).require.bytes
   }
 
   case class SOP(prefix: Byte,
                  collectionId: Long,
-                 subject: Option[ObjectEncoding],
-                 `object`: Option[ObjectEncoding],
+                 subject: Option[ElementEncoding],
+                 `object`: Option[ElementEncoding],
                  predicateId: Option[Long])
   def encodeSOPPrefix(collectionId: Long,
-                              subject: Option[ObjectEncoding],
-                              predicate: Option[Long],
-                              `object`: Option[ObjectEncoding]): ByteVector = {
+                      subject: Option[ElementEncoding],
+                      predicate: Option[Long],
+                      `object`: Option[ElementEncoding]): ByteVector = {
     Codec.encode(SOP(Prefixes.SOPC, collectionId, subject, `object`, predicate)).require.bytes
   }
 
   case class PSO(prefix: Byte,
                  collectionId: Long,
                  predicateId: Option[Long],
-                 subject: Option[ObjectEncoding],
-                 `object`: Option[ObjectEncoding])
+                 subject: Option[ElementEncoding],
+                 `object`: Option[ElementEncoding])
   def encodePSOPrefix(collectionId: Long,
-                      subject: Option[ObjectEncoding],
+                      subject: Option[ElementEncoding],
                       predicate: Option[Long],
-                      `object`: Option[ObjectEncoding]): ByteVector = {
+                      `object`: Option[ElementEncoding]): ByteVector = {
     Codec.encode(PSO(Prefixes.PSOC, collectionId, predicate, subject, `object`)).require.bytes
   }
 
   case class POS(prefix: Byte,
                  collectionId: Long,
                  predicateId: Option[Long],
-                 `object`: Option[ObjectEncoding],
-                 subject: Option[ObjectEncoding])
+                 `object`: Option[ElementEncoding],
+                 subject: Option[ElementEncoding])
   def encodePOSPrefix(collectionId: Long,
-                      subject: Option[ObjectEncoding],
+                      subject: Option[ElementEncoding],
                       predicate: Option[Long],
-                      `object`: Option[ObjectEncoding]): ByteVector = {
+                      `object`: Option[ElementEncoding]): ByteVector = {
     Codec.encode(POS(Prefixes.POSC, collectionId, predicate, `object`, subject)).require.bytes
   }
 
   case class OSP(prefix: Byte,
                  collectionId: Long,
-                 `object`: Option[ObjectEncoding],
-                 subject: Option[ObjectEncoding],
+                 `object`: Option[ElementEncoding],
+                 subject: Option[ElementEncoding],
                  predicateId: Option[Long])
   def encodeOSPPrefix(collectionId: Long,
-                      subject: Option[ObjectEncoding],
+                      subject: Option[ElementEncoding],
                       predicate: Option[Long],
-                      `object`: Option[ObjectEncoding]): ByteVector = {
+                      `object`: Option[ElementEncoding]): ByteVector = {
     Codec.encode(OSP(Prefixes.OSPC, collectionId, `object`, subject, predicate)).require.bytes
   }
 
   case class OPS(prefix: Byte,
                  collectionId: Long,
-                 `object`: Option[ObjectEncoding],
+                 `object`: Option[ElementEncoding],
                  predicateId: Option[Long],
-                 subject: Option[ObjectEncoding])
+                 subject: Option[ElementEncoding])
   def encodeOPSPrefix(collectionId: Long,
-                      subject: Option[ObjectEncoding],
+                      subject: Option[ElementEncoding],
                       predicate: Option[Long],
-                      `object`: Option[ObjectEncoding]): ByteVector = {
+                      `object`: Option[ElementEncoding]): ByteVector = {
     Codec.encode(OPS(Prefixes.OPSC, collectionId, `object`, predicate, subject)).require.bytes
   }
 
@@ -221,78 +221,78 @@ object Encoder {
 
   case class SPOC(prefix: Byte,
                   collectionId: Long,
-                  subject: ObjectEncoding,
+                  subject: ElementEncoding,
                   predicateId: Long,
-                  `object`: ObjectEncoding,
+                  `object`: ElementEncoding,
                   context: Long)
-  def encodeSPOC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: Context): ByteVector = {
+  def encodeSPOC(collectionId: Long, subject: ElementEncoding, predicateId: Long,
+                 obj: ElementEncoding, context: AnonymousElement): ByteVector = {
     Codec.encode(SPOC(Prefixes.SPOC, collectionId, subject, predicateId, obj, context.identifier)).require.bytes
   }
 
   case class SOPC(prefix: Byte,
                   collectionId: Long,
-                  subject: ObjectEncoding,
-                  `object`: ObjectEncoding,
+                  subject: ElementEncoding,
+                  `object`: ElementEncoding,
                   predicateId: Long,
                   context: Long)
-  def encodeSOPC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: Context): ByteVector = {
+  def encodeSOPC(collectionId: Long, subject: ElementEncoding, predicateId: Long,
+                 obj: ElementEncoding, context: AnonymousElement): ByteVector = {
     Codec.encode(SOPC(Prefixes.SOPC, collectionId, subject, obj, predicateId, context.identifier)).require.bytes
   }
 
   case class PSOC(prefix: Byte,
                   collectionId: Long,
                   predicateId: Long,
-                  subject: ObjectEncoding,
-                  `object`: ObjectEncoding,
+                  subject: ElementEncoding,
+                  `object`: ElementEncoding,
                   context: Long)
-  def encodePSOC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: Context): ByteVector = {
+  def encodePSOC(collectionId: Long, subject: ElementEncoding, predicateId: Long,
+                 obj: ElementEncoding, context: AnonymousElement): ByteVector = {
     Codec.encode(PSOC(Prefixes.PSOC, collectionId, predicateId, subject, obj, context.identifier)).require.bytes
   }
 
   case class POSC(prefix: Byte,
                   collectionId: Long,
                   predicateId: Long,
-                  `object`: ObjectEncoding,
-                  subject: ObjectEncoding,
+                  `object`: ElementEncoding,
+                  subject: ElementEncoding,
                   context: Long)
-  def encodePOSC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: Context): ByteVector = {
+  def encodePOSC(collectionId: Long, subject: ElementEncoding, predicateId: Long,
+                 obj: ElementEncoding, context: AnonymousElement): ByteVector = {
     Codec.encode(POSC(Prefixes.POSC, collectionId, predicateId, obj, subject, context.identifier)).require.bytes
   }
 
   case class OSPC(prefix: Byte,
                   collectionId: Long,
-                  `object`: ObjectEncoding,
-                  subject: ObjectEncoding,
+                  `object`: ElementEncoding,
+                  subject: ElementEncoding,
                   predicateId: Long,
                   context: Long)
-  def encodeOSPC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: Context): ByteVector = {
+  def encodeOSPC(collectionId: Long, subject: ElementEncoding, predicateId: Long,
+                 obj: ElementEncoding, context: AnonymousElement): ByteVector = {
     Codec.encode(OSPC(Prefixes.OSPC, collectionId, obj, subject, predicateId, context.identifier)).require.bytes
   }
 
   case class OPSC(prefix: Byte,
                   collectionId: Long,
-                  `object`: ObjectEncoding,
+                  `object`: ElementEncoding,
                   predicateId: Long,
-                  subject: ObjectEncoding,
+                  subject: ElementEncoding,
                   context: Long)
-  def encodeOPSC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: Context): ByteVector = {
+  def encodeOPSC(collectionId: Long, subject: ElementEncoding, predicateId: Long,
+                 obj: ElementEncoding, context: AnonymousElement): ByteVector = {
     Codec.encode(OPSC(Prefixes.OPSC, collectionId, obj, predicateId, subject, context.identifier)).require.bytes
   }
 
   case class CSPO(prefix: Byte,
                   collectionId: Long,
                   context: Long,
-                  subject: ObjectEncoding,
+                  subject: ElementEncoding,
                   predicateId: Long,
-                  `object`: ObjectEncoding)
-  def encodeCSPO(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: Context): ByteVector = {
+                  `object`: ElementEncoding)
+  def encodeCSPO(collectionId: Long, subject: ElementEncoding, predicateId: Long,
+                 obj: ElementEncoding, context: AnonymousElement): ByteVector = {
     Codec.encode(CSPO(Prefixes.CSPO, collectionId, context.identifier, subject, predicateId, obj)).require.bytes
   }
 
@@ -310,13 +310,8 @@ object Encoder {
     Codec.encode(value).require.bytes
   }
 
-  private case class AnonymousEntityKey(prefix: Byte, collectionId: Long, anonymousId: Long)
-  def encodeAnonymousEntityKey(collectionId: Long, anonymousId: Long): ByteVector = {
-    Codec.encode(AnonymousEntityKey(Prefixes.AnonymousEntities, collectionId, anonymousId)).require.bytes
-  }
-
-  private case class ContextKey(prefix: Byte, collectionId: Long, contextId: Long)
-  def encodeContextKey(collectionId: Long, contextId: Long): ByteVector = {
-    Codec.encode(ContextKey(Prefixes.Contexts, collectionId, contextId)).require.bytes
+  private case class AnonymousElementKey(prefix: Byte, collectionId: Long, anonymousId: Long)
+  def encodeAnonymousElementKey(collectionId: Long, anonymousId: Long): ByteVector = {
+    Codec.encode(AnonymousElementKey(Prefixes.AnonymousEntities, collectionId, anonymousId)).require.bytes
   }
 }

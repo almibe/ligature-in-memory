@@ -96,15 +96,15 @@ object WriteOperations {
 
   def subjectType(entity: Entity): Byte =
     entity match {
-      case _: NamedEntity => TypeCodes.NamedEntity
-      case _: AnonymousEntity => TypeCodes.AnonymousEntity
+      case _: NamedEntity => TypeCodes.NamedElement
+      case _: AnonymousEntity => TypeCodes.AnonymousElement
       case _: Context => TypeCodes.Context
     }
 
   def objectType(`object`: Object): Byte =
     `object` match {
-      case _: NamedEntity => TypeCodes.NamedEntity
-      case _: AnonymousEntity => TypeCodes.AnonymousEntity
+      case _: NamedEntity => TypeCodes.NamedElement
+      case _: AnonymousEntity => TypeCodes.AnonymousElement
       case _: Context => TypeCodes.Context
       case _: LangLiteral => TypeCodes.LangLiteral
       case _: StringLiteral => TypeCodes.String
@@ -129,8 +129,8 @@ object WriteOperations {
       val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
       val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
       val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
-      val subjectEncoding = Encoder.ObjectEncoding(subjectType(subject._1), subject._2)
-      val objectEncoding = Encoder.ObjectEncoding(objectType(obj._1), obj._2)
+      val subjectEncoding = Encoder.ElementEncoding(subjectType(subject._1), subject._2)
+      val objectEncoding = Encoder.ElementEncoding(objectType(obj._1), obj._2)
       store.put(Encoder.encodeSPOC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
       store.put(Encoder.encodeSOPC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
       store.put(Encoder.encodePSOC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
