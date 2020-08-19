@@ -98,12 +98,14 @@ object WriteOperations {
     entity match {
       case _: NamedEntity => TypeCodes.NamedEntity
       case _: AnonymousEntity => TypeCodes.AnonymousEntity
+      case _: Context => TypeCodes.Context
     }
 
   def objectType(`object`: Object): Byte =
     `object` match {
       case _: NamedEntity => TypeCodes.NamedEntity
       case _: AnonymousEntity => TypeCodes.AnonymousEntity
+      case _: Context => TypeCodes.Context
       case _: LangLiteral => TypeCodes.LangLiteral
       case _: StringLiteral => TypeCodes.String
       case _: BooleanLiteral => TypeCodes.Boolean
@@ -202,6 +204,7 @@ object WriteOperations {
     subject match {
       case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionId, a)
       case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
+      case c: Context => fetchOrCreateContext(store, collectionId, c)
     }
   }
 
@@ -249,6 +252,21 @@ object WriteOperations {
   private def createAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): (AnonymousEntity, Long) = {
     //TODO get next id
     //TODO write to AnonymousEntities
+    ???
+  }
+
+  private def fetchOrCreateContext(store: KeyValueStore, collectionId: Long, context: Context): (Context, Long) = {
+    val res = ReadOperations.fetchContextId(store, collectionId, context)
+    if (res.isEmpty) {
+      createContext(store, collectionId, context)
+    } else {
+      (context, res.get)
+    }
+  }
+
+  private def createContext(store: KeyValueStore, collectionId: Long, context: Context): (Context, Long) = {
+    //TODO get next id
+    //TODO write to Contexts
     ???
   }
 
