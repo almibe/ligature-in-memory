@@ -7,8 +7,8 @@ package dev.ligature.store.inmemory
 import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
-import dev.ligature.store.keyvalue.{ReadOperations, KeyValueStore}
-import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
+import dev.ligature.store.keyvalue.{KeyValueStore, ReadOperations}
+import dev.ligature.{AnonymousEntity, Context, Entity, NamedEntity, Object, PersistedStatement, Predicate, Range, ReadTx}
 
 private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
   private val active = new AtomicBoolean(true)
@@ -75,7 +75,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
 //    }
 //  }
 
-  override def statementByContext(collectionName: NamedEntity, context: AnonymousEntity):
+  override def statementByContext(collectionName: NamedEntity, context: Context):
   IO[Option[PersistedStatement]] = {
     if (active.get()) {
       IO {

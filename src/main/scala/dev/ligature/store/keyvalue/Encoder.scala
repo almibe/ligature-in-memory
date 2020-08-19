@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, Entity, NamedEntity, Object, Predicate, Statement, StringLiteral, Range}
+import dev.ligature.{AnonymousEntity, Context, Entity, NamedEntity, Object, Predicate, Range, Statement, StringLiteral}
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 import scodec.codecs.{byte, long, utf8}
@@ -226,7 +226,7 @@ object Encoder {
                   `object`: ObjectEncoding,
                   context: Long)
   def encodeSPOC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: AnonymousEntity): ByteVector = {
+                 obj: ObjectEncoding, context: Context): ByteVector = {
     Codec.encode(SPOC(Prefixes.SPOC, collectionId, subject, predicateId, obj, context.identifier)).require.bytes
   }
 
@@ -237,7 +237,7 @@ object Encoder {
                   predicateId: Long,
                   context: Long)
   def encodeSOPC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: AnonymousEntity): ByteVector = {
+                 obj: ObjectEncoding, context: Context): ByteVector = {
     Codec.encode(SOPC(Prefixes.SOPC, collectionId, subject, obj, predicateId, context.identifier)).require.bytes
   }
 
@@ -248,7 +248,7 @@ object Encoder {
                   `object`: ObjectEncoding,
                   context: Long)
   def encodePSOC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: AnonymousEntity): ByteVector = {
+                 obj: ObjectEncoding, context: Context): ByteVector = {
     Codec.encode(PSOC(Prefixes.PSOC, collectionId, predicateId, subject, obj, context.identifier)).require.bytes
   }
 
@@ -259,7 +259,7 @@ object Encoder {
                   subject: ObjectEncoding,
                   context: Long)
   def encodePOSC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: AnonymousEntity): ByteVector = {
+                 obj: ObjectEncoding, context: Context): ByteVector = {
     Codec.encode(POSC(Prefixes.POSC, collectionId, predicateId, obj, subject, context.identifier)).require.bytes
   }
 
@@ -270,7 +270,7 @@ object Encoder {
                   predicateId: Long,
                   context: Long)
   def encodeOSPC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: AnonymousEntity): ByteVector = {
+                 obj: ObjectEncoding, context: Context): ByteVector = {
     Codec.encode(OSPC(Prefixes.OSPC, collectionId, obj, subject, predicateId, context.identifier)).require.bytes
   }
 
@@ -281,7 +281,7 @@ object Encoder {
                   subject: ObjectEncoding,
                   context: Long)
   def encodeOPSC(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: AnonymousEntity): ByteVector = {
+                 obj: ObjectEncoding, context: Context): ByteVector = {
     Codec.encode(OPSC(Prefixes.OPSC, collectionId, obj, predicateId, subject, context.identifier)).require.bytes
   }
 
@@ -292,7 +292,7 @@ object Encoder {
                   predicateId: Long,
                   `object`: ObjectEncoding)
   def encodeCSPO(collectionId: Long, subject: ObjectEncoding, predicateId: Long,
-                 obj: ObjectEncoding, context: AnonymousEntity): ByteVector = {
+                 obj: ObjectEncoding, context: Context): ByteVector = {
     Codec.encode(CSPO(Prefixes.CSPO, collectionId, context.identifier, subject, predicateId, obj)).require.bytes
   }
 

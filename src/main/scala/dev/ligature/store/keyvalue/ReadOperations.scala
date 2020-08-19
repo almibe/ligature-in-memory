@@ -403,7 +403,7 @@ object ReadOperations {
 
   def statementByContextImpl(store: KeyValueStore,
                              collectionName: NamedEntity,
-                             context: AnonymousEntity): Option[PersistedStatement] = {
+                             context: Context): Option[PersistedStatement] = {
     ???
   }
 }

@@ -7,12 +7,12 @@ package dev.ligature.store.inmemory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-import cats.effect.IO
+import cats.effect.{IO, Resource}
 import dev.ligature._
 import scodec.bits.ByteVector
 
 final class LigatureInMemory extends Ligature {
-  override def start(): Managed[Throwable, LigatureSession] = Managed.make(
+  override def start(): Resource[IO, LigatureSession] = Resource.make(
     IO {
       new LigatureInMemorySession()
     }
@@ -33,8 +33,8 @@ final class LigatureInMemorySession extends LigatureSession {
     data.clear()
   }
 
-  override def compute: Managed[Throwable, ReadTx] = {
-    Managed.make(
+  override def compute: Resource[IO, ReadTx] = {
+    Resource.make(
       IO {
         lock.readLock().lock()
         new InMemoryReadTx(data)
@@ -46,8 +46,8 @@ final class LigatureInMemorySession extends LigatureSession {
     )
   }
 
-  override def write: Managed[Throwable, WriteTx] = {
-    Managed.make(
+  override def write: Resource[IO, WriteTx] = {
+    Resource.make(
       IO {
         lock.writeLock().lock()
         new InMemoryWriteTx(data)
