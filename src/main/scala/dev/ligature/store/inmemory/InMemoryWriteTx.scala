@@ -60,7 +60,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-  override def isOpen(): Boolean = active.get()
+  override def isOpen: Boolean = active.get()
 
   override def newEntity(collection: NamedEntity): IO[Try[AnonymousEntity]] = {
     if (active.get()) {

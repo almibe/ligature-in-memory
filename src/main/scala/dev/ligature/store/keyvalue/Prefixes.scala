@@ -19,20 +19,22 @@ private object Prefixes {
   val NamedEntitiesToId: Byte = 11.toByte
   val IdToNamedEntities: Byte = 12.toByte
   val AnonymousEntities: Byte = 13.toByte
-  val PredicatesToId: Byte = 14.toByte
-  val IdToPredicates: Byte = 15.toByte
-  val LangLiteralToId: Byte = 16.toByte
-  val IdToLangLiteral: Byte = 17.toByte
-  val StringToId: Byte = 18.toByte
-  val IdToString: Byte = 19.toByte
+  val Contexts: Byte = 14.toByte
+  val PredicatesToId: Byte = 15.toByte
+  val IdToPredicates: Byte = 16.toByte
+  val LangLiteralToId: Byte = 17.toByte
+  val IdToLangLiteral: Byte = 18.toByte
+  val StringToId: Byte = 19.toByte
+  val IdToString: Byte = 20.toByte
 }
 
 private object TypeCodes {
   val NamedEntity: Byte = 0.toByte
   val AnonymousEntity: Byte = 1.toByte
-  val LangLiteral: Byte = 2.toByte
-  val String: Byte = 3.toByte
-  val Boolean: Byte = 4.toByte
-  val Long: Byte = 5.toByte
-  val Double: Byte = 6.toByte
+  val Context: Byte = 2.toByte
+  val LangLiteral: Byte = 3.toByte
+  val String: Byte = 4.toByte
+  val Boolean: Byte = 5.toByte
+  val Long: Byte = 6.toByte
+  val Double: Byte = 7.toByte
 }

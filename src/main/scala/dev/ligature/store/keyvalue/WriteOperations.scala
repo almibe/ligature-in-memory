@@ -154,7 +154,7 @@ object WriteOperations {
       removePersistedStatement(store, s)
     }
     val contextMatch = entity match {
-      case a: AnonymousEntity => ReadOperations.statementByContextImpl (store, collectionName, a)
+      case c: Context => ReadOperations.statementByContextImpl (store, collectionName, c)
       case _ => None
     }
     contextMatch.foreach { s =>

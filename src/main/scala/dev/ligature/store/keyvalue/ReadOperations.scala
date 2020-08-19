@@ -124,6 +124,15 @@ object ReadOperations {
     }
   }
 
+  def fetchContextEntityId(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): Option[Long] = {
+    val res = store.get(Encoder.encodeContextKey(collectionId, entity.identifier))
+    if (res.nonEmpty) {
+      Some(entity.identifier)
+    } else {
+      None
+    }
+  }
+
   def fetchPredicateId(store: KeyValueStore, collectionId: Long, predicate: Predicate): Option[Long] = {
     val res = store.get(Encoder.encodePredicatesToIdKey(collectionId, predicate))
     if (res.nonEmpty) {
@@ -158,6 +167,11 @@ object ReadOperations {
       case a: AnonymousEntity => {
         fetchAnonymousEntityId(store, collectionId, a) flatMap { id: Long =>
           Some(ObjectEncoding(TypeCodes.AnonymousEntity, id))
+        }
+      }
+      case c: Context => {
+        fetchContextEntityId(store, collectionId, c) flatMap { id: Long =>
+          Some(ObjectEncoding(TypeCodes.Context, id))
         }
       }
     }

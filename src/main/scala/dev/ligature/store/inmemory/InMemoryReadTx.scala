@@ -26,7 +26,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
     }
   }
 
-  override def collections(): IO[Iterator[NamedEntity]] =
+  override def collections: IO[Iterator[NamedEntity]] =
     if (active.get()) {
       IO { ReadOperations.collections(store).iterator }
     } else {
@@ -47,7 +47,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
       ???
     }
 
-  override def isOpen(): Boolean = active.get()
+  override def isOpen: Boolean = active.get()
 
   override def matchStatements(collectionName: NamedEntity,
                                subject: Option[Entity] = None,

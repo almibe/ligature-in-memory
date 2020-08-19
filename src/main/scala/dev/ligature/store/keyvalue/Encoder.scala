@@ -314,4 +314,9 @@ object Encoder {
   def encodeAnonymousEntityKey(collectionId: Long, anonymousId: Long): ByteVector = {
     Codec.encode(AnonymousEntityKey(Prefixes.AnonymousEntities, collectionId, anonymousId)).require.bytes
   }
+
+  private case class ContextKey(prefix: Byte, collectionId: Long, contextId: Long)
+  def encodeContextKey(collectionId: Long, contextId: Long): ByteVector = {
+    Codec.encode(ContextKey(Prefixes.Contexts, collectionId, contextId)).require.bytes
+  }
 }
