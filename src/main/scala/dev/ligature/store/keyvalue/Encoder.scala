@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousElement, AnonymousElement, Entity, NamedEntity, Object, Predicate, Range, Statement, StringLiteral}
+import dev.ligature.{AnonymousElement, Element, NamedElement, Statement, StringLiteral}
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 import scodec.codecs.{byte, long, utf8}
@@ -39,7 +39,7 @@ object Encoder {
   val empty: ByteVector = ByteVector.empty
 
   private case class CollectionNameToIdKey(prefix: Byte, collectionName: String)
-  def encodeCollectionNameToIdKey(collectionName: NamedEntity): ByteVector =
+  def encodeCollectionNameToIdKey(collectionName: NamedElement): ByteVector =
     Codec.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collectionName.identifier)).require.bytes
   private case class CollectionNameToIdValue(collectionId: Long)
   def encodeCollectionNameToIdValue(id: Long): ByteVector =
@@ -49,7 +49,7 @@ object Encoder {
   def encodeIdToCollectionNameKey(id: Long): ByteVector =
     Codec.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, id)).require.bytes
   private case class IdToCollectionNameValue(collectionName: String)
-  def encodeIdToCollectionNameValue(name: NamedEntity): ByteVector =
+  def encodeIdToCollectionNameValue(name: NamedElement): ByteVector =
     Codec.encode(IdToCollectionNameValue(name.identifier)).require.bytes
 
   private case class CollectionNameCounterKey(prefix: Byte)
@@ -59,13 +59,13 @@ object Encoder {
   def encodeCollectionNameCounterValue(counter: Long): ByteVector =
     Codec.encode(CollectionNameCounterValue(counter)).require.bytes
 
-  def encodeSubject(entity: Entity): ByteVector = ???
+  def encodeSubject(entity: Element): ByteVector = ???
   case class ElementEncoding(`type`: Byte, id: Long)
-  def encodeObject(obj: Object): ByteVector = ???
+  def encodeObject(obj: Element): ByteVector = ???
 
-  case class NamedEntitiesToIdKey(prefix: Byte, collectionId: Long, namedEntity: String)
-  def encodeNamedEntitiesToIdKey(collectionId: Long, entity: NamedEntity): ByteVector = {
-    Codec.encode(NamedEntitiesToIdKey(Prefixes.NamedEntitiesToId, collectionId, entity.identifier)).require.bytes
+  case class NamedEntitiesToIdKey(prefix: Byte, collectionId: Long, namedElement: String)
+  def encodeNamedEntitiesToIdKey(collectionId: Long, entity: NamedElement): ByteVector = {
+    Codec.encode(NamedEntitiesToIdKey(Prefixes.NamedElementsToId, collectionId, entity.identifier)).require.bytes
   }
 
   def encodeNamedEntitiesToIdValue(nextId: Long): ByteVector = {
@@ -74,16 +74,16 @@ object Encoder {
 
   case class IdToNamedEntitiesKey(prefix: Byte, collectionId: Long, entity: Long)
   def encodeIdToNamedEntitiesKey(collectionId: Long, entity: Long): ByteVector = {
-    Codec.encode(IdToNamedEntitiesKey(Prefixes.IdToNamedEntities, collectionId, entity)).require.bytes
+    Codec.encode(IdToNamedEntitiesKey(Prefixes.IdToNamedElements, collectionId, entity)).require.bytes
   }
 
-  def encodeIdToNamedEntitiesValue(entity: NamedEntity): ByteVector = {
+  def encodeIdToNamedEntitiesValue(entity: NamedElement): ByteVector = {
     utf8.encode(entity.identifier).require.bytes
   }
 
   case class PredicatesToIdKey(prefix: Byte, collectionId: Long, predicate: String)
-  def encodePredicatesToIdKey(collectionId: Long, predicate: Predicate): ByteVector = {
-    Codec.encode(PredicatesToIdKey(Prefixes.PredicatesToId, collectionId, predicate.identifier)).require.bytes
+  def encodePredicatesToIdKey(collectionId: Long, predicate: NamedElement): ByteVector = {
+    Codec.encode(PredicatesToIdKey(Prefixes.NamedElementsToId, collectionId, predicate.identifier)).require.bytes
   }
 
   def encodePredicatesToIdValue(nextId: Long): ByteVector = {
@@ -92,10 +92,10 @@ object Encoder {
 
   case class IdToPredicatesKey(prefix: Byte, collectionId: Long, predicateId: Long)
   def encodeIdToPredicatesKey(collectionId: Long, predicateId: Long): ByteVector = {
-    Codec.encode(IdToPredicatesKey(Prefixes.IdToPredicates, collectionId, predicateId)).require.bytes
+    Codec.encode(IdToPredicatesKey(Prefixes.IdToNamedElements, collectionId, predicateId)).require.bytes
   }
 
-  def encodeIdToPredicatesValue(predicate: Predicate): ByteVector = {
+  def encodeIdToPredicatesValue(predicate: NamedElement): ByteVector = {
     utf8.encode(predicate.identifier).require.bytes
   }
 
@@ -110,7 +110,7 @@ object Encoder {
 
   case class IdToStringKey(prefix: Byte, collectionId: Long, stringLiteralId: Long)
   def encodeIdToStringKey(collectionId: Long, stringLiteralId: Long): ByteVector = {
-    Codec.encode(IdToStringKey(Prefixes.IdToPredicates, collectionId, stringLiteralId)).require.bytes
+    Codec.encode(IdToStringKey(Prefixes.IdToNamedElements, collectionId, stringLiteralId)).require.bytes
   }
 
   def encodeIdToStringValue(stringLiteral: StringLiteral): ByteVector = {
@@ -192,28 +192,28 @@ object Encoder {
   }
 
 //  def encodeSOPStartStop(collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_]): (ByteVector, ByteVector) = {
 //    ???
 //  }
 //
 //  def encodePOSStartStop(collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_]): (ByteVector, ByteVector) = {
 //    ???
 //  }
 //
 //  def encodeOSPStartStop(collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_]): (ByteVector, ByteVector) = {
 //    ???
 //  }
 //
 //  def encodeOPSStartStop(collectionId: Long,
-//                         subject: Option[ObjectEncoding],
+//                         subject: Option[ElementEncoding],
 //                         predicate: Option[Long],
 //                         literalRange: Range[_]): (ByteVector, ByteVector) = {
 //    ???
@@ -312,6 +312,6 @@ object Encoder {
 
   private case class AnonymousElementKey(prefix: Byte, collectionId: Long, anonymousId: Long)
   def encodeAnonymousElementKey(collectionId: Long, anonymousId: Long): ByteVector = {
-    Codec.encode(AnonymousElementKey(Prefixes.AnonymousEntities, collectionId, anonymousId)).require.bytes
+    Codec.encode(AnonymousElementKey(Prefixes.AnonymousElements, collectionId, anonymousId)).require.bytes
   }
 }

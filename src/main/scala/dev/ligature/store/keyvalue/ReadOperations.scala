@@ -5,7 +5,7 @@
 package dev.ligature.store.keyvalue
 
 import dev.ligature.store.keyvalue.Encoder.ElementEncoding
-import dev.ligature.{AnonymousElement, BooleanLiteral, DoubleLiteral, LangLiteral, LongLiteral, NamedElement, Element, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousElement, BooleanLiteral, DoubleLiteral, Element, LangLiteral, LongLiteral, NamedElement, PersistedStatement, Statement, StringLiteral, Subject}
 import scodec.bits.ByteVector
 
 object ReadOperations {
@@ -63,15 +63,6 @@ object ReadOperations {
       NamedElement(Decoder.decodeStringLiteral(res.get))
     } else {
       throw new RuntimeException(s"Not valid NamedElement - $collectionId $entityId")
-    }
-  }
-
-  def handlePredicateLookup(store: KeyValueStore, collectionId: Long, predicateId: Long): Predicate = {
-    val res = store.get(Encoder.encodeIdToPredicatesKey(collectionId, predicateId))
-    if (res.nonEmpty) {
-      Predicate(Decoder.decodeStringLiteral(res.get))
-    } else {
-      throw new RuntimeException(s"Not valid Predicate - $collectionId $predicateId")
     }
   }
 
@@ -154,7 +145,7 @@ object ReadOperations {
     }
   }
 
-  def lookupPredicate(store: KeyValueStore, collectionId: Long, predicate: Option[Predicate]): Option[Long] = {
+  def lookupPredicate(store: KeyValueStore, collectionId: Long, predicate: Option[NamedElement]): Option[Long] = {
     predicate flatMap {
       fetchPredicateId(store, collectionId, _) flatMap { Some(_) }
     }

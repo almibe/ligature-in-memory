@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature.store.keyvalue.{KeyValueStore, ReadOperations}
-import dev.ligature.{AnonymousElement, Subject, NamedElement, PersistedStatement, ReadTx}
+import dev.ligature.{AnonymousElement, Element, NamedElement, PersistedStatement, ReadTx, Subject}
 
 private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
   private val active = new AtomicBoolean(true)
@@ -52,7 +52,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
   override def matchStatements(collectionName: NamedElement,
                                subject: Option[Subject] = None,
                                predicate: Option[NamedElement] = None,
-                               `object`: Option[Subject] = None): IO[Iterator[PersistedStatement]] = {
+                               `object`: Option[Element] = None): IO[Iterator[PersistedStatement]] = {
     if (active.get()) {
       IO {
         ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, `object`).iterator

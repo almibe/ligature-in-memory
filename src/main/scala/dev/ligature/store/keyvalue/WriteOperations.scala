@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousEntity, BooleanLiteral, Context, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedEntity, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousElement, BooleanLiteral, AnonymousElement, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedElement, Object, PersistedStatement, Predicate, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long}
@@ -12,7 +12,7 @@ import scodec.codecs.{byte, long}
 import scala.util.{Success, Try}
 
 object WriteOperations {
-  def createCollection(store: KeyValueStore, collection: NamedEntity): Try[Long] = {
+  def createCollection(store: KeyValueStore, collection: NamedElement): Try[Long] = {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
       val nextId = nextCollectionNameId(store)
@@ -28,7 +28,7 @@ object WriteOperations {
     }
   }
 
-  def deleteCollection(store: KeyValueStore, collection: NamedEntity): Try[NamedEntity] = {
+  def deleteCollection(store: KeyValueStore, collection: NamedElement): Try[NamedElement] = {
     val id = fetchCollectionId(store, collection)
     if (id.nonEmpty) {
       val collectionNameToIdKey = Encoder.encodeCollectionNameToIdKey(collection)
@@ -54,7 +54,7 @@ object WriteOperations {
     nextId
   }
 
-  def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedEntity): Long = {
+  def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedElement): Long = {
     val id = fetchCollectionId(store, collectionName)
     if (id.isEmpty) {
       createCollection(store, collectionName).get
@@ -76,36 +76,34 @@ object WriteOperations {
   }
 
   /**
-   * Creates an new AnonymousEntity for the given collection name.
-   * Returns the new AnonymousEntity.
+   * Creates an new AnonymousElement for the given collection name.
+   * Returns the new AnonymousElement.
    */
-  def newEntity(store: KeyValueStore, collectionName: NamedEntity): AnonymousEntity = {
+  def newEntity(store: KeyValueStore, collectionName: NamedElement): AnonymousElement = {
     val id = fetchOrCreateCollection(store, collectionName)
     newEntity(store, id)
   }
 
-  private def newEntity(store: KeyValueStore, collectionId: Long): AnonymousEntity = {
+  private def newEntity(store: KeyValueStore, collectionId: Long): AnonymousElement = {
     val nextId = nextCollectionId(store, collectionId)
-    store.put(Encoder.encodeAnonymousEntityKey(collectionId, nextId), Encoder.empty)
-    AnonymousEntity(nextId)
+    store.put(Encoder.encodeAnonymousElementKey(collectionId, nextId), Encoder.empty)
+    AnonymousElement(nextId)
   }
 
-  def newContext(store: KeyValueStore, l: Long): Context = {
+  def newAnonymousElement(store: KeyValueStore, l: Long): AnonymousElement = {
     ???
   }
 
-  def subjectType(entity: Entity): Byte =
+  def subjectType(element: Entity): Byte =
     entity match {
-      case _: NamedEntity => TypeCodes.NamedElement
-      case _: AnonymousEntity => TypeCodes.AnonymousElement
-      case _: Context => TypeCodes.Context
+      case _: NamedElement => TypeCodes.NamedElement
+      case _: AnonymousElement => TypeCodes.AnonymousElement
     }
 
   def objectType(`object`: Object): Byte =
     `object` match {
-      case _: NamedEntity => TypeCodes.NamedElement
-      case _: AnonymousEntity => TypeCodes.AnonymousElement
-      case _: Context => TypeCodes.Context
+      case _: NamedElement => TypeCodes.NamedElement
+      case _: AnonymousElement => TypeCodes.AnonymousElement
       case _: LangLiteral => TypeCodes.LangLiteral
       case _: StringLiteral => TypeCodes.String
       case _: BooleanLiteral => TypeCodes.Boolean
@@ -114,7 +112,7 @@ object WriteOperations {
     }
 
   def addStatement(store: KeyValueStore,
-                   collectionName: NamedEntity,
+                   collectionName: NamedElement,
                    statement: Statement): Try[PersistedStatement] = {
     val statementResult = ReadOperations.matchStatementsImpl(store, collectionName, Some(statement.subject),
       Some(statement.predicate), Some(statement.`object`))
@@ -145,7 +143,7 @@ object WriteOperations {
     }
   }
 
-  def removeEntity(store: KeyValueStore, collectionName: NamedEntity, entity: Entity): Try[Entity] = {
+  def removeEntity(store: KeyValueStore, collectionName: NamedElement, entity: Entity): Try[Entity] = {
     //TODO check collection exists to short circuit
     val subjectMatches = ReadOperations.matchStatementsImpl(store, collectionName, Some(entity))
     subjectMatches.foreach { s =>
@@ -165,7 +163,7 @@ object WriteOperations {
     Success(entity)
   }
 
-  def removePredicate(store: KeyValueStore, collectionName: NamedEntity, predicate: Predicate): Try[Predicate] = {
+  def removePredicate(store: KeyValueStore, collectionName: NamedElement, predicate: Predicate): Try[Predicate] = {
     //TODO check collection exists to short circuit
     val predicateMatches = ReadOperations.matchStatementsImpl(store, collectionName, None, Some(predicate))
     predicateMatches.foreach { s =>
@@ -174,7 +172,7 @@ object WriteOperations {
     Success(predicate)
   }
 
-  def removeStatement(store: KeyValueStore, collectionName: NamedEntity, statement: Statement): Try[Statement] = {
+  def removeStatement(store: KeyValueStore, collectionName: NamedElement, statement: Statement): Try[Statement] = {
     //TODO check collection exists to short circuit
     val statementMatches = ReadOperations.matchStatementsImpl(store,
       collectionName,
@@ -202,8 +200,8 @@ object WriteOperations {
 
   private def fetchOrCreateSubject(store: KeyValueStore, collectionId: Long, subject: Entity): (Entity, Long) = {
     subject match {
-      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionId, a)
-      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
+      case a: AnonymousElement => fetchOrCreateAnonymousElement(store, collectionId, a)
+      case n: NamedElement => fetchOrCreateNamedElement(store, collectionId, n)
       case c: Context => fetchOrCreateContext(store, collectionId, c)
     }
   }
@@ -230,8 +228,8 @@ object WriteOperations {
 
   private def fetchOrCreateObject(store: KeyValueStore, collectionId: Long, value: Object): (Object, Long) = {
     value match {
-      case a: AnonymousEntity => fetchOrCreateAnonymousEntity(store, collectionId, a)
-      case n: NamedEntity => fetchOrCreateNamedEntity(store, collectionId, n)
+      case a: AnonymousElement => fetchOrCreateAnonymousElement(store, collectionId, a)
+      case n: NamedElement => fetchOrCreateNamedElement(store, collectionId, n)
       case l: LangLiteral => fetchOrCreateLangLiteral(store, collectionId, l)
       case d: DoubleLiteral => fetchOrCreateDoubleLiteral(store, collectionId, d)
       case l: LongLiteral => (l, l.value)
@@ -240,16 +238,16 @@ object WriteOperations {
     }
   }
 
-  private def fetchOrCreateAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): (AnonymousEntity, Long) = {
-    val res = ReadOperations.fetchAnonymousEntityId(store, collectionId, entity)
+  private def fetchOrCreateAnonymousElement(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): (AnonymousElement, Long) = {
+    val res = ReadOperations.fetchAnonymousElementId(store, collectionId, entity)
     if (res.isEmpty) {
-      createAnonymousEntity(store, collectionId, entity)
+      createAnonymousElement(store, collectionId, entity)
     } else {
       (entity, res.get)
     }
   }
 
-  private def createAnonymousEntity(store: KeyValueStore, collectionId: Long, entity: AnonymousEntity): (AnonymousEntity, Long) = {
+  private def createAnonymousElement(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): (AnonymousElement, Long) = {
     //TODO get next id
     //TODO write to AnonymousEntities
     ???
@@ -270,16 +268,16 @@ object WriteOperations {
     ???
   }
 
-  private def fetchOrCreateNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): (NamedEntity, Long) = {
-    val res = ReadOperations.fetchNamedEntityId(store, collectionId, entity)
+  private def fetchOrCreateNamedElement(store: KeyValueStore, collectionId: Long, entity: NamedElement): (NamedElement, Long) = {
+    val res = ReadOperations.fetchNamedElementId(store, collectionId, entity)
     if (res.isEmpty) {
-      createNamedEntity(store, collectionId, entity)
+      createNamedElement(store, collectionId, entity)
     } else {
       (entity, res.get)
     }
   }
 
-  private def createNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): (NamedEntity, Long) = {
+  private def createNamedElement(store: KeyValueStore, collectionId: Long, entity: NamedElement): (NamedElement, Long) = {
     val nextId = nextCollectionId(store, collectionId)
     val namedEntitiesToIdKey = Encoder.encodeNamedEntitiesToIdKey(collectionId, entity)
     val namedEntitiesToIdValue = Encoder.encodeNamedEntitiesToIdValue(nextId)
