@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature.store.keyvalue.{KeyValueStore, ReadOperations}
-import dev.ligature.{CollectionName, Node, PersistedTriple, ReadTx}
+import dev.ligature.{CollectionName, Context, Node, PersistedTriple, ReadTx, Vertex}
 
 private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
   private val active = new AtomicBoolean(true)
@@ -33,14 +33,14 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
       throw new RuntimeException("Transaction is closed.")
     }
 
-  override def collections(prefix: Node): IO[Iterator[Node]] =
+  override def collections(prefix: String): IO[Iterator[Node]] =
     IO {
 //      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
 //        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle prefix
       ???
     }
 
-  override def collections(from: Node, to: Node): IO[Iterator[Node]] =
+  override def collections(from: String, to: String): IO[Iterator[Node]] =
     IO {
 //      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
 //        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle range
@@ -50,12 +50,12 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
   override def isOpen: Boolean = active.get()
 
   override def matchStatements(collectionName: CollectionName,
-                               subject: Option[Subject] = None,
+                               source: Option[Vertex] = None,
                                predicate: Option[Node] = None,
-                               `object`: Option[Element] = None): IO[Iterator[PersistedTriple]] = {
+                               destination: Option[Vertex] = None): IO[Iterator[PersistedTriple]] = {
     if (active.get()) {
       IO {
-        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, `object`).iterator
+        ReadOperations.matchStatementsImpl(store, collectionName, source, predicate, destination).iterator
       }
     } else {
       throw new RuntimeException("Transaction is closed.")
@@ -63,19 +63,19 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
   }
 
 //  override def matchStatements(collectionName: CollectionName,
-//                               subject: Option[Subject],
+//                               source: Option[Vertex],
 //                               predicate: Option[Node],
 //                               range: Range[_]): IO[Iterator[PersistedTriple]] = {
 //    if (active.get()) {
 //      IO {
-//        ReadOperations.matchStatementsImpl(store, collectionName, subject, predicate, range)
+//        ReadOperations.matchStatementsImpl(store, collectionName, source, predicate, range)
 //      }
 //    } else {
 //      throw new RuntimeException("Transaction is closed.")
 //    }
 //  }
 
-  override def statementByContext(collectionName: CollectionName, context: AnonymousElement):
+  override def statementByContext(collectionName: CollectionName, context: Context):
   IO[Option[PersistedTriple]] = {
     if (active.get()) {
       IO {
