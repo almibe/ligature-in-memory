@@ -1,7 +1,7 @@
 package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.store.keyvalue.codec.Encoder.ElementEncoding
-import dev.ligature.store.keyvalue.codec.{Decoder, Encoder}
+import dev.ligature.store.keyvalue.codec.Encoder
 import dev.ligature.store.keyvalue.{KeyValueStore, TypeCodes}
 import dev.ligature._
 import scodec.bits.ByteVector

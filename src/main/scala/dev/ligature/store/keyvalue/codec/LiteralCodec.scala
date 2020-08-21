@@ -4,6 +4,23 @@
 
 package dev.ligature.store.keyvalue.codec
 
-class LiteralCodec {
+import dev.ligature.{BooleanLiteral, DoubleLiteral}
+import scodec.Codec
+import scodec.bits.ByteVector
+import scodec.codecs.utf8
 
+class LiteralCodec {
+  private implicit val utf: Codec[String] = utf8
+
+  def decodeDoubleLiteral(literal: Long): DoubleLiteral = {
+    ???
+  }
+
+  def decodeBooleanLiteral(literalId: Long): BooleanLiteral = {
+    ???
+  }
+
+  def decodeStringLiteral(byteVector: ByteVector): String = {
+    utf8.decode(byteVector.bits).require.value
+  }
 }
