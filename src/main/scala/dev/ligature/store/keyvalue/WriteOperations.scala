@@ -4,7 +4,8 @@
 
 package dev.ligature.store.keyvalue
 
-import dev.ligature.{AnonymousElement, BooleanLiteral, AnonymousElement, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedElement, Object, PersistedStatement, Predicate, Statement, StringLiteral}
+import dev.ligature.{AnonymousElement, BooleanLiteral, AnonymousElement, DoubleLiteral, Subject, LangLiteral,
+  LongLiteral, NamedElement, Object, PersistedStatement, NamedElement, Statement, StringLiteral}
 import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long}
@@ -277,7 +278,7 @@ object WriteOperations {
     }
   }
 
-  private def createNamedElement(store: KeyValueStore, collectionId: Long, entity: NamedElement): (NamedElement, Long) = {
+  private def createNamedEntity(store: KeyValueStore, collectionId: Long, entity: NamedEntity): (NamedEntity, Long) = {
     val nextId = nextCollectionId(store, collectionId)
     val namedEntitiesToIdKey = Encoder.encodeNamedEntitiesToIdKey(collectionId, entity)
     val namedEntitiesToIdValue = Encoder.encodeNamedEntitiesToIdValue(nextId)
