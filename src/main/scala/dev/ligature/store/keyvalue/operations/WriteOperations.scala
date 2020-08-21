@@ -1,11 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+package dev.ligature.store.keyvalue.operations
 
-package dev.ligature.store.keyvalue
-
-import dev.ligature.{AnonymousElement, BooleanLiteral, AnonymousElement, DoubleLiteral, Entity, LangLiteral, LongLiteral, NamedElement, Object, PersistedStatement, Predicate, Statement, StringLiteral}
-import dev.ligature.store.keyvalue.ReadOperations.fetchCollectionId
+import dev.ligature.store.keyvalue.codec.Encoder
+import dev.ligature.store.keyvalue.operations.ReadOperations.fetchCollectionId
+import dev.ligature.store.keyvalue.{KeyValueStore, Prefixes, TypeCodes}
+import dev.ligature.{AnonymousElement, BooleanLiteral, DoubleLiteral, LangLiteral, LongLiteral, NamedElement, PersistedStatement, Statement, StringLiteral}
 import scodec.bits.ByteVector
 import scodec.codecs.{byte, long}
 
@@ -154,7 +152,7 @@ object WriteOperations {
       removePersistedStatement(store, s)
     }
     val contextMatch = entity match {
-      case c: Context => ReadOperations.statementByContextImpl (store, collectionName, c)
+      case c: Context => ReadOperations.statementByContextImpl(store, collectionName, c)
       case _ => None
     }
     contextMatch.foreach { s =>
@@ -215,7 +213,7 @@ object WriteOperations {
     }
   }
 
-  private def createPredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): (Predicate, Long)  = {
+  private def createPredicate(store: KeyValueStore, collectionId: Long, predicate: Predicate): (Predicate, Long) = {
     val nextId = nextCollectionId(store, collectionId)
     val predicatesToIdKey = Encoder.encodePredicatesToIdKey(collectionId, predicate)
     val predicatesToIdValue = Encoder.encodePredicatesToIdValue(nextId)

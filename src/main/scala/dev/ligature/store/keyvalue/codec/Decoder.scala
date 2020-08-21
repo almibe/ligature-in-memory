@@ -1,15 +1,10 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+package dev.ligature.store.keyvalue.codec
 
-package dev.ligature.store.keyvalue
-
+import Encoder.{CSPO, OPSC, OSPC, POSC, PSOC, SOPC, SPOC}
 import dev.ligature.{BooleanLiteral, DoubleLiteral}
-import dev.ligature.store.keyvalue.Encoder.{CSPO, OPSC, OSPC, POSC, PSOC, SOPC, SPOC}
 import scodec.Codec
-import scodec.codecs.utf8
 import scodec.bits.ByteVector
-import scodec.codecs.implicits.{implicitStringCodec => _, _}
+import scodec.codecs.utf8
 
 import scala.util.{Failure, Success, Try}
 
