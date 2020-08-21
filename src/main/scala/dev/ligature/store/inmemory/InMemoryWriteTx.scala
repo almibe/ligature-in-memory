@@ -16,9 +16,9 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   private val active = new AtomicBoolean(true)
   private val workingState = store.copy()
 
-  override def addStatement(collection: NamedElement, statement: Statement): IO[Try[PersistedStatement]] = {
+  override def addStatement(collection: CollectionName, triple: Triple): IO[Try[PersistedTriple]] = {
     if (active.get()) {
-      IO { WriteOperations.addStatement(workingState, collection, statement) }
+      IO { WriteOperations.addStatement(workingState, collection, triple) }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
@@ -40,7 +40,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-  override def createCollection(collection: NamedElement): IO[Try[NamedElement]] =
+  override def createCollection(collection: CollectionName): IO[Try[CollectionName]] =
     if (active.get()) {
       IO {
         WriteOperations.createCollection(workingState, collection)
@@ -50,7 +50,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
 
-  override def deleteCollection(collection: NamedElement): IO[Try[NamedElement]] = {
+  override def deleteCollection(collection: CollectionName): IO[Try[CollectionName]] = {
     if (active.get()) {
       IO {
         WriteOperations.deleteCollection(workingState, collection)
@@ -62,7 +62,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def isOpen: Boolean = active.get()
 
-  override def newEntity(collection: NamedElement): IO[Try[AnonymousElement]] = {
+  override def newEntity(collection: CollectionName): IO[Try[AnonymousNode]] = {
     if (active.get()) {
       IO { Success(WriteOperations.newEntity(workingState, collection)) }
     } else {
@@ -70,7 +70,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-//  override def removeEntity(collection: NamedElement, entity: Entity): IO[Try[Entity]] = {
+//  override def removeEntity(collection: CollectionName, entity: Entity): IO[Try[Entity]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removeEntity(workingState, collection, entity) }
 //    } else {
@@ -78,7 +78,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 //    }
 //  }
 //
-//  override def removePredicate(collection: NamedElement, predicate: Predicate): IO[Try[Predicate]] = {
+//  override def removePredicate(collection: CollectionName, predicate: Predicate): IO[Try[Predicate]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removePredicate(workingState, collection, predicate) }
 //    } else {
@@ -86,9 +86,9 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 //    }
 //  }
 //
-//  override def removeStatement(collection: NamedElement, statement: Statement): IO[Try[Statement]] = {
+//  override def removeStatement(collection: CollectionName, triple: Triple): IO[Try[Statement]] = {
 //    if (active.get()) {
-//      IO { WriteOperations.removeStatement(workingState, collection, statement) }
+//      IO { WriteOperations.removeStatement(workingState, collection, triple) }
 //    } else {
 //      IO { Failure(new RuntimeException("Transaction is closed.")) }
 //    }
