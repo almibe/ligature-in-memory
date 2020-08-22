@@ -1,7 +1,7 @@
 package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.store.keyvalue.codec.Encoder
-import dev.ligature.store.keyvalue.operations.ReadOperations.fetchCollectionId
+import .fetchCollectionId
 import dev.ligature.store.keyvalue.{KeyValueStore, Prefixes, TypeCodes}
 import dev.ligature.{AnonymousElement, BooleanLiteral, DoubleLiteral, LangLiteral, LongLiteral, NamedElement, PersistedStatement, Statement, StringLiteral}
 import scodec.bits.ByteVector

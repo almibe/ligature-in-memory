@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature.store.keyvalue.KeyValueStore
-import dev.ligature.store.keyvalue.operations.ReadOperations
 import dev.ligature.{AnonymousElement, Element, NamedElement, PersistedStatement, ReadTx, Subject}
 
 private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {

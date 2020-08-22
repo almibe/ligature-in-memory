@@ -4,6 +4,18 @@
 
 package dev.ligature.store.keyvalue.operations
 
-class AnonymousElementOperations {
+import dev.ligature.AnonymousElement
+import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.codec.Encoder
+
+object AnonymousElementOperations {
+  def fetchAnonymousElementId(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): Option[Long] = {
+    val res = store.get(Encoder.encodeAnonymousElementKey(collectionId, entity.identifier))
+    if (res.nonEmpty) {
+      Some(entity.identifier)
+    } else {
+      None
+    }
+  }
 
 }
