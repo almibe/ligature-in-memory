@@ -10,6 +10,8 @@ import dev.ligature.store.keyvalue.codec.Encoder
 import dev.ligature.store.keyvalue.codec.Encoder.ElementEncoding
 import scodec.bits.ByteVector
 
+import scala.util.{Success, Try}
+
 object StatementOperations {
   def readAllStatements(store: KeyValueStore, collectionName: NamedElement): Option[Iterable[PersistedStatement]] = {
     val collectionId = fetchCollectionId(store, collectionName)
@@ -255,5 +257,64 @@ object StatementOperations {
                              context: AnonymousElement): Option[PersistedStatement] = {
     ???
   }
+
+  def addStatement(store: KeyValueStore,
+                   collectionName: NamedElement,
+                   statement: Statement): Try[PersistedStatement] = {
+    val statementResult = ReadOperations.matchStatementsImpl(store, collectionName, Some(statement.subject),
+      Some(statement.predicate), Some(statement.`object`))
+    if (statementResult.isEmpty) {
+      val optionId = fetchCollectionId(store, collectionName)
+      val collectionId = if (optionId.isEmpty) {
+        createCollection(store, collectionName).get
+      } else {
+        optionId.get
+      }
+      val context = newContext(store, collectionId)
+      val subject = fetchOrCreateSubject(store, collectionId, statement.subject)
+      val predicate = fetchOrCreatePredicate(store, collectionId, statement.predicate)
+      val obj = fetchOrCreateObject(store, collectionId, statement.`object`)
+      val subjectEncoding = Encoder.ElementEncoding(subjectType(subject._1), subject._2)
+      val objectEncoding = Encoder.ElementEncoding(objectType(obj._1), obj._2)
+      store.put(Encoder.encodeSPOC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeSOPC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodePSOC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodePOSC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeOSPC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeOPSC(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      store.put(Encoder.encodeCSPO(collectionId, subjectEncoding, predicate._2, objectEncoding, context), ByteVector.empty)
+      Success(PersistedStatement(collectionName, Statement(subject._1, predicate._1, obj._1), context))
+    } else {
+      //TODO maybe make sure only a single statement is returned
+      Success(statementResult.head)
+    }
+  }
+
+  def removeStatement(store: KeyValueStore, collectionName: NamedElement, statement: Statement): Try[Statement] = {
+    //TODO check collection exists to short circuit
+    val statementMatches = ReadOperations.matchStatementsImpl(store,
+      collectionName,
+      Some(statement.subject),
+      Some(statement.predicate),
+      Some(statement.`object`))
+    statementMatches.foreach { s =>
+      removePersistedStatement(store, s)
+    }
+    Success(statement)
+  }
+
+  private def removePersistedStatement(store: KeyValueStore, statement: PersistedStatement): Try[PersistedStatement] = {
+    //TODO lookup subject
+    //TODO lookup predicate
+    //TODO lookup object
+    //TODO check if subject exists in only one statement - if remove from lookups
+    //TODO check if predicate exists in only one statement - if remove from lookups
+    //TODO check if object exists in only one statement - if remove from lookups
+    //TODO fetch context from statementMatches and call remove entity -- not sure what best time to do this is
+    //TODO remove all statement entries from SPOC-CSPO
+    //TODO that's it?
+    ???
+  }
+
 
 }

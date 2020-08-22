@@ -42,4 +42,28 @@ object ObjectOperations {
     }
   }
 
+  def objectType(`object`: Object): Byte =
+    `object` match {
+      case _: NamedElement => TypeCodes.NamedElement
+      case _: AnonymousElement => TypeCodes.AnonymousElement
+      case _: LangLiteral => TypeCodes.LangLiteral
+      case _: StringLiteral => TypeCodes.String
+      case _: BooleanLiteral => TypeCodes.Boolean
+      case _: LongLiteral => TypeCodes.Long
+      case _: DoubleLiteral => TypeCodes.Double
+    }
+
+  private def fetchOrCreateObject(store: KeyValueStore, collectionId: Long, value: Object): (Object, Long) = {
+    value match {
+      case a: AnonymousElement => fetchOrCreateAnonymousElement(store, collectionId, a)
+      case n: NamedElement => fetchOrCreateNamedElement(store, collectionId, n)
+      case l: LangLiteral => fetchOrCreateLangLiteral(store, collectionId, l)
+      case d: DoubleLiteral => fetchOrCreateDoubleLiteral(store, collectionId, d)
+      case l: LongLiteral => (l, l.value)
+      case s: StringLiteral => fetchOrCreateStringLiteral(store, collectionId, s)
+      case b: BooleanLiteral => fetchOrCreateBooleanLiteral(store, collectionId, b)
+    }
+  }
+
+
 }

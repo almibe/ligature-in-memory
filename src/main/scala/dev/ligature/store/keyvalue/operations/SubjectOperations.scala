@@ -6,8 +6,7 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.store.keyvalue.codec.Encoder.ElementEncoding
 import dev.ligature.{AnonymousElement, NamedElement, Subject}
-import dev.ligature.store.keyvalue.{KeyValueStore, TypeCodes}
-import .handleNamedElementLookup
+import dev.ligature.store.keyvalue.{KeyValueStore, TypeCodes} .handleNamedElementLookup
 
 object SubjectOperations {
   def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Subject = {
@@ -32,5 +31,20 @@ object SubjectOperations {
       }
     }
   }
+
+  def subjectType(element: Entity): Byte =
+    entity match {
+      case _: NamedElement => TypeCodes.NamedElement
+      case _: AnonymousElement => TypeCodes.AnonymousElement
+    }
+
+  private def fetchOrCreateSubject(store: KeyValueStore, collectionId: Long, subject: Entity): (Entity, Long) = {
+    subject match {
+      case a: AnonymousElement => fetchOrCreateAnonymousElement(store, collectionId, a)
+      case n: NamedElement => fetchOrCreateNamedElement(store, collectionId, n)
+      case c: Context => fetchOrCreateContext(store, collectionId, c)
+    }
+  }
+
 
 }

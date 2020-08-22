@@ -18,4 +18,38 @@ object AnonymousElementOperations {
     }
   }
 
+  def newAnonymousElement(store: KeyValueStore, l: Long): AnonymousElement = {
+    ???
+  }
+
+  private def fetchOrCreateAnonymousElement(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): (AnonymousElement, Long) = {
+    val res = ReadOperations.fetchAnonymousElementId(store, collectionId, entity)
+    if (res.isEmpty) {
+      createAnonymousElement(store, collectionId, entity)
+    } else {
+      (entity, res.get)
+    }
+  }
+
+  private def createAnonymousElement(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): (AnonymousElement, Long) = {
+    //TODO get next id
+    //TODO write to AnonymousEntities
+    ???
+  }
+
+  private def fetchOrCreateContext(store: KeyValueStore, collectionId: Long, context: Context): (Context, Long) = {
+    val res = ReadOperations.fetchContextId(store, collectionId, context)
+    if (res.isEmpty) {
+      createContext(store, collectionId, context)
+    } else {
+      (context, res.get)
+    }
+  }
+
+  private def createContext(store: KeyValueStore, collectionId: Long, context: Context): (Context, Long) = {
+    //TODO get next id
+    //TODO write to Contexts
+    ???
+  }
+
 }

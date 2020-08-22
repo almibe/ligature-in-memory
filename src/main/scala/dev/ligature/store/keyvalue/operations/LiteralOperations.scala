@@ -42,4 +42,50 @@ object LiteralOperations {
     }
   }
 
+  private def fetchOrCreateLangLiteral(store: KeyValueStore, collectionId: Long, literal: LangLiteral): (Object, Long) = {
+    val res = ReadOperations.fetchLangLiteralId(store, collectionId, literal)
+    if (res.isEmpty) {
+      createLangLiteral(store, collectionId, literal)
+    } else {
+      (literal, res.get)
+    }
+  }
+
+  private def createLangLiteral(store: KeyValueStore, collectionId: Long, langLiteral: LangLiteral): (Object, Long) = {
+    //TODO get next id
+    //TODO write to LangLiteralToId
+    //TODO write to IdToLangLiteral
+    ???
+  }
+
+  private def fetchOrCreateDoubleLiteral(store: KeyValueStore, collectionId: Long, literal: DoubleLiteral): (Object, Long) = {
+    //TODO not sure I need this since I'm storing doubles directly?
+    ???
+  }
+
+  private def fetchOrCreateStringLiteral(store: KeyValueStore, collectionId: Long, literal: StringLiteral): (Object, Long) = {
+    val res = ReadOperations.fetchStringLiteralId(store, collectionId, literal)
+    if (res.isEmpty) {
+      createStringLiteral(store, collectionId, literal)
+    } else {
+      (literal, res.get)
+    }
+  }
+
+  private def createStringLiteral(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): (Object, Long) = {
+    val nextId = nextCollectionId(store, collectionId)
+    val stringToIdKey = Encoder.encodeStringToIdKey(collectionId, stringLiteral)
+    val stringToIdValue = Encoder.encodeStringToIdValue(nextId)
+    val idToStringKey = Encoder.encodeIdToStringKey(collectionId, nextId)
+    val idToStringValue = Encoder.encodeIdToStringValue(stringLiteral)
+    store.put(stringToIdKey, stringToIdValue)
+    store.put(idToStringKey, idToStringValue)
+    (stringLiteral, nextId)
+  }
+
+  private def fetchOrCreateBooleanLiteral(store: KeyValueStore, collectionId: Long, literal: BooleanLiteral): (Object, Long) = {
+    //TODO not sure I need this since I'm storing booleans directly?
+    ???
+  }
+
 }
