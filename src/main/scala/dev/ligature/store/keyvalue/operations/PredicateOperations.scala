@@ -6,7 +6,6 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.NamedElement
 import dev.ligature.store.keyvalue.KeyValueStore
-import dev.ligature.store.keyvalue.codec.Encoder
 import .removePersistedStatement
 
 import scala.util.{Success, Try}

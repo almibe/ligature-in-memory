@@ -10,6 +10,16 @@ import scodec.Codec
 import scodec.bits.ByteVector
 
 object CollectionCodec {
+  private case class CollectionCounterKey(prefix: Byte, collectionId: Long)
+
+  def encodeCollectionCounterKey(collectionId: Long): ByteVector = {
+    Codec.encode(CollectionCounterKey(Prefixes.CollectionCounter, collectionId)).require.bytes
+  }
+
+  def encodeCollectionCounterValue(value: Long): ByteVector = {
+    Codec.encode(value).require.bytes
+  }
+
   val collectionNamesPrefixStart: ByteVector = Codec.encode(Prefixes.CollectionNameToId).require.bytes
 
   private case class CollectionNameToIdKey(prefix: Byte, collectionName: String)

@@ -6,7 +6,6 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.AnonymousElement
 import dev.ligature.store.keyvalue.KeyValueStore
-import dev.ligature.store.keyvalue.codec.Encoder
 
 object AnonymousElementOperations {
   def fetchAnonymousElementId(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): Option[Long] = {

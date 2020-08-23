@@ -4,8 +4,7 @@
 
 package dev.ligature.store.inmemory
 
-import dev.ligature.store.keyvalue.codec.Encoder.ElementEncoding
-import dev.ligature.store.keyvalue.codec.Encoder
+import .ElementEncoding
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import scodec.codecs.{byte, long}

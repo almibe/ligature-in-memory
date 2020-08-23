@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue.operations
 
-import dev.ligature.store.keyvalue.codec.Encoder.ElementEncoding
+import .ElementEncoding
 import dev.ligature.{AnonymousElement, NamedElement, Subject}
 import dev.ligature.store.keyvalue.{KeyValueStore, TypeCodes} .handleNamedElementLookup
 

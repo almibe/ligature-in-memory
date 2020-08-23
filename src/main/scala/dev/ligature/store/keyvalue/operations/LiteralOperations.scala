@@ -6,7 +6,6 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.{BooleanLiteral, DoubleLiteral, LangLiteral, StringLiteral}
 import dev.ligature.store.keyvalue.KeyValueStore
-import dev.ligature.store.keyvalue.codec.Encoder
 
 object LiteralOperations {
   def decodeDoubleLiteral(literalId: Long): DoubleLiteral = {
