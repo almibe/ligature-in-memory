@@ -4,6 +4,42 @@
 
 package dev.ligature.store.keyvalue.codec
 
-class CollectionCodec {
+import dev.ligature.NamedElement
+import dev.ligature.store.keyvalue.Prefixes
+import scodec.Codec
+import scodec.bits.ByteVector
+
+object CollectionCodec {
+  val collectionNamesPrefixStart: ByteVector = Codec.encode(Prefixes.CollectionNameToId).require.bytes
+
+  private case class CollectionNameToIdKey(prefix: Byte, collectionName: String)
+
+  def encodeCollectionNameToIdKey(collectionName: NamedElement): ByteVector =
+    Codec.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collectionName.identifier)).require.bytes
+
+  private case class CollectionNameToIdValue(collectionId: Long)
+
+  def encodeCollectionNameToIdValue(id: Long): ByteVector =
+    Codec.encode(CollectionNameToIdValue(id)).require.bytes
+
+  private case class IdToCollectionNameKey(prefix: Byte, collectionId: Long)
+
+  def encodeIdToCollectionNameKey(id: Long): ByteVector =
+    Codec.encode(IdToCollectionNameKey(Prefixes.IdToCollectionName, id)).require.bytes
+
+  private case class IdToCollectionNameValue(collectionName: String)
+
+  def encodeIdToCollectionNameValue(name: NamedElement): ByteVector =
+    Codec.encode(IdToCollectionNameValue(name.identifier)).require.bytes
+
+  private case class CollectionNameCounterKey(prefix: Byte)
+
+  def encodeCollectionNameCounterKey(): ByteVector =
+    Codec.encode(CollectionNameCounterKey(Prefixes.CollectionNameCounter)).require.bytes
+
+  private case class CollectionNameCounterValue(counter: Long)
+
+  def encodeCollectionNameCounterValue(counter: Long): ByteVector =
+    Codec.encode(CollectionNameCounterValue(counter)).require.bytes
 
 }

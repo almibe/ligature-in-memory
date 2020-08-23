@@ -7,7 +7,6 @@ package dev.ligature.store.keyvalue.operations
 import dev.ligature.{AnonymousElement, NamedElement}
 import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.store.keyvalue.codec.Encoder
-import .removePersistedStatement
 
 import scala.util.{Success, Try}
 
@@ -15,7 +14,7 @@ object NamedElementOperations {
   def handleNamedElementLookup(store: KeyValueStore, collectionId: Long, entityId: Long): NamedElement = {
     val res = store.get(Encoder.encodeIdToNamedEntitiesKey(collectionId, entityId))
     if (res.nonEmpty) {
-      NamedElement(Decoder.decodeStringLiteral(res.get))
+      NamedElement(LiteralCodec.decodeStringLiteral(res.get))
     } else {
       throw new RuntimeException(s"Not valid NamedElement - $collectionId $entityId")
     }

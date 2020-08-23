@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature._
+import dev.ligature.store.keyvalue.operations.{NamedElementOperations, CollectionOperations, StatementOperations}
 
 import scala.util.{Failure, Success, Try}
 
@@ -17,7 +18,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def addStatement(collection: NamedElement, statement: Statement): IO[Try[PersistedStatement]] = {
     if (active.get()) {
-      IO { WriteOperations.addStatement(workingState, collection, statement) }
+      IO { StatementOperations.addStatement(workingState, collection, statement) }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
@@ -42,7 +43,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   override def createCollection(collection: NamedElement): IO[Try[NamedElement]] =
     if (active.get()) {
       IO {
-        WriteOperations.createCollection(workingState, collection)
+        CollectionOperations.createCollection(workingState, collection)
         Success(collection)
       }
     } else {
@@ -52,7 +53,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
   override def deleteCollection(collection: NamedElement): IO[Try[NamedElement]] = {
     if (active.get()) {
       IO {
-        WriteOperations.deleteCollection(workingState, collection)
+        CollectionOperations.deleteCollection(workingState, collection)
       }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
@@ -63,7 +64,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def newEntity(collection: NamedElement): IO[Try[AnonymousElement]] = {
     if (active.get()) {
-      IO { Success(WriteOperations.newEntity(workingState, collection)) }
+      IO { Success(NamedElementOperations.newEntity(workingState, collection)) }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }

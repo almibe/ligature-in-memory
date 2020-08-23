@@ -8,7 +8,7 @@ import dev.ligature.{BooleanLiteral, DoubleLiteral}
 import scodec.bits.ByteVector
 import scodec.codecs.utf8
 
-class LiteralCodec {
+object LiteralCodec {
 
   def decodeDoubleLiteral(literal: Long): DoubleLiteral = {
     ???
