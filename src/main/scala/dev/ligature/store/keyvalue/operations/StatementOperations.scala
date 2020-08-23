@@ -6,17 +6,18 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.{AnonymousElement, Element, NamedElement, PersistedStatement, Statement, Subject}
 import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.codec.StatementCodec
 import scodec.bits.ByteVector
 
 import scala.util.{Success, Try}
 
 object StatementOperations {
   def readAllStatements(store: KeyValueStore, collectionName: NamedElement): Option[Iterable[PersistedStatement]] = {
-    val collectionId = fetchCollectionId(store, collectionName)
+    val collectionId = CollectionOperations.fetchCollectionId(store, collectionName)
     if (collectionId.nonEmpty) {
-      val itr = store.prefix(Encoder.encodeSPOCScanStart(collectionId.get))
+      val itr = store.prefix(StatementCodec.encodeSPOCScanStart(collectionId.get))
       Some(itr.map { entry: (ByteVector, ByteVector) =>
-        val attempt = Decoder.decodeSPOC(entry._1)
+        val attempt = StatementCodec.decodeSPOC(entry._1)
         if (attempt.isSuccess) {
           val spoc = attempt.get
           spocToPersistedStatement(store, collectionName, collectionId.get, spoc)
@@ -29,9 +30,9 @@ object StatementOperations {
     }
   }
 
-  def spocToPersistedStatement(store: KeyValueStore, collectionName: NamedElement, collectionId: Long, spoc: Encoder.SPOC): PersistedStatement = {
-    val subject = handleSubjectLookup(store, collectionId, spoc.subject.`type`, spoc.subject.id)
-    val predicate = handlePredicateLookup(store, collectionId, spoc.predicateId)
+  def spocToPersistedStatement(store: KeyValueStore, collectionName: NamedElement, collectionId: Long, spoc: StatementCodec.SPOC): PersistedStatement = {
+    val subject = SubjectOperations.handleSubjectLookup(store, collectionId, spoc.subject.`type`, spoc.subject.id)
+    val predicate = PredicateOperations.predicateLookup(store, collectionId, spoc.predicateId)
     val obj = handleObjectLookup(store, collectionId, spoc.`object`.`type`, spoc.`object`.id)
     val context = AnonymousElement(spoc.context)
     val statement = Statement(subject, predicate, obj)
@@ -41,7 +42,7 @@ object StatementOperations {
   def matchStatementsImpl(store: KeyValueStore,
                           collectionName: NamedElement,
                           subject: Option[Subject] = None,
-                          predicate: Option[Predicate] = None,
+                          predicate: Option[NamedElement] = None,
                           `object`: Option[Element] = None): Iterable[PersistedStatement] = {
     val collectionId = fetchCollectionId(store, collectionName)
     if (collectionId.nonEmpty) {
