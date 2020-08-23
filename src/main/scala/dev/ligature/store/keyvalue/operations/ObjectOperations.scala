@@ -4,9 +4,9 @@
 
 package dev.ligature.store.keyvalue.operations
 
-import .ElementEncoding
 import dev.ligature.{AnonymousElement, BooleanLiteral, DoubleLiteral, Element, LangLiteral, LongLiteral, NamedElement, StringLiteral}
-import dev.ligature.store.keyvalue.{KeyValueStore, TypeCodes}
+import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.codec.TypeCodes
 
 object ObjectOperations {
   def handleObjectLookup(store: KeyValueStore, collectionId: Long, objectType: Byte, objectId: Long): Element = {

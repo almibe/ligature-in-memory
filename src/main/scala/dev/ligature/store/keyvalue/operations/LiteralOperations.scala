@@ -6,19 +6,20 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.{BooleanLiteral, DoubleLiteral, LangLiteral, StringLiteral}
 import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.codec.LiteralCodec
 
 object LiteralOperations {
   def decodeDoubleLiteral(literalId: Long): DoubleLiteral = {
-    Decoder.decodeDoubleLiteral(literalId)
+    LiteralCodec.decodeDoubleLiteral(literalId)
   }
 
   def decodeBooleanLiteral(literalId: Long): BooleanLiteral = {
-    Decoder.decodeBooleanLiteral(literalId)
+    LiteralCodec.decodeBooleanLiteral(literalId)
   }
 
   def handleStringLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): StringLiteral = {
-    val res = store.get(Encoder.encodeIdToStringKey(collectionId, literalId))
-    StringLiteral(Decoder.decodeStringLiteral(res.get))
+    val res = store.get(LiteralCodec.encodeIdToStringKey(collectionId, literalId))
+    StringLiteral(LiteralCodec.decodeStringLiteral(res.get))
   }
 
   def handleLangLiteralLookup(store: KeyValueStore, collectionId: Long, literalId: Long): LangLiteral = {
@@ -33,7 +34,7 @@ object LiteralOperations {
   }
 
   def fetchStringLiteralId(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): Option[Long] = {
-    val res = store.get(Encoder.encodeStringToIdKey(collectionId, stringLiteral))
+    val res = store.get(LiteralCodec.encodeStringToIdKey(collectionId, stringLiteral))
     if (res.nonEmpty) {
       Some(res.get.toLong())
     } else {
@@ -42,7 +43,7 @@ object LiteralOperations {
   }
 
   private def fetchOrCreateLangLiteral(store: KeyValueStore, collectionId: Long, literal: LangLiteral): (Object, Long) = {
-    val res = ReadOperations.fetchLangLiteralId(store, collectionId, literal)
+    val res = fetchLangLiteralId(store, collectionId, literal)
     if (res.isEmpty) {
       createLangLiteral(store, collectionId, literal)
     } else {
@@ -63,7 +64,7 @@ object LiteralOperations {
   }
 
   private def fetchOrCreateStringLiteral(store: KeyValueStore, collectionId: Long, literal: StringLiteral): (Object, Long) = {
-    val res = ReadOperations.fetchStringLiteralId(store, collectionId, literal)
+    val res = fetchStringLiteralId(store, collectionId, literal)
     if (res.isEmpty) {
       createStringLiteral(store, collectionId, literal)
     } else {
@@ -72,11 +73,11 @@ object LiteralOperations {
   }
 
   private def createStringLiteral(store: KeyValueStore, collectionId: Long, stringLiteral: StringLiteral): (Object, Long) = {
-    val nextId = nextCollectionId(store, collectionId)
-    val stringToIdKey = Encoder.encodeStringToIdKey(collectionId, stringLiteral)
-    val stringToIdValue = Encoder.encodeStringToIdValue(nextId)
-    val idToStringKey = Encoder.encodeIdToStringKey(collectionId, nextId)
-    val idToStringValue = Encoder.encodeIdToStringValue(stringLiteral)
+    val nextId = CollectionOperations.nextCollectionId(store, collectionId)
+    val stringToIdKey = LiteralCodec.encodeStringToIdKey(collectionId, stringLiteral)
+    val stringToIdValue = LiteralCodec.encodeStringToIdValue(nextId)
+    val idToStringKey = LiteralCodec.encodeIdToStringKey(collectionId, nextId)
+    val idToStringValue = LiteralCodec.encodeIdToStringValue(stringLiteral)
     store.put(stringToIdKey, stringToIdValue)
     store.put(idToStringKey, idToStringValue)
     (stringLiteral, nextId)

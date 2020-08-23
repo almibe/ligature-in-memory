@@ -4,9 +4,9 @@
 
 package dev.ligature.store.keyvalue.operations
 
-import .ElementEncoding
 import dev.ligature.{AnonymousElement, NamedElement, Subject}
-import dev.ligature.store.keyvalue.{KeyValueStore, TypeCodes} .handleNamedElementLookup
+import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.codec.TypeCodes
 
 object SubjectOperations {
   def handleSubjectLookup(store: KeyValueStore, collectionId: Long, subjectType: Byte, subjectId: Long): Subject = {

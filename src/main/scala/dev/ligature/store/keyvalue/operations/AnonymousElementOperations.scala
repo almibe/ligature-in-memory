@@ -6,10 +6,11 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.AnonymousElement
 import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.codec.AnonymousElementCodec
 
 object AnonymousElementOperations {
   def fetchAnonymousElementId(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): Option[Long] = {
-    val res = store.get(Encoder.encodeAnonymousElementKey(collectionId, entity.identifier))
+    val res = store.get(AnonymousElementCodec.encodeAnonymousElementKey(collectionId, entity.identifier))
     if (res.nonEmpty) {
       Some(entity.identifier)
     } else {
@@ -22,7 +23,7 @@ object AnonymousElementOperations {
   }
 
   private def fetchOrCreateAnonymousElement(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): (AnonymousElement, Long) = {
-    val res = ReadOperations.fetchAnonymousElementId(store, collectionId, entity)
+    val res = fetchAnonymousElementId(store, collectionId, entity)
     if (res.isEmpty) {
       createAnonymousElement(store, collectionId, entity)
     } else {
@@ -35,20 +36,4 @@ object AnonymousElementOperations {
     //TODO write to AnonymousEntities
     ???
   }
-
-  private def fetchOrCreateContext(store: KeyValueStore, collectionId: Long, context: Context): (Context, Long) = {
-    val res = ReadOperations.fetchContextId(store, collectionId, context)
-    if (res.isEmpty) {
-      createContext(store, collectionId, context)
-    } else {
-      (context, res.get)
-    }
-  }
-
-  private def createContext(store: KeyValueStore, collectionId: Long, context: Context): (Context, Long) = {
-    //TODO get next id
-    //TODO write to Contexts
-    ???
-  }
-
 }

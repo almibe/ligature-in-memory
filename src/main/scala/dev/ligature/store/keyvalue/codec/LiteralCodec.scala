@@ -4,7 +4,6 @@
 
 package dev.ligature.store.keyvalue.codec
 
-import dev.ligature.store.keyvalue.Prefixes
 import dev.ligature.{BooleanLiteral, DoubleLiteral, StringLiteral}
 import scodec.Codec
 import scodec.bits.ByteVector

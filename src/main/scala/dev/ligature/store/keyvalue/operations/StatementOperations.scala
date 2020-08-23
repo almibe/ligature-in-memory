@@ -6,7 +6,6 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.{AnonymousElement, Element, NamedElement, PersistedStatement, Statement, Subject}
 import dev.ligature.store.keyvalue.KeyValueStore
-import .ElementEncoding
 import scodec.bits.ByteVector
 
 import scala.util.{Success, Try}

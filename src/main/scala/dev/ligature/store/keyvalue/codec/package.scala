@@ -4,7 +4,6 @@
 
 package dev.ligature.store.keyvalue
 
-import .ElementEncoding
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 import scodec.codecs.{long, utf8}

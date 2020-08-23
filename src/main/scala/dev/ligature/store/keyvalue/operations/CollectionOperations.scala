@@ -5,21 +5,21 @@
 package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.NamedElement
-import dev.ligature.store.keyvalue.{KeyValueStore, Prefixes}
-import scodec.codecs.{byte, long}
+import dev.ligature.store.keyvalue.KeyValueStore
+import dev.ligature.store.keyvalue.codec.CollectionCodec
 
 import scala.util.{Success, Try}
 
 object CollectionOperations {
   def collections(store: KeyValueStore): Iterable[NamedElement] = {
-    val collectionNameToId = store.prefix(Encoder.collectionNamesPrefixStart)
+    val collectionNameToId = store.prefix(CollectionCodec.collectionNamesPrefixStart)
     collectionNameToId.map { encoded =>
       encoded._1.drop(1).decodeUtf8.map(NamedElement).getOrElse(throw new RuntimeException("Invalid Name"))
     }
   }
 
   def fetchCollectionId(store: KeyValueStore, collectionName: NamedElement): Option[Long] = {
-    val encoded = Encoder.encodeCollectionNameToIdKey(collectionName)
+    val encoded = CollectionCodec.encodeCollectionNameToIdKey(collectionName)
     val res = store.get(encoded)
     res.map(_.toLong())
   }
@@ -28,10 +28,10 @@ object CollectionOperations {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
       val nextId = nextCollectionNameId(store)
-      val collectionNameToIdKey = Encoder.encodeCollectionNameToIdKey(collection)
-      val idToCollectionNameKey = Encoder.encodeIdToCollectionNameKey(nextId)
-      val collectionNameToIdValue = Encoder.encodeCollectionNameToIdValue(nextId)
-      val idToCollectionNameValue = Encoder.encodeIdToCollectionNameValue(collection)
+      val collectionNameToIdKey = CollectionCodec.encodeCollectionNameToIdKey(collection)
+      val idToCollectionNameKey = CollectionCodec.encodeIdToCollectionNameKey(nextId)
+      val collectionNameToIdValue = CollectionCodec.encodeCollectionNameToIdValue(nextId)
+      val idToCollectionNameValue = CollectionCodec.encodeIdToCollectionNameValue(collection)
       store.put(collectionNameToIdKey, collectionNameToIdValue)
       store.put(idToCollectionNameKey, idToCollectionNameValue)
       Success(nextId)
@@ -41,28 +41,29 @@ object CollectionOperations {
   }
 
   def deleteCollection(store: KeyValueStore, collection: NamedElement): Try[NamedElement] = {
-    val id = fetchCollectionId(store, collection)
-    if (id.nonEmpty) {
-      val collectionNameToIdKey = Encoder.encodeCollectionNameToIdKey(collection)
-      val idToCollectionNameKey = Encoder.encodeIdToCollectionNameKey(id.get)
-      store.delete(collectionNameToIdKey)
-      store.delete(idToCollectionNameKey)
-      Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
-        store.delete((byte ~~ long(64)).encode((prefix.toByte, id.get)).require.bytes)
-      }
-      Success(collection)
-    } else {
-      Success(collection)
-    }
+    ???
+//    val id = fetchCollectionId(store, collection)
+//    if (id.nonEmpty) {
+//      val collectionNameToIdKey = CollectionCodec.encodeCollectionNameToIdKey(collection)
+//      val idToCollectionNameKey = CollectionCodec.encodeIdToCollectionNameKey(id.get)
+//      store.delete(collectionNameToIdKey)
+//      store.delete(idToCollectionNameKey)
+//      Range(Prefixes.SPOC, Prefixes.IdToString + 1).foreach { prefix =>
+//        store.delete((byte ~~ long(64)).encode((prefix.toByte, id.get)).require.bytes)
+//      }
+//      Success(collection)
+//    } else {
+//      Success(collection)
+//    }
   }
 
   def nextCollectionNameId(store: KeyValueStore): Long = {
-    val currentId = store.get(Encoder.encodeCollectionNameCounterKey())
+    val currentId = store.get(CollectionCodec.encodeCollectionNameCounterKey())
     val nextId = currentId match {
       case Some(bv) => bv.toLong() + 1
       case None => 0
     }
-    store.put(Encoder.encodeCollectionNameCounterKey(), Encoder.encodeCollectionNameCounterValue(nextId))
+    store.put(CollectionCodec.encodeCollectionNameCounterKey(), CollectionCodec.encodeCollectionNameCounterValue(nextId))
     nextId
   }
 
@@ -75,17 +76,15 @@ object CollectionOperations {
     }
   }
 
-  private def nextCollectionId(store: KeyValueStore, collectionId: Long): Long = {
-    val key = Encoder.encodeCollectionCounterKey(collectionId)
+  private[keyvalue] def nextCollectionId(store: KeyValueStore, collectionId: Long): Long = {
+    val key = CollectionCodec.encodeCollectionCounterKey(collectionId)
     val collectionCounter = store.get(key)
     val counterValue = if (collectionCounter.nonEmpty) {
       collectionCounter.get.toLong() + 1L
     } else {
       0
     }
-    store.put(key, Encoder.encodeCollectionCounterValue(counterValue))
+    store.put(key, CollectionCodec.encodeCollectionCounterValue(counterValue))
     counterValue
   }
-
-
 }
