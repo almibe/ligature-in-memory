@@ -6,12 +6,11 @@ package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.{AnonymousElement, NamedElement}
 import dev.ligature.store.keyvalue.KeyValueStore
-
-import scala.util.{Success, Try}
+import dev.ligature.store.keyvalue.codec.{AnonymousElementCodec, EmptyCodec, LiteralCodec, NamedElementCodec}
 
 object NamedElementOperations {
   def handleNamedElementLookup(store: KeyValueStore, collectionId: Long, entityId: Long): NamedElement = {
-    val res = store.get(Encoder.encodeIdToNamedEntitiesKey(collectionId, entityId))
+    val res = store.get(NamedElementCodec.encodeIdToNamedElementsKey(collectionId, entityId))
     if (res.nonEmpty) {
       NamedElement(LiteralCodec.decodeStringLiteral(res.get))
     } else {
@@ -20,7 +19,7 @@ object NamedElementOperations {
   }
 
   def fetchNamedElementId(store: KeyValueStore, collectionId: Long, entity: NamedElement): Option[Long] = {
-    val res = store.get(Encoder.encodeNamedEntitiesToIdKey(collectionId, entity))
+    val res = store.get(NamedElementCodec.encodeNamedElementsToIdKey(collectionId, entity))
     if (res.nonEmpty) {
       Some(res.get.toLong())
     } else {
@@ -33,56 +32,53 @@ object NamedElementOperations {
    * Returns the new AnonymousElement.
    */
   def newEntity(store: KeyValueStore, collectionName: NamedElement): AnonymousElement = {
-    val id = fetchOrCreateCollection(store, collectionName)
+    val id = CollectionOperations.fetchOrCreateCollection(store, collectionName)
     newEntity(store, id)
   }
 
   private def newEntity(store: KeyValueStore, collectionId: Long): AnonymousElement = {
-    val nextId = nextCollectionId(store, collectionId)
-    store.put(Encoder.encodeAnonymousElementKey(collectionId, nextId), Encoder.empty)
+    val nextId = CollectionOperations.nextCollectionId(store, collectionId)
+    store.put(AnonymousElementCodec.encodeAnonymousElementKey(collectionId, nextId), EmptyCodec.empty)
     AnonymousElement(nextId)
   }
 
+//  def removeEntity(store: KeyValueStore, collectionName: NamedElement, entity: Entity): Try[Entity] = {
+//    //TODO check collection exists to short circuit
+//    val subjectMatches = ReadOperations.matchStatementsImpl(store, collectionName, Some(entity))
+//    subjectMatches.foreach { s =>
+//      removePersistedStatement(store, s)
+//    }
+//    val objectMatches = ReadOperations.matchStatementsImpl(store, collectionName, None, None, Some(entity))
+//    objectMatches.foreach { s =>
+//      removePersistedStatement(store, s)
+//    }
+//    val contextMatch = entity match {
+//      case c: Context => ReadOperations.statementByContextImpl(store, collectionName, c)
+//      case _ => None
+//    }
+//    contextMatch.foreach { s =>
+//      removePersistedStatement(store, s)
+//    }
+//    Success(entity)
+//  }
 
-  def removeEntity(store: KeyValueStore, collectionName: NamedElement, entity: Entity): Try[Entity] = {
-    //TODO check collection exists to short circuit
-    val subjectMatches = ReadOperations.matchStatementsImpl(store, collectionName, Some(entity))
-    subjectMatches.foreach { s =>
-      removePersistedStatement(store, s)
-    }
-    val objectMatches = ReadOperations.matchStatementsImpl(store, collectionName, None, None, Some(entity))
-    objectMatches.foreach { s =>
-      removePersistedStatement(store, s)
-    }
-    val contextMatch = entity match {
-      case c: Context => ReadOperations.statementByContextImpl(store, collectionName, c)
-      case _ => None
-    }
-    contextMatch.foreach { s =>
-      removePersistedStatement(store, s)
-    }
-    Success(entity)
-  }
-
-  private def fetchOrCreateNamedElement(store: KeyValueStore, collectionId: Long, entity: NamedElement): (NamedElement, Long) = {
-    val res = ReadOperations.fetchNamedElementId(store, collectionId, entity)
+  private def fetchOrCreateNamedElement(store: KeyValueStore, collectionId: Long, namedElement: NamedElement): (NamedElement, Long) = {
+    val res = NamedElementOperations.fetchNamedElementId(store, collectionId, namedElement)
     if (res.isEmpty) {
-      createNamedElement(store, collectionId, entity)
+      createNamedElement(store, collectionId, namedElement)
     } else {
-      (entity, res.get)
+      (namedElement, res.get)
     }
   }
 
   private def createNamedElement(store: KeyValueStore, collectionId: Long, entity: NamedElement): (NamedElement, Long) = {
-    val nextId = nextCollectionId(store, collectionId)
-    val namedEntitiesToIdKey = Encoder.encodeNamedEntitiesToIdKey(collectionId, entity)
-    val namedEntitiesToIdValue = Encoder.encodeNamedEntitiesToIdValue(nextId)
-    val idToNamedEntitiesKey = Encoder.encodeIdToNamedEntitiesKey(collectionId, nextId)
-    val idToNamedEntitiesValue = Encoder.encodeIdToNamedEntitiesValue(entity)
-    store.put(namedEntitiesToIdKey, namedEntitiesToIdValue)
-    store.put(idToNamedEntitiesKey, idToNamedEntitiesValue)
+    val nextId = CollectionOperations.nextCollectionId(store, collectionId)
+    val namedElementsToIdKey = NamedElementCodec.encodeNamedElementsToIdKey(collectionId, entity)
+    val namedElementsToIdValue = NamedElementCodec.encodeNamedElementsToIdValue(nextId)
+    val idToNamedElementsKey = NamedElementCodec.encodeIdToNamedElementsKey(collectionId, nextId)
+    val idToNamedElementsValue = NamedElementCodec.encodeIdToNamedElementsValue(entity)
+    store.put(namedElementsToIdKey, namedElementsToIdValue)
+    store.put(idToNamedElementsKey, idToNamedElementsValue)
     (entity, nextId)
   }
-
-
 }

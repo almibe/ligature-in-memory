@@ -36,7 +36,4 @@ package object codec {
 
     override def sizeBound: SizeBound = SizeBound.unknown
   }
-
-  val empty: ByteVector = ByteVector.empty
-
 }
