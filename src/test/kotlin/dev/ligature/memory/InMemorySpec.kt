@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.keyvalue.codec
+package dev.ligature.memory
 
-import scodec.bits.ByteVector
+import io.kotlintest.specs.StringSpec
+import dev.ligature.test.createSpec
 
-object EmptyCodec {
-  val empty: ByteVector = ByteVector.empty
-}
+class InMemorySpec: StringSpec({createSpec { InMemoryStore() }()})
