@@ -4,13 +4,13 @@
 
 package dev.ligature.store.keyvalue.operations
 
-import dev.ligature.AnonymousElement
+import dev.ligature.AnonymousNode
 import dev.ligature.store.keyvalue.KeyValueStore
-import dev.ligature.store.keyvalue.codec.AnonymousElementCodec
+import dev.ligature.store.keyvalue.codec.AnonymousNodeCodec
 
-object AnonymousElementOperations {
-  def fetchAnonymousElementId(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): Option[Long] = {
-    val res = store.get(AnonymousElementCodec.encodeAnonymousElementKey(collectionId, entity.identifier))
+object AnonymousNodeOperations {
+  def fetchAnonymousNodeId(store: KeyValueStore, collectionId: Long, entity: AnonymousNode): Option[Long] = {
+    val res = store.get(AnonymousNodeCodec.encodeAnonymousNodeKey(collectionId, entity.identifier))
     if (res.nonEmpty) {
       Some(entity.identifier)
     } else {
@@ -18,20 +18,20 @@ object AnonymousElementOperations {
     }
   }
 
-  def newAnonymousElement(store: KeyValueStore, l: Long): AnonymousElement = {
+  def newAnonymousNode(store: KeyValueStore, l: Long): AnonymousNode = {
     ???
   }
 
-  private def fetchOrCreateAnonymousElement(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): (AnonymousElement, Long) = {
-    val res = fetchAnonymousElementId(store, collectionId, entity)
+  private def fetchOrCreateAnonymousNode(store: KeyValueStore, collectionId: Long, entity: AnonymousNode): (AnonymousNode, Long) = {
+    val res = fetchAnonymousNodeId(store, collectionId, entity)
     if (res.isEmpty) {
-      createAnonymousElement(store, collectionId, entity)
+      createAnonymousNode(store, collectionId, entity)
     } else {
       (entity, res.get)
     }
   }
 
-  private def createAnonymousElement(store: KeyValueStore, collectionId: Long, entity: AnonymousElement): (AnonymousElement, Long) = {
+  private def createAnonymousNode(store: KeyValueStore, collectionId: Long, entity: AnonymousNode): (AnonymousNode, Long) = {
     //TODO get next id
     //TODO write to AnonymousEntities
     ???

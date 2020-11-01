@@ -9,12 +9,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import cats.effect.IO
 import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.store.keyvalue.operations.{CollectionOperations, StatementOperations}
-import dev.ligature.{AnonymousElement, Element, NamedElement, PersistedStatement, ReadTx, Subject}
+import dev.ligature.{AnonymousNode, LigatureReadTx, NamedNode, PersistedStatement}
+import fs2.Stream
 
-private final class InMemoryReadTx(private val store: KeyValueStore) extends ReadTx {
+private final class InMemoryReadTx(private val store: KeyValueStore) extends LigatureReadTx {
   private val active = new AtomicBoolean(true)
 
-  override def allStatements(collectionName: NamedElement): IO[Iterator[PersistedStatement]] = {
+  override def allStatements(collectionName: NamedNode): IO[Iterator[PersistedStatement]] = {
     if (active.get()) {
       if (CollectionOperations.fetchCollectionId(store, collectionName).nonEmpty) {
         val result = StatementOperations.readAllStatements(store, collectionName).get
@@ -27,21 +28,21 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
     }
   }
 
-  override def collections: IO[Iterator[NamedElement]] =
+  override def collections: IO[Iterator[NamedNode]] =
     if (active.get()) {
       IO { CollectionOperations.collections(store).iterator }
     } else {
       throw new RuntimeException("Transaction is closed.")
     }
 
-  override def collections(prefix: NamedElement): IO[Iterator[NamedElement]] =
+  override def collections(prefix: NamedNode): Stream[IO, NamedNode] =
     IO {
 //      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
 //        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle prefix
       ???
     }
 
-  override def collections(from: NamedElement, to: NamedElement): IO[Iterator[NamedElement]] =
+  override def collections(from: NamedNode, to: NamedNode): Stream[IO, NamedNode] =
     IO {
 //      val collectionNameToId = store.scan(Array(Prefixes.CollectionNameToId),
 //        Array(Prefixes.CollectionNameToId + 1.toByte)) //TODO fix to handle range
@@ -50,9 +51,9 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
 
   override def isOpen: Boolean = active.get()
 
-  override def matchStatements(collectionName: NamedElement,
+  override def matchStatements(collectionName: NamedNode,
                                subject: Option[Subject] = None,
-                               predicate: Option[NamedElement] = None,
+                               predicate: Option[NamedNode] = None,
                                `object`: Option[Element] = None): IO[Iterator[PersistedStatement]] = {
     if (active.get()) {
       IO {
@@ -63,9 +64,9 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
     }
   }
 
-//  override def matchStatements(collectionName: NamedElement,
+//  override def matchStatements(collectionName: NamedNode,
 //                               subject: Option[Subject],
-//                               predicate: Option[NamedElement],
+//                               predicate: Option[NamedNode],
 //                               range: Range[_]): IO[Iterator[PersistedStatement]] = {
 //    if (active.get()) {
 //      IO {
@@ -76,7 +77,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Rea
 //    }
 //  }
 
-  override def statementByContext(collectionName: NamedElement, context: AnonymousElement):
+  override def statementByContext(collectionName: NamedNode, context: AnonymousElement):
   IO[Option[PersistedStatement]] = {
     if (active.get()) {
       IO {

@@ -32,7 +32,7 @@ object StatementOperations {
 
   def spocToPersistedStatement(store: KeyValueStore, collectionName: NamedElement, collectionId: Long, spoc: StatementCodec.SPOC): PersistedStatement = {
     val subject = SubjectOperations.handleSubjectLookup(store, collectionId, spoc.subject.`type`, spoc.subject.id)
-    val predicate = NamedElementOperations.predicateLookup(store, collectionId, spoc.predicateId)
+    val predicate = NamedNodeOperations.predicateLookup(store, collectionId, spoc.predicateId)
     val obj = handleObjectLookup(store, collectionId, spoc.`object`.`type`, spoc.`object`.id)
     val context = AnonymousElement(spoc.context)
     val statement = Statement(subject, predicate, obj)

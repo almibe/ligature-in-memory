@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
 import dev.ligature._
-import dev.ligature.store.keyvalue.operations.{NamedElementOperations, CollectionOperations, StatementOperations}
+import dev.ligature.store.keyvalue.operations.{NamedNodeOperations, CollectionOperations, StatementOperations}
 
 import scala.util.{Failure, Success, Try}
 
@@ -64,7 +64,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def newEntity(collection: NamedElement): IO[Try[AnonymousElement]] = {
     if (active.get()) {
-      IO { Success(NamedElementOperations.newEntity(workingState, collection)) }
+      IO { Success(NamedNodeOperations.newEntity(workingState, collection)) }
     } else {
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }

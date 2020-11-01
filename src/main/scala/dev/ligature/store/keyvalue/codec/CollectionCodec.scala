@@ -4,7 +4,7 @@
 
 package dev.ligature.store.keyvalue.codec
 
-import dev.ligature.NamedElement
+import dev.ligature.NamedNode
 import scodec.Codec
 import scodec.bits.ByteVector
 
@@ -23,7 +23,7 @@ object CollectionCodec {
 
   private case class CollectionNameToIdKey(prefix: Byte, collectionName: String)
 
-  def encodeCollectionNameToIdKey(collectionName: NamedElement): ByteVector =
+  def encodeCollectionNameToIdKey(collectionName: NamedNode): ByteVector =
     Codec.encode(CollectionNameToIdKey(Prefixes.CollectionNameToId, collectionName.identifier)).require.bytes
 
   private case class CollectionNameToIdValue(collectionId: Long)
@@ -38,7 +38,7 @@ object CollectionCodec {
 
   private case class IdToCollectionNameValue(collectionName: String)
 
-  def encodeIdToCollectionNameValue(name: NamedElement): ByteVector =
+  def encodeIdToCollectionNameValue(name: NamedNode): ByteVector =
     Codec.encode(IdToCollectionNameValue(name.identifier)).require.bytes
 
   private case class CollectionNameCounterKey(prefix: Byte)
@@ -50,5 +50,4 @@ object CollectionCodec {
 
   def encodeCollectionNameCounterValue(counter: Long): ByteVector =
     Codec.encode(CollectionNameCounterValue(counter)).require.bytes
-
 }

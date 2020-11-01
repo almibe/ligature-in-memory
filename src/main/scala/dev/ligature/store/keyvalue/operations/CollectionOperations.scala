@@ -4,27 +4,27 @@
 
 package dev.ligature.store.keyvalue.operations
 
-import dev.ligature.NamedElement
+import dev.ligature.NamedNode
 import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.store.keyvalue.codec.CollectionCodec
 
 import scala.util.{Success, Try}
 
 object CollectionOperations {
-  def collections(store: KeyValueStore): Iterable[NamedElement] = {
+  def collections(store: KeyValueStore): Iterable[NamedNode] = {
     val collectionNameToId = store.prefix(CollectionCodec.collectionNamesPrefixStart)
     collectionNameToId.map { encoded =>
-      encoded._1.drop(1).decodeUtf8.map(NamedElement).getOrElse(throw new RuntimeException("Invalid Name"))
+      encoded._1.drop(1).decodeUtf8.map(NamedNode).getOrElse(throw new RuntimeException("Invalid Name"))
     }
   }
 
-  def fetchCollectionId(store: KeyValueStore, collectionName: NamedElement): Option[Long] = {
+  def fetchCollectionId(store: KeyValueStore, collectionName: NamedNode): Option[Long] = {
     val encoded = CollectionCodec.encodeCollectionNameToIdKey(collectionName)
     val res = store.get(encoded)
     res.map(_.toLong())
   }
 
-  def createCollection(store: KeyValueStore, collection: NamedElement): Try[Long] = {
+  def createCollection(store: KeyValueStore, collection: NamedNode): Try[Long] = {
     val id = fetchCollectionId(store, collection)
     if (id.isEmpty) {
       val nextId = nextCollectionNameId(store)
@@ -40,7 +40,7 @@ object CollectionOperations {
     }
   }
 
-  def deleteCollection(store: KeyValueStore, collection: NamedElement): Try[NamedElement] = {
+  def deleteCollection(store: KeyValueStore, collection: NamedNode): Try[NamedNode] = {
     ???
 //    val id = fetchCollectionId(store, collection)
 //    if (id.nonEmpty) {
@@ -67,7 +67,7 @@ object CollectionOperations {
     nextId
   }
 
-  def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedElement): Long = {
+  def fetchOrCreateCollection(store: KeyValueStore, collectionName: NamedNode): Long = {
     val id = fetchCollectionId(store, collectionName)
     if (id.isEmpty) {
       createCollection(store, collectionName).get

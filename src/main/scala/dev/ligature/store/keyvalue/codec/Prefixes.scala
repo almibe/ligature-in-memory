@@ -16,8 +16,8 @@ private object Prefixes {
   val OPSC: Byte = 8.toByte
   val CSPO: Byte = 9.toByte
   val CollectionCounter: Byte = 10.toByte
-  val NamedElementsToId: Byte = 11.toByte
-  val IdToNamedElements: Byte = 12.toByte
+  val NamedNodesToId: Byte = 11.toByte
+  val IdToNamedNodes: Byte = 12.toByte
   val AnonymousElements: Byte = 13.toByte
   val LangLiteralToId: Byte = 14.toByte
   val IdToLangLiteral: Byte = 15.toByte
@@ -26,7 +26,7 @@ private object Prefixes {
 }
 
 private object TypeCodes {
-  val NamedElement: Byte = 0.toByte
+  val NamedNode: Byte = 0.toByte
   val AnonymousElement: Byte = 1.toByte
   val LangLiteral: Byte = 2.toByte
   val String: Byte = 3.toByte
