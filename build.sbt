@@ -9,10 +9,9 @@ resolvers += Resolver.mavenLocal
 
 lazy val root = (project in file("."))
   .settings(
-    name := "ligature-keyvalue",
+    name := "ligature-key-value",
     libraryDependencies += "dev.ligature" %% "ligature" % "0.1.0-SNAPSHOT",
-    libraryDependencies += "org.scodec" %% "scodec-bits" % "1.1.17",
-    libraryDependencies += "org.scodec" %% "scodec-core" % "1.11.7",
-    libraryDependencies += scalaTest % Test,
-    libraryDependencies += "dev.ligature" %% "ligature-test-suite" % "0.1.0-SNAPSHOT" % Test
+    libraryDependencies += "dev.almibe" %% "slonky" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "dev.ligature" %% "ligature-test-suite" % "0.1.0-SNAPSHOT" % Test,
+    libraryDependencies += "dev.almibe" %% "slonky-in-memory" % "0.1.0-SNAPSHOT" % Test
   )
