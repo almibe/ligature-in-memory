@@ -5,8 +5,8 @@
 package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.NamedNode
-import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.store.keyvalue.codec.CollectionCodec
+import dev.ligature.store.keyvalue.slonky.KeyValueStore
 
 import scala.util.{Success, Try}
 

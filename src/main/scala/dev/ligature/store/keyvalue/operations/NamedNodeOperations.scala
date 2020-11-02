@@ -5,8 +5,8 @@
 package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.{AnonymousNode, NamedNode}
-import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.store.keyvalue.codec.{AnonymousNodeCodec, EmptyCodec, LiteralCodec, NamedNodeCodec}
+import dev.ligature.store.keyvalue.slonky.KeyValueStore
 
 object NamedNodeOperations {
   def handleNamedNodeLookup(store: KeyValueStore, collectionId: Long, entityId: Long): NamedNode = {

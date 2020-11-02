@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.inmemory
+package dev.ligature.store.keyvalue.slonky
 
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -12,11 +12,11 @@ import dev.ligature.store.keyvalue.operations.{NamedNodeOperations, CollectionOp
 
 import scala.util.{Failure, Success, Try}
 
-private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends WriteTx {
+private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends LigatureWriteTx {
   private val active = new AtomicBoolean(true)
   private val workingState = store.copy()
 
-  override def addStatement(collection: NamedElement, statement: Statement): IO[Try[PersistedStatement]] = {
+  override def addStatement(collection: NamedNode, statement: Statement): IO[Try[PersistedStatement]] = {
     if (active.get()) {
       IO { StatementOperations.addStatement(workingState, collection, statement) }
     } else {
@@ -40,7 +40,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-  override def createCollection(collection: NamedElement): IO[Try[NamedElement]] =
+  override def createCollection(collection: NamedNode): IO[Try[NamedNode]] =
     if (active.get()) {
       IO {
         CollectionOperations.createCollection(workingState, collection)
@@ -50,7 +50,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
       IO { Failure(new RuntimeException("Transaction is closed.")) }
     }
 
-  override def deleteCollection(collection: NamedElement): IO[Try[NamedElement]] = {
+  override def deleteCollection(collection: NamedNode): IO[Try[NamedNode]] = {
     if (active.get()) {
       IO {
         CollectionOperations.deleteCollection(workingState, collection)
@@ -62,7 +62,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 
   override def isOpen: Boolean = active.get()
 
-  override def newEntity(collection: NamedElement): IO[Try[AnonymousElement]] = {
+  override def newEntity(collection: NamedNode): IO[Try[AnonymousNode]] = {
     if (active.get()) {
       IO { Success(NamedNodeOperations.newEntity(workingState, collection)) }
     } else {
@@ -70,7 +70,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
     }
   }
 
-//  override def removeEntity(collection: NamedElement, entity: Entity): IO[Try[Entity]] = {
+//  override def removeEntity(collection: NamedNode, entity: Entity): IO[Try[Entity]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removeEntity(workingState, collection, entity) }
 //    } else {
@@ -78,7 +78,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 //    }
 //  }
 //
-//  override def removePredicate(collection: NamedElement, predicate: Predicate): IO[Try[Predicate]] = {
+//  override def removePredicate(collection: NamedNode, predicate: Predicate): IO[Try[Predicate]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removePredicate(workingState, collection, predicate) }
 //    } else {
@@ -86,7 +86,7 @@ private final class InMemoryWriteTx(val store: InMemoryKeyValueStore) extends Wr
 //    }
 //  }
 //
-//  override def removeStatement(collection: NamedElement, statement: Statement): IO[Try[Statement]] = {
+//  override def removeStatement(collection: NamedNode, statement: Statement): IO[Try[Statement]] = {
 //    if (active.get()) {
 //      IO { WriteOperations.removeStatement(workingState, collection, statement) }
 //    } else {

@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.inmemory
+package dev.ligature.store.keyvalue.slonky
 
-import dev.ligature.store.inmemory.InMemoryKeyValueStore.ByteVectorOrdering
+import dev.ligature.store.keyvalue.slonky.InMemoryKeyValueStore.ByteVectorOrdering
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import scodec.bits.ByteVector

@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package dev.ligature.store.inmemory
+package dev.ligature.store.keyvalue.slonky
 
 import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.effect.IO
-import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.store.keyvalue.operations.{CollectionOperations, StatementOperations}
-import dev.ligature.{AnonymousNode, LigatureReadTx, NamedNode, PersistedStatement}
+import dev.ligature.{AnonymousNode, LigatureReadTx, NamedNode, Node, PersistedStatement}
 import fs2.Stream
 
 private final class InMemoryReadTx(private val store: KeyValueStore) extends LigatureReadTx {
@@ -52,9 +51,9 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Lig
   override def isOpen: Boolean = active.get()
 
   override def matchStatements(collectionName: NamedNode,
-                               subject: Option[Subject] = None,
+                               subject: Option[Node] = None,
                                predicate: Option[NamedNode] = None,
-                               `object`: Option[Element] = None): IO[Iterator[PersistedStatement]] = {
+                               `object`: Option[Object] = None): IO[Iterator[PersistedStatement]] = {
     if (active.get()) {
       IO {
         StatementOperations.matchStatementsImpl(store, collectionName, subject, predicate, `object`).iterator
@@ -65,7 +64,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Lig
   }
 
 //  override def matchStatements(collectionName: NamedNode,
-//                               subject: Option[Subject],
+//                               subject: Option[Node],
 //                               predicate: Option[NamedNode],
 //                               range: Range[_]): IO[Iterator[PersistedStatement]] = {
 //    if (active.get()) {
@@ -77,7 +76,7 @@ private final class InMemoryReadTx(private val store: KeyValueStore) extends Lig
 //    }
 //  }
 
-  override def statementByContext(collectionName: NamedNode, context: AnonymousElement):
+  override def statementByContext(collectionName: NamedNode, context: AnonymousNode):
   IO[Option[PersistedStatement]] = {
     if (active.get()) {
       IO {

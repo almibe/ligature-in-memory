@@ -5,8 +5,8 @@
 package dev.ligature.store.keyvalue.operations
 
 import dev.ligature.AnonymousNode
-import dev.ligature.store.keyvalue.KeyValueStore
 import dev.ligature.store.keyvalue.codec.AnonymousNodeCodec
+import dev.ligature.store.keyvalue.slonky.KeyValueStore
 
 object AnonymousNodeOperations {
   def fetchAnonymousNodeId(store: KeyValueStore, collectionId: Long, entity: AnonymousNode): Option[Long] = {
