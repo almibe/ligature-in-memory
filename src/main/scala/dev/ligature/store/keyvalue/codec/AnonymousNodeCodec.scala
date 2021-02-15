@@ -4,13 +4,22 @@
 
 package dev.ligature.store.keyvalue.codec
 
+import dev.ligature.AnonymousNode
 import scodec.Codec
 import scodec.bits.ByteVector
 
-object AnonymousElementCodec {
+object AnonymousNodeCodec {
   private case class AnonymousElementKey(prefix: Byte, collectionId: Long, anonymousId: Long)
 
+  def encode(anonymousNode: AnonymousNode): ByteVector = {
+    ???
+  }
+
+  def decode(byteVector: ByteVector): AnonymousNode = {
+    ???
+  }
+
   def encodeAnonymousElementKey(collectionId: Long, anonymousId: Long): ByteVector = {
-    Codec.encode(AnonymousElementKey(Prefixes.AnonymousElements, collectionId, anonymousId)).require.bytes
+    Codec.encode(AnonymousElementKey(Prefixes.AnonymousNodes, collectionId, anonymousId)).require.bytes
   }
 }

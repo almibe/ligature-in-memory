@@ -16,7 +16,7 @@ object StatementCodec {
 
   case class SPO(prefix: Byte,
                  collectionId: Long,
-                 subject: Option[ElementEncoding],
+                 subject: Option[NodeEncoding],
                  predicateId: Option[Long],
                  `object`: Option[ElementEncoding])
 

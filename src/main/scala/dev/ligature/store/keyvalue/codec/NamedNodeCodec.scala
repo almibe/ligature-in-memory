@@ -12,8 +12,16 @@ import scodec.codecs.{long, utf8}
 object NamedNodeCodec {
   case class NamedNodesToIdKey(prefix: Byte, collectionId: Long, namedElement: String)
 
+  def encode(namedNode: NamedNode): ByteVector = {
+    ???
+  }
+
+  def decode(byteVector: ByteVector): NamedNode = {
+    ???
+  }
+
   def encodeNamedNodesToIdKey(collectionId: Long, entity: NamedNode): ByteVector = {
-    Codec.encode(NamedNodesToIdKey(Prefixes.NamedNodesToId, collectionId, entity.identifier)).require.bytes
+    Codec.encode(NamedNodesToIdKey(Prefixes.NamedNodeToId, collectionId, entity.identifier)).require.bytes
   }
 
   def encodeNamedNodesToIdValue(nextId: Long): ByteVector = {
@@ -23,11 +31,10 @@ object NamedNodeCodec {
   case class IdToNamedNodesKey(prefix: Byte, collectionId: Long, entity: Long)
 
   def encodeIdToNamedNodesKey(collectionId: Long, entity: Long): ByteVector = {
-    Codec.encode(IdToNamedNodesKey(Prefixes.IdToNamedNodes, collectionId, entity)).require.bytes
+    Codec.encode(IdToNamedNodesKey(Prefixes.IdToNamedNode, collectionId, entity)).require.bytes
   }
 
   def encodeIdToNamedNodesValue(entity: NamedNode): ByteVector = {
     utf8.encode(entity.identifier).require.bytes
   }
-
 }
