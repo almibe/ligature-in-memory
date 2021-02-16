@@ -2,11 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ligature::{
-    Attribute, Dataset, Entity, Ligature, LigatureError, PersistedStatement, QueryTx, Statement,
-    Value, WriteTx,
-};
-use std::collections::HashMap;
+use ligature::{Attribute, Dataset, LigatureError};
 
 pub const DATASET_PREFIX: u8 = 0;
 pub const ENTITY_ID_COUNTER_KEY: u8 = 1;
