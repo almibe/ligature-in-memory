@@ -1,4 +1,10 @@
-# ligature-key-value
+# ligature-kv
+
+## Status
+This project isn't used anymore.
+See https://github.com/almibe/ligature or
+https://github.com/almibe/ligature-jvm for updated projects.
+
 A key value store api for Ligature that uses [slonky](https://github.com/almibe/slonky) for storage.
 The main idea of this project is to set up a shared code base for storing Ligature data in key value stores
 with maximal code reuse.
